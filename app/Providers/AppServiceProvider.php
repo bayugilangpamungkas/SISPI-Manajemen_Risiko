@@ -37,7 +37,7 @@ class AppServiceProvider extends ServiceProvider
                 $level_menus = Level_menu::where('id_level', auth()->user()->id_level)->get();
                 $first = Menu::first();
                 $menus = Menu::get();
-                // $panel_menus[] = null;
+                $panel_menus = [];
                 foreach($menus as $menu){
                     foreach ($level_menus->skip(1) as $level_menu) {
                         if ($menu->id == $level_menu->id_menu) {

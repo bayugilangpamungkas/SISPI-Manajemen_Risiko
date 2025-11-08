@@ -22,8 +22,8 @@
 <body>
     <div id="app">
         <div class="main-wrapper">
-            @include('components.header')
-            @include('components.sidebar')
+            @includeWhen(!($isWelcomePage ?? false), 'components.header')
+            @includeWhen(!($isWelcomePage ?? false), 'components.sidebar')
             @yield('main')
             @include('components.footer')
         </div>

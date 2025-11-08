@@ -222,6 +222,10 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '6',
                 'id_menu' => '19',
             ],
+            [
+                'id_level' => '6',
+                'id_menu' => '20',
+            ]
 
         ];
 

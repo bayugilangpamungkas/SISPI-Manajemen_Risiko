@@ -510,6 +510,52 @@
                 font-size: 1rem;
             }
 
+            /* Minutes Section */
+            .minutes-section {
+                padding: 120px 40px;
+                background: #f7fafc;
+            }
+
+            .minutes-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 30px;
+                margin-top: 60px;
+            }
+
+@include('components.minute-card-styles')
+
+            .minutes-empty {
+                text-align: center;
+                color: #4a5568;
+                font-size: 1rem;
+                margin-top: 40px;
+            }
+
+            .minutes-more {
+                margin-top: 40px;
+                text-align: center;
+            }
+
+            .minutes-more-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                padding: 12px 24px;
+                background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+                color: white;
+                text-decoration: none;
+                border-radius: 999px;
+                font-weight: 600;
+                box-shadow: 0 12px 30px rgba(30, 64, 175, 0.25);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            .minutes-more-link:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 16px 40px rgba(30, 64, 175, 0.3);
+            }
+
             /* CTA Section */
             .cta-section {
                 padding: 100px 40px;
@@ -657,6 +703,10 @@
                     gap: 30px;
                 }
 
+                .minutes-grid {
+                    grid-template-columns: 1fr;
+                }
+
                 .footer-content {
                     grid-template-columns: 1fr;
                     gap: 40px;
@@ -695,6 +745,18 @@
                 .stats-grid {
                     grid-template-columns: 1fr;
                 }
+
+                .minutes-section {
+                    padding: 80px 20px;
+                }
+
+                .minute-card {
+                    padding: 25px;
+                }
+
+                .minute-gallery {
+                    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+                }
             }
         </style>
     </head>
@@ -715,6 +777,7 @@
                 <ul class="nav-links">
                     <li><a href="#beranda">Beranda</a></li>
                     <li><a href="#tentang">Tentang</a></li>
+                    <li><a href="#berita-acara">Berita Acara</a></li>
                     <li><a href="#fitur">Fitur</a></li>
                 </ul>
 
@@ -831,22 +894,17 @@
                     <div class="about-image">
                         <div class="about-image-card">
                             <div class="stats-grid">
-                                <div class="stat-item">
-                                    <div class="stat-number">100+</div>
-                                    <div class="stat-label">Audit Terlaksana</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-number">50+</div>
-                                    <div class="stat-label">Unit Kerja</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-number">95%</div>
-                                    <div class="stat-label">Kepuasan Pengguna</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-number">24/7</div>
-                                    <div class="stat-label">Akses Sistem</div>
-                                </div>
+                                @forelse ($welcomeStats ?? [] as $stat)
+                                    <div class="stat-item">
+                                        <div class="stat-number">{{ $stat['display'] ?? '-' }}</div>
+                                        <div class="stat-label">{{ $stat['label'] ?? '' }}</div>
+                                    </div>
+                                @empty
+                                    <div class="stat-item">
+                                        <div class="stat-number">-</div>
+                                        <div class="stat-label">Data belum tersedia</div>
+                                    </div>
+                                @endforelse
                             </div>
                         </div>
                     </div>
@@ -929,6 +987,39 @@
             </div>
         </section>
 
+        <!-- Minutes Section -->
+        <section id="berita-acara" class="minutes-section">
+            <div class="section-container">
+                <div class="section-header">
+                    <span class="section-label">Berita Acara</span>
+                    <h2 class="section-title">Ringkasan Kegiatan Terbaru</h2>
+                    <p class="section-description">
+                        Pantau berita acara terbaru lengkap dengan dokumentasi rapat dan bukti visual.
+                    </p>
+                </div>
+
+                @if(isset($beritaAcaras) && $beritaAcaras->isNotEmpty())
+                    <div class="minutes-grid">
+                        @foreach($beritaAcaras as $minute)
+                            @include('components.minute-card', ['minute' => $minute])
+                        @endforeach
+                    </div>
+                    @if(!empty($moreMinutesExist))
+                        <div class="minutes-more">
+                            <a href="{{ route('welcome.berita-acara') }}" class="minutes-more-link">
+                                Lihat semua berita acara
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12h14M12 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                        </div>
+                    @endif
+                @else
+                    <p class="minutes-empty">Belum ada berita acara yang dapat ditampilkan.</p>
+                @endif
+            </div>
+        </section>
+
         <!-- CTA Section -->
         <section class="cta-section">
             <div class="cta-container">
@@ -968,6 +1059,7 @@
                         <ul class="footer-links">
                             <li><a href="#beranda">Beranda</a></li>
                             <li><a href="#tentang">Tentang</a></li>
+                            <li><a href="#berita-acara">Berita Acara</a></li>
                             <li><a href="#fitur">Fitur</a></li>
                         </ul>
                     </div>
@@ -998,6 +1090,8 @@
                 </div>
             </div>
         </footer>
+
+        @include('components.minute-card-script')
 
         <script>
             // Smooth scroll for navigation links

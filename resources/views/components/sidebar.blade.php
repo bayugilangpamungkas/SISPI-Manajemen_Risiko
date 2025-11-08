@@ -7,6 +7,9 @@
             <a href="#">SPI</a>
         </div>
         <ul class="sidebar-menu">
+            @php
+                $currentPanelActive = $active ?? null;
+            @endphp
             <li class="{{ Request::is('dashboard') ? 'active' : '' }}">
                 <a href="{{ $first_menu->link }}" class="nav-link">
                     <i class="{{ $first_menu->icon }}"></i>
@@ -43,11 +46,11 @@
                             @endphp
 
                             @if (in_array(auth()->user()->id_level, $level_menu))
-                                <?php
-                                $active = ltrim($menu->link, '/');
-                                ?>
+                                @php
+                                    $menuPath = ltrim($menu->link, '/');
+                                @endphp
 
-                    <li class="{{ Request::is($active) ? 'active' : '' }}">
+                    <li class="{{ Request::is($menuPath) ? 'active' : '' }}">
                         <a href="{{ $menu->link }}" class="nav-link">
                             <i class="{{ $menu->icon }}"></i>
                             <span>{{ $menu->name }}</span>
@@ -60,7 +63,7 @@
             @endforeach
 
             @foreach ($panel_menus as $menu)
-                <li class="{{ $active == $menu->id ? 'active' : '' }}">
+                <li class="{{ $currentPanelActive == $menu->id ? 'active' : '' }}">
                     <a href="{{ $menu->link }}" class="nav-link">
                         <i class="nav-icon {{ $menu->icon }}"></i>
                         <span>{{ $menu->name }}</span>

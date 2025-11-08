@@ -23,6 +23,10 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ValidasiController;
 use App\Http\Controllers\RTMController;
 use App\Http\Controllers\ImportedExcelController;
+use App\Http\Controllers\BeritaAcaraController;
+use App\Models\BeritaAcara;
+use App\Models\Post;
+use App\Models\UnitKerja;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -219,6 +223,15 @@ Route::get('dokumen/download/{id}', [DokumenController::class, 'download'])->nam
     ->middleware('auth');
 Route::delete('/dokumens/{id}',   [DokumenController::class, 'destroy'])->name('dokumens.destroy')->middleware('auth');
 
+// Route Berita Acara Minutes Management
+Route::resource('/berita-acara', BeritaAcaraController::class)->middleware(['auth', 'approved']);
+Route::delete('/berita-acara-documents/{document}', [BeritaAcaraController::class, 'destroyDocument'])
+    ->name('berita-acara.documents.destroy')
+    ->middleware(['auth', 'approved']);
+Route::delete('/berita-acara-images/{image}', [BeritaAcaraController::class, 'destroyImage'])
+    ->name('berita-acara.images.destroy')
+    ->middleware(['auth', 'approved']);
+
 
 //Route View
 Route::get('/dashboard',               [ProjectController::class, 'dashboard'])->middleware(['auth', 'approved']);
@@ -263,8 +276,61 @@ Route::get('/feedback_web', [ProjectController::class, 'feedback_web']);
 
 //template
 Route::get('/welcome', function () {
-    return view('welcome');
+    $beritaAcaras = BeritaAcara::with(['documents', 'images'])
+        ->orderByDesc('meeting_date')
+        ->orderByDesc('created_at')
+        ->take(3)
+        ->get();
+
+    $beritaAcaraCount = BeritaAcara::count();
+    $moreMinutesExist = $beritaAcaraCount > $beritaAcaras->count();
+
+    $totalAudits = Post::count();
+    $completedAudits = Post::where('status_task', 'approved')->count();
+    $unitKerjaCount = UnitKerja::count();
+
+    $completionRate = $totalAudits > 0
+        ? round(($completedAudits / $totalAudits) * 100)
+        : null;
+
+    $formatValue = static function (int $value): string {
+        if ($value >= 1000) {
+            return number_format($value);
+        }
+
+        return (string) $value;
+    };
+
+    $welcomeStats = [
+        [
+            'display' => $formatValue($totalAudits),
+            'label' => 'Total Audit',
+        ],
+        [
+            'display' => $formatValue($completedAudits),
+            'label' => 'Audit Selesai',
+        ],
+        [
+            'display' => $completionRate !== null ? $completionRate . '%' : '0%',
+            'label' => 'Tingkat Penyelesaian',
+        ],
+        [
+            'display' => $formatValue($beritaAcaraCount),
+            'label' => 'Berita Acara',
+        ],
+    ];
+
+    return view('welcome', compact('beritaAcaras', 'moreMinutesExist', 'welcomeStats'));
 });
+
+Route::get('/welcome/berita-acara', function () {
+    $minutes = BeritaAcara::with(['documents', 'images'])
+        ->orderByDesc('meeting_date')
+        ->orderByDesc('created_at')
+        ->paginate(9);
+
+    return view('welcome-berita-acara', compact('minutes'));
+})->name('welcome.berita-acara');
 
 Route::middleware(['auth'])->group(function () {
     //MR Anggota

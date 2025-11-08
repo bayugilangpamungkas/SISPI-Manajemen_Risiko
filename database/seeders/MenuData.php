@@ -88,6 +88,12 @@ class MenuData extends Seeder
                 'link' => '/template-dokumen',
                 'icon' => 'fas fa-paste',
             ],
+            [
+                'id' => 20,
+                'name' => 'Berita Acara',
+                'link' => '/berita-acara',
+                'icon' => 'fas fa-paste',
+            ],
         ];
 
         foreach ($menu as $key => $value) {

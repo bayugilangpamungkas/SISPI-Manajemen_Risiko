@@ -160,6 +160,17 @@ class UserData extends Seeder
                 'email_verified_at' => now(),
                 'is_approved' => true,
             ],
+            [
+                'name' => 'Test Super Admin',
+                'username' => 'test',
+                'password' => Hash::make('123'),
+                'nip' => '123',
+                'id_level' => 1,
+                'id_unit_kerja' => 1,
+                'email' => 'test@gmail.com',
+                'email_verified_at' => now(),
+                'is_approved' => true,
+            ],
         ];
 
         foreach($user as $key => $value){

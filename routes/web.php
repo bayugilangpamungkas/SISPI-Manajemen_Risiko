@@ -236,7 +236,6 @@ Route::delete('/berita-acara-images/{image}', [BeritaAcaraController::class, 'de
 //Route View
 Route::get('/dashboard',               [ProjectController::class, 'dashboard'])->middleware(['auth', 'approved']);
 Route::get('/template',               [ProjectController::class, 'template']);
-Route::get('/',                        [ProjectController::class, 'dashboard'])->middleware(['auth', 'approved']);
 
 //Route Search
 Route::get('/reviewLaporan/search',     [ProjectController::class, 'search'])->middleware('auth');
@@ -275,7 +274,7 @@ Route::get('/feedback', [ProjectController::class, 'feedback'])->middleware('aut
 Route::get('/feedback_web', [ProjectController::class, 'feedback_web']);
 
 //template
-Route::get('/welcome', function () {
+ $welcomePage = function () {
     $beritaAcaras = BeritaAcara::with(['documents', 'images'])
         ->orderByDesc('meeting_date')
         ->orderByDesc('created_at')
@@ -288,10 +287,6 @@ Route::get('/welcome', function () {
     $totalAudits = Post::count();
     $completedAudits = Post::where('status_task', 'approved')->count();
     $unitKerjaCount = UnitKerja::count();
-
-    $completionRate = $totalAudits > 0
-        ? round(($completedAudits / $totalAudits) * 100)
-        : null;
 
     $formatValue = static function (int $value): string {
         if ($value >= 1000) {
@@ -311,8 +306,8 @@ Route::get('/welcome', function () {
             'label' => 'Audit Selesai',
         ],
         [
-            'display' => $completionRate !== null ? $completionRate . '%' : '0%',
-            'label' => 'Tingkat Penyelesaian',
+            'display' => $formatValue($unitKerjaCount),
+            'label' => 'Unit Kerja',
         ],
         [
             'display' => $formatValue($beritaAcaraCount),
@@ -321,7 +316,10 @@ Route::get('/welcome', function () {
     ];
 
     return view('welcome', compact('beritaAcaras', 'moreMinutesExist', 'welcomeStats'));
-});
+};
+
+Route::get('/welcome', $welcomePage)->name('welcome');
+Route::get('/', $welcomePage);
 
 Route::get('/welcome/berita-acara', function () {
     $minutes = BeritaAcara::with(['documents', 'images'])

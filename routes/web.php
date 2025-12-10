@@ -23,6 +23,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ValidasiController;
 use App\Http\Controllers\RTMController;
 use App\Http\Controllers\ImportedExcelController;
+use App\Http\Controllers\WelcomeBeritaAcaraController;
 use App\Http\Controllers\BeritaAcaraController;
 use App\Models\BeritaAcara;
 use App\Models\Post;
@@ -143,42 +144,7 @@ Route::get('/rtm/export', [PostController::class, 'exportRTMToWord'])->name('rtm
 Route::get('/rtm/export-excel', [RTMController::class, 'exportExcel'])->name('rtm.export-excel')
     ->middleware('auth');
 
-//Route CRUD Peta Controller
-Route::resource('/petas', PetaController::class)->middleware(['auth', 'approved']);
-Route::post('/uploadDokumen/{id}', [PetaController::class, 'uploadDokumen'])->name('uploadDokumen')
-    ->middleware('auth');
-Route::get('/peta-risiko/detail/{jenis}', [PetaController::class, 'detailByJenis'])->name('petaRisikoDetail')
-    ->middleware('auth');
-Route::post('/upload-dokumen/{jenis}', [PetaController::class, 'uploadDokumenByJenis'])->name('uploadDokumenByJenis')
-    ->middleware('auth');
-Route::post('/updateDataByJenis/{jenis}', [PetaController::class, 'updateData'])->name('updateDataByJenis')
-    ->middleware('auth');
-Route::get('/peta-risiko/tugas/{jenis}', [PetaController::class, 'tugas'])->name('petas.tugas')
-    ->middleware('auth');
-Route::post('/peta-risiko/tambahtugas/{jenis}', [PetaController::class, 'tambahtugas'])->name('petas.tambahtugas')
-    ->middleware('auth');
-
-// Route::get('/petas/{id}/tugas', [PetaController::class, 'tugas'])->name('petas.tugas')
-//     ->middleware('auth');
-Route::get('/petas-tabel', [PetaController::class, 'tabelMatrik'])->name('petas.tabel')
-    ->middleware('auth');
-Route::get('/petas/tabel-unit-kerja/{unitKerja}', [PetaController::class, 'tabelUnitKerja'])->name('petas.tabelUnitKerja')
-    ->middleware('auth');
-// Route::post('/petas/{id}/tambahtugas', [PetaController::class, 'tambahtugas'])->name('petas.tambahtugas')
-//     ->middleware('auth');
-Route::get('/detailPR/{id}', [PetaController::class, 'detailPR'])->name('detailPR')
-    ->middleware('auth');
-// Route::get('/tampilData/{id}', [PetaController::class, 'tampilData'])->name('tampilData')
-//     ->middleware('auth');
-// Route::post('/updateData/{id}', [PetaController::class, 'updateData'])->name('updateData')
-//     ->middleware('auth');
-Route::delete('/petas/{id}',   [PetaController::class, 'destroy'])->name('destroy')->middleware('auth');
-Route::post('/petas/{id}/approve',   [PetaController::class, 'approve'])->name('petas.approve')
-    ->middleware('auth');
-Route::post('/petas/{id}/disapprove', [PetaController::class, 'disapprove'])->name('petas.disapprove')
-    ->middleware('auth');
-Route::get('/detailPR/{id}', [PetaController::class, 'detailPR'])->name('detailPR')
-    ->middleware('auth');
+Route::get('/welcome/berita-acara', WelcomeBeritaAcaraController::class)->name('welcome.berita-acara');
 Route::post('/detailPR/{id}/comment', [PetaController::class, 'postComment'])->name('postComment')
     ->middleware('auth');
 Route::post('/tambah-tugas-ketua/{jenis}', [PetaController::class, 'tambahTugasKetua'])->name('tambahTugasKetua')->middleware('auth');
@@ -321,13 +287,40 @@ Route::get('/feedback_web', [ProjectController::class, 'feedback_web']);
 Route::get('/welcome', $welcomePage)->name('welcome');
 Route::get('/', $welcomePage);
 
-Route::get('/welcome/berita-acara', function () {
-    $minutes = BeritaAcara::with(['documents', 'images'])
-        ->orderByDesc('meeting_date')
-        ->orderByDesc('created_at')
-        ->paginate(9);
+Route::get('/welcome/berita-acara', function (Request $request) {
+    $search = $request->input('search');
+    $startDate = $request->input('start_date');
+    $endDate = $request->input('end_date');
 
-    return view('welcome-berita-acara', compact('minutes'));
+    $minutesQuery = BeritaAcara::with(['documents', 'images'])
+        ->when($search, function ($query, $term) {
+            $query->where(function ($inner) use ($term) {
+                $inner->where('title', 'like', "%{$term}%")
+                    ->orWhere('summary', 'like', "%{$term}%")
+                    ->orWhere('location', 'like', "%{$term}%");
+            });
+        })
+        ->when($startDate, function ($query, $from) {
+            $query->whereDate('meeting_date', '>=', $from);
+        })
+        ->when($endDate, function ($query, $to) {
+            $query->whereDate('meeting_date', '<=', $to);
+        })
+        ->orderByDesc('meeting_date')
+        ->orderByDesc('created_at');
+
+    $minutes = $minutesQuery
+        ->paginate(9)
+        ->appends($request->query());
+
+    return view('welcome-berita-acara', [
+        'minutes' => $minutes,
+        'filters' => [
+            'search' => $search,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ],
+    ]);
 })->name('welcome.berita-acara');
 
 Route::middleware(['auth'])->group(function () {

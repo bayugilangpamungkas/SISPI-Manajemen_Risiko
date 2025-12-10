@@ -75,6 +75,40 @@
 
         <main class="welcome-berita-main py-5">
             <div class="container">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <form method="GET" action="{{ route('welcome.berita-acara') }}">
+                            <div class="form-row">
+                                <div class="form-group col-md-4 mb-3">
+                                    <label for="search">Pencarian</label>
+                                    <input id="search" type="text" name="search" class="form-control"
+                                           value="{{ $filters['search'] ?? '' }}" placeholder="Judul, ringkasan, lokasi">
+                                </div>
+                                <div class="form-group col-md-3 mb-3">
+                                    <label for="start_date">Tanggal Mulai</label>
+                                    <input id="start_date" type="date" name="start_date" class="form-control"
+                                           value="{{ $filters['start_date'] ?? '' }}">
+                                </div>
+                                <div class="form-group col-md-3 mb-3">
+                                    <label for="end_date">Tanggal Selesai</label>
+                                    <input id="end_date" type="date" name="end_date" class="form-control"
+                                           value="{{ $filters['end_date'] ?? '' }}">
+                                </div>
+                                <div class="form-group col-md-2 d-flex align-items-end mb-3">
+                                    <div class="btn-group btn-block">
+                                        <button type="submit" class="btn btn-primary btn-block">
+                                            <i class="fas fa-search mr-1"></i>Cari
+                                        </button>
+                                        <a href="{{ route('welcome.berita-acara') }}" class="btn btn-outline-secondary">
+                                            Reset
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <div class="row">
                     @forelse ($minutes as $minute)
                         <div class="col-md-6 col-lg-4 mb-4">
@@ -83,14 +117,14 @@
                     @empty
                         <div class="col-12">
                             <div class="alert alert-info" role="alert">
-                                Belum ada berita acara yang tersedia.
+                                Tidak menemukan berita acara sesuai filter yang dipilih.
                             </div>
                         </div>
                     @endforelse
                 </div>
 
                 <div class="d-flex justify-content-center">
-                    {{ $minutes->links() }}
+                    {{ $minutes->appends($filters ?? [])->links() }}
                 </div>
             </div>
         </main>

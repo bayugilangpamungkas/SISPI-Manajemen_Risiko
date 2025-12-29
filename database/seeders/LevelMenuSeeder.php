@@ -16,6 +16,10 @@ class LevelMenuSeeder extends Seeder
     public function run()
     {
         $level = [
+            // ========================================
+            // LEVEL 1: SUPER ADMIN
+            // Full Access - Semua Menu
+            // ========================================
             [
                 'id_level' => '1',
                 'id_menu' => '1',
@@ -32,10 +36,6 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '1',
                 'id_menu' => '4',
             ],
-            // [
-            //     'id_level' => '1',
-            //     'id_menu' => '5',
-            // ],
             [
                 'id_level' => '1',
                 'id_menu' => '7',
@@ -65,7 +65,11 @@ class LevelMenuSeeder extends Seeder
                 'id_menu' => '19',
             ],
 
-            // create same for level_id 2 3 4
+            // ========================================
+            // LEVEL 2: ADMIN
+            // Akses: Dashboard, User Management, Peta Risiko, 
+            // Dokumen, Unit Kerja, Manajemen Risiko
+            // ========================================
             [
                 'id_level' => '2',
                 'id_menu' => '1',
@@ -82,10 +86,6 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '2',
                 'id_menu' => '4',
             ],
-            // [
-            //     'id_level' => '2',
-            //     'id_menu' => '5',
-            // ],
             [
                 'id_level' => '2',
                 'id_menu' => '7',
@@ -107,6 +107,16 @@ class LevelMenuSeeder extends Seeder
                 'id_menu' => '19',
             ],
             [
+                'id_level' => '2',
+                'id_menu' => '21', // Menu: Manajemen Risiko
+            ],
+
+            // ========================================
+            // LEVEL 3: KETUA
+            // Akses: Dashboard, User Management, Laporan,
+            // Peta Risiko, Berita Acara
+            // ========================================
+            [
                 'id_level' => '3',
                 'id_menu' => '1',
             ],
@@ -122,10 +132,6 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '3',
                 'id_menu' => '4',
             ],
-            // [
-            //     'id_level' => '3',
-            //     'id_menu' => '5',
-            // ],
             [
                 'id_level' => '3',
                 'id_menu' => '7',
@@ -134,6 +140,12 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '3',
                 'id_menu' => '19',
             ],
+
+            // ========================================
+            // LEVEL 4: ANGGOTA
+            // Akses: Dashboard, User Management, Laporan,
+            // Peta Risiko, Berita Acara
+            // ========================================
             [
                 'id_level' => '4',
                 'id_menu' => '1',
@@ -150,10 +162,6 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '4',
                 'id_menu' => '4',
             ],
-            // [
-            //     'id_level' => '4',
-            //     'id_menu' => '5',
-            // ],
             [
                 'id_level' => '4',
                 'id_menu' => '7',
@@ -162,6 +170,12 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '4',
                 'id_menu' => '19',
             ],
+
+            // ========================================
+            // LEVEL 5: AUDITEE
+            // Akses: Dashboard, Laporan, Peta Risiko,
+            // Dokumen, Berita Acara
+            // ========================================
             [
                 'id_level' => '5',
                 'id_menu' => '1',
@@ -174,10 +188,6 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '5',
                 'id_menu' => '4',
             ],
-            // [
-            //     'id_level' => '5',
-            //     'id_menu' => '5',
-            // ],
             [
                 'id_level' => '5',
                 'id_menu' => '7',
@@ -190,6 +200,12 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '5',
                 'id_menu' => '19',
             ],
+
+            // ========================================
+            // LEVEL 6: SEKRETARIS
+            // Akses: Dashboard, User Management, Laporan,
+            // Peta Risiko, Dokumen, Template, Berita Acara
+            // ========================================
             [
                 'id_level' => '6',
                 'id_menu' => '1',
@@ -206,10 +222,6 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '6',
                 'id_menu' => '4',
             ],
-            // [
-            //     'id_level' => '6',
-            //     'id_menu' => '5',
-            // ],
             [
                 'id_level' => '6',
                 'id_menu' => '7',

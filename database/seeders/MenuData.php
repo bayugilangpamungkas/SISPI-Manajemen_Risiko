@@ -94,6 +94,13 @@ class MenuData extends Seeder
                 'link' => '/berita-acara',
                 'icon' => 'fas fa-paste',
             ],
+
+            [
+                'id' => 21,
+                'name' => 'Manajemen Risiko',
+                'link' => '/manajemen-risiko',
+                'icon' => 'fas fa-shield-halved',
+            ],
         ];
 
         foreach ($menu as $key => $value) {

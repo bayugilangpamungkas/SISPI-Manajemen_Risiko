@@ -240,7 +240,7 @@ Route::get('/feedback', [ProjectController::class, 'feedback'])->middleware('aut
 Route::get('/feedback_web', [ProjectController::class, 'feedback_web']);
 
 //template
- $welcomePage = function () {
+$welcomePage = function () {
     $beritaAcaras = BeritaAcara::with(['documents', 'images'])
         ->orderByDesc('meeting_date')
         ->orderByDesc('created_at')
@@ -366,3 +366,9 @@ Route::get('/jenis-template/search', [JenisKegiatanController::class, 'search'])
 // Route CRUD Template Dokumen
 Route::resource('/template-dokumen', TemplateDokumenController::class)->middleware('auth');
 Route::get('/template-dokumen/search', [TemplateDokumenController::class, 'search'])->middleware('auth')->name('templateDokumen.search');
+
+
+
+// Route Manajemen Risiko
+Route::get('/manajemen-risiko', [App\Http\Controllers\ManajemenRisikoController::class, 'index'])->name('manajemen-risiko.index')->middleware('auth');
+Route::get('/manajemen-risiko/detail/{jenis}', [App\Http\Controllers\ManajemenRisikoController::class, 'detailUnit'])->name('manajemen-risiko.detail')->middleware('auth');

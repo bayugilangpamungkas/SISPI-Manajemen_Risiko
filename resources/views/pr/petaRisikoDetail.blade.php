@@ -12,7 +12,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form action="{{ route('uploadDokumenByJenis', $jenis) }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('petas.uploadDokumen', $jenis) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="jenis" value="{{ $jenis }}">
                         <div class="form-group">
@@ -200,7 +200,7 @@
                                                     {{ $item->created_at->format('Y') }}
                                                 </td> --}}
                                                 <td class="text-center">
-                                                    <a href="{{ route('detailPR', ['id' => $item->id]) }}"
+                                                    <a href="{{ route('petas.detailPR', ['id' => $item->id]) }}"
                                                         class="btn fa-solid fa-list bg-success p-2 text-white"
                                                         data-toggle="tooltip" title="Detail Dokumen"></a>
                                                 </td>

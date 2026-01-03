@@ -38,63 +38,6 @@ class PetaController extends Controller
         //query to get data peta berdasarkan anggota
         $query = Peta::query();
 
-        // if ($users->id_level == 1 || $users->id_level == 2) {
-        //     // Admin: dapat melihat semua data
-        //     $showAll = true;
-
-        //     // Mengambil data jenis yang dikelompokkan berdasarkan jenis untuk admin
-        //     $jenisCount = Peta::select(
-        //         'jenis', 
-        //         DB::raw('count(*) as total'),
-        //         DB::raw("(SELECT anggota 
-        //                  FROM petas p2 
-        //                  WHERE p2.jenis = petas.jenis 
-        //                     AND p2.anggota IS NOT NULL 
-        //                     AND TRIM(p2.anggota) != ''
-        //                  ORDER BY p2.created_at ASC 
-        //                  LIMIT 1) as anggota"
-        //         )
-        //     )
-        //         ->groupBy('jenis')
-        //         ->paginate(5);
-        //     // dd($jenisCount);
-        // } else {
-        //     // Filter untuk pengguna yang mengunggah dokumen atau anggota yang ditugaskan
-        //     $query->where(function ($q) use ($users) {
-        //         $q->where('jenis', $users->unitKerja->nama_unit_kerja) // Mengambil data yang diunggah oleh pengguna
-        //             ->orWhere('anggota', 'LIKE', '%' . $users->name . '%') // Menambahkan kondisi untuk anggota yang ditugaskan
-        //             ->orWhereHas('ketuaPenelaah', function ($q2) use ($users) {
-        //                 $q2->where('id_ketua', $users->id); // Mengambil data yang ditugaskan oleh ketua
-        //             });
-        //     });
-
-        //     // Mengambil data jenis yang dikelompokkan berdasarkan jenis untuk non-admin
-        //     $jenisCount = Peta::select(
-        //         'petas.jenis',
-        //         DB::raw('count(*) as filtered_total'), // Total yang memenuhi filter
-        //         DB::raw('(SELECT COUNT(*) FROM petas as p2 WHERE p2.jenis = petas.jenis) as total'), // Total semua peta per jenis
-        //         DB::raw("(SELECT anggota 
-        //                  FROM petas p2 
-        //                  WHERE p2.jenis = petas.jenis 
-        //                     AND p2.anggota IS NOT NULL 
-        //                     AND TRIM(p2.anggota) != ''
-        //                  ORDER BY p2.created_at ASC 
-        //                  LIMIT 1) as anggota"
-        //         )
-        //     )
-        //         ->where(function ($q) use ($users) {
-        //             $q->where('jenis', $users->unitKerja->nama_unit_kerja)
-        //                 ->orWhere('anggota', 'LIKE', '%' . $users->name . '%')
-        //                 ->orWhereHas('ketuaPenelaah', function ($q2) use ($users) {
-        //                     $q2->where('id_ketua', $users->id);
-        //                 });
-        //         })
-        //         ->groupBy('jenis')
-        //         ->paginate(5);
-
-        //     $showAll = false;
-        // }
-
         if ($users->id_level == 1 || $users->id_level == 2) {
             // Admin: dapat melihat semua data
             $showAll = true;
@@ -175,17 +118,6 @@ class PetaController extends Controller
             $query->where('anggota', 'LIKE', '%' . $anggota . '%');
         }
 
-        //filter berdasarkan jenis jika ada
-        // if ($request->has('search')) {
-        //     dd($request->search);
-        //     $query->WhereYear('created_at', $request->search);
-        // }
-
-        // if ($request->has('yearKegiatan') && $request->year != '') {
-        //     $year = $request->input('yearKegiatan', date('Y'));
-        //     $query->whereYear('created_at', $year);
-        // }
-
         //get filtered petas
         $petas = $query->latest()->with('comment_prs.user')->get();
 
@@ -211,7 +143,6 @@ class PetaController extends Controller
 
         $highImpactActivities = Peta::selectRaw('kode_regist, (skor_kemungkinan * skor_dampak) as skor_total')
             ->whereYear('created_at', $selectedYear)
-            // ->whereRaw('(skor_kemungkinan * skor_dampak) >= 16') // Tinggi dan Ekstrim
             ->orderBy('skor_total', 'desc')
             ->get();
 
@@ -228,91 +159,10 @@ class PetaController extends Controller
             ]
         ];
 
-        // dd($jenisCount);
-
         return view('pr.petaRisiko', compact('active', 'petas', 'approvedCount', 'rejectedCount', 'unitKerjas', 'jenisCount', 'years', 'selectedYear', 'chartData', 'totalHighImpactActivities'))
             ->with('tugasLaporChart', $tugasLaporChart->build())
             ->with('users', $users);
     }
-
-    // public function index(Request $request, TugasLaporChart $tugasLaporChart)
-    // {
-    //     $active = 7;
-    //     $users = User::where('id', Auth::user()->id)->with('unitKerja')->first();
-
-    //     $query = Peta::query();
-
-    //     if ($users->id_level == 1 || $users->id_level == 2) {
-    //         // Admin: dapat melihat semua data
-    //         $showAll = true;
-
-    //         // Mengambil data jenis yang dikelompokkan berdasarkan jenis untuk admin
-    //         $jenisCount = Peta::select(
-    //             'jenis',
-    //             DB::raw('count(*) as total'),
-    //             DB::raw("(SELECT anggota 
-    //                  FROM petas p2 
-    //                  WHERE p2.jenis = petas.jenis 
-    //                     AND p2.anggota IS NOT NULL 
-    //                     AND TRIM(p2.anggota) != ''
-    //                  ORDER BY p2.created_at ASC 
-    //                  LIMIT 1) as anggota"),
-    //             DB::raw(
-    //                 "(SELECT penelaah_peta 
-    //                  FROM unit_kerjas 
-    //                  WHERE nama_unit_kerja = petas.jenis 
-    //                  LIMIT 1) as penelaah"
-    //             )
-    //         )
-    //             ->groupBy('jenis')
-    //             ->paginate(5);
-    //     } else {
-    //         // Filter untuk pengguna yang mengunggah dokumen atau anggota yang ditugaskan
-    //         $query->where(function ($q) use ($users) {
-    //             $q->where('jenis', $users->unitKerja->nama_unit_kerja)
-    //                 ->orWhere('anggota', 'LIKE', '%' . $users->name . '%')
-    //                 ->orWhereHas('ketuaPenelaah', function ($q2) use ($users) {
-    //                     $q2->where('id_ketua', $users->id);
-    //                 });
-    //         });
-
-    //         // Mengambil data jenis yang dikelompokkan berdasarkan jenis untuk non-admin
-    //         $jenisCount = Peta::select(
-    //             'petas.jenis',
-    //             DB::raw('count(*) as filtered_total'),
-    //             DB::raw('(SELECT COUNT(*) FROM petas as p2 WHERE p2.jenis = petas.jenis) as total'),
-    //             DB::raw("(SELECT anggota 
-    //                  FROM petas p2 
-    //                  WHERE p2.jenis = petas.jenis 
-    //                     AND p2.anggota IS NOT NULL 
-    //                     AND TRIM(p2.anggota) != ''
-    //                  ORDER BY p2.created_at ASC 
-    //                  LIMIT 1) as anggota"),
-    //             DB::raw(
-    //                 "(SELECT penelaah_peta 
-    //                  FROM unit_kerjas 
-    //                  WHERE nama_unit_kerja = petas.jenis 
-    //                  LIMIT 1) as penelaah"
-    //             )
-    //         )
-    //             ->where(function ($q) use ($users) {
-    //                 $q->where('jenis', $users->unitKerja->nama_unit_kerja)
-    //                     ->orWhere('anggota', 'LIKE', '%' . $users->name . '%')
-    //                     ->orWhereHas('ketuaPenelaah', function ($q2) use ($users) {
-    //                         $q2->where('id_ketua', $users->id);
-    //                     });
-    //             })
-    //             ->groupBy('jenis')
-    //             ->paginate(5);
-
-    //         $showAll = false;
-    //     }
-
-    //     // Rest of the code remains the same...
-    //     return view('pr.petaRisiko', compact('active', 'petas', 'approvedCount', 'rejectedCount', 'unitKerjas', 'jenisCount', 'years', 'selectedYear', 'chartData', 'totalHighImpactActivities'))
-    //         ->with('tugasLaporChart', $tugasLaporChart->build())
-    //         ->with('users', $users);
-    // }
 
     private function generateColors($count)
     {
@@ -322,27 +172,6 @@ class PetaController extends Controller
         }
         return $colors;
     }
-
-    // public function tabelUnitKerja(Request $request, $unitKerja)
-    // {
-    //     $active = 7;
-    //     $tahun = $request->input('tahun');
-    //     $petas = Peta::where('jenis', $unitKerja)
-    //         ->when($tahun, function ($query, $tahun) {
-    //             return $query->whereYear('created_at', $tahun);
-    //         })
-    //         ->get();
-    //     $matrix = [];
-    //     foreach ($petas as $peta) {
-    //         $key = 'R-' . $peta->skor_dampak . '-' . $peta->skor_kemungkinan;
-    //         if (!isset($matrix[$key])) {
-    //             $matrix[$key] = [];
-    //         }
-    //         $matrix[$key][] = $peta->kode_regist;
-    //     }
-
-    //     return view('pr.tabelUnitKerja', compact('active', 'matrix', 'unitKerja', 'tahun'));
-    // }
 
     public function tabelUnitKerja(Request $request, $unitKerja)
     {
@@ -419,89 +248,13 @@ class PetaController extends Controller
         return view('pr.tabelUnitKerja', compact('active', 'matrix', 'unitKerja', 'tahun', 'riskDistribution'));
     }
 
-
-    // public function searchPetaRisiko(Request $request)
-    // {
-    //     $active = 7;
-    //     $search = $request->input('search');
-    //     $selectedYear = $request->input('year', date('Y')); // Ambil tahun dari inputan filter atau default ke tahun saat ini
-    //     $user = Auth::user();
-
-    //     // Query default untuk judul atau tahun
-    //     $query = Peta::query();
-
-    //     // Jika input search adalah angka (kemungkinan tahun), filter berdasarkan tahun
-    //     if (is_numeric($search)) {
-    //         $query->whereYear('created_at', $search);
-    //     } else {
-    //         // Jika input bukan angka, anggap sebagai judul kegiatan
-    //         $query->where('judul', 'LIKE', '%' . $search . '%');
-    //     }
-
-    //     // Filter berdasarkan hak akses pengguna
-    //     if ($user->id_level != 1 && $user->id_level != 2) {
-    //         $query->where(function ($query) use ($user) {
-    //             $query->where('nama', $user->name)
-    //                 ->orWhere('anggota', 'LIKE', '%' . $user->name . '%');
-    //         });
-    //     }
-
-    //     // Ambil data yang sesuai dengan pencarian dan hak akses pengguna
-    //     $petas = $query->paginate(10);
-
-    //     // Hitung jumlah dokumen yang disetujui dan ditolak
-    //     $approvedCount = $query->clone()->where('approvalPr', 'approved')->count();
-    //     $rejectedCount = $query->clone()->where('approvalPr', 'rejected')->count();
-
-    //     // Hitung jumlah data berdasarkan jenis
-    //     $jenisCount = Peta::select('jenis', DB::raw('count(*) as total'))
-    //         ->where(function ($query) use ($search) {
-    //             if (is_numeric($search)) {
-    //                 $query->whereYear('created_at', $search);
-    //             } else {
-    //                 $query->where('judul', 'LIKE', '%' . $search . '%');
-    //             }
-    //         })
-    //         ->groupBy('jenis')
-    //         ->paginate(5);
-
-    //     // Ambil tahun yang tersedia
-    //     $years = Peta::selectRaw('YEAR(created_at) as year')
-    //         ->distinct()
-    //         ->orderBy('year', 'desc')
-    //         ->pluck('year');
-
-    //     // Hitung kegiatan berpengaruh tinggi berdasarkan tahun yang dipilih dari filter
-    //     $highImpactActivities = Peta::selectRaw('id, (skor_kemungkinan * skor_dampak) as skor_total')
-    //         ->whereYear('created_at', $selectedYear) // Tetap filter berdasarkan tahun yang dipilih
-    //         ->orderBy('skor_total', 'desc')
-    //         ->get();
-
-    //     $totalHighImpactActivities = $highImpactActivities->count();
-
-    //     // Siapkan data chart
-    //     $chartData = [
-    //         'labels' => $highImpactActivities->pluck('id'),
-    //         'datasets' => [
-    //             [
-    //                 'label' => 'Skor Pengaruh',
-    //                 'data' => $highImpactActivities->pluck('skor_total'),
-    //                 'backgroundColor' => $this->generateColors($totalHighImpactActivities),
-    //             ]
-    //         ]
-    //     ];
-
-    //     // dd($petas);
-
-    //     return view('pr.petaRisiko', compact('active', 'petas', 'approvedCount', 'rejectedCount', 'jenisCount', 'years', 'selectedYear', 'chartData', 'totalHighImpactActivities'));
-    // }
-
     public function searchPetaRisiko(Request $request)
     {
         $active = 7;
         $search = $request->input('search');
         $selectedYear = $request->input('year', date('Y'));
         $user = Auth::user();
+        $users = User::where('id', Auth::user()->id)->with('unitKerja')->first();
 
         $query = Peta::query();
 
@@ -551,6 +304,8 @@ class PetaController extends Controller
             ->groupBy('jenis')
             ->paginate(5);
 
+        $unitKerjas = UnitKerja::all();
+
         $years = Peta::selectRaw('YEAR(created_at) as year')
             ->distinct()
             ->orderBy('year', 'desc')
@@ -580,32 +335,14 @@ class PetaController extends Controller
             'approvedCount',
             'rejectedCount',
             'jenisCount',
+            'unitKerjas',
             'years',
             'selectedYear',
             'chartData',
-            'totalHighImpactActivities'
+            'totalHighImpactActivities',
+            'users'
         ));
     }
-
-    // public function tabelMatrik(Request $request)
-    // {
-    //     $active = 7;
-    //     $tahun = $request->input('tahun');
-    //     $petas = Peta::when($tahun, function ($query, $tahun) {
-    //         return $query->whereYear('created_at', $tahun);
-    //     })->get();
-
-    //     $matrix = [];
-    //     foreach ($petas as $peta) {
-    //         $key = 'R-' . $peta->skor_dampak . '-' . $peta->skor_kemungkinan;
-    //         if (!isset($matrix[$key])) {
-    //             $matrix[$key] = [];
-    //         }
-    //         $matrix[$key][] = $peta->kode_regist;
-    //     }
-
-    //     return view('pr.tabelPeta', compact('active', 'matrix', 'tahun'));
-    // }
 
     public function tabelMatrik(Request $request)
     {
@@ -998,301 +735,11 @@ class PetaController extends Controller
     {
         $active = 7;
         $petas = Peta::with('ketuaPenelaah')->findOrFail($id);
-        // $unit_kerja = UnitKerja::all();
-        // $comment_prs = $petas->comment_prs()->with('user')->latest()->get();
         $comment_prs_aspek = CommentPr::where('jenis', 'keuangan')->where('peta_id', $petas->id)->get();
 
         $comment_prs_analisis = CommentPr::where('jenis', 'analisis')->where('peta_id', $petas->id)->get();
         return view('pr.detailPR', compact('active', 'petas', 'comment_prs_aspek', 'comment_prs_analisis'));
     }
-
-    // public function exportExcelPR(Request $request)
-    // {
-    //     try {
-    //         $spreadsheet = new Spreadsheet();
-    //         $sheet = $spreadsheet->getActiveSheet();
-
-    //         // Header untuk jenis informasi
-    //         // $headers = [
-    //         //     'Judul Kegiatan',
-    //         //     'Pernyataan Risiko',
-    //         //     'Kategori Risiko',
-    //         //     'Uraian Dampak',
-    //         //     'Metode Pencapaian Tujuan SPIP',
-    //         //     'Skor Probabilitas',
-    //         //     'Skor Dampak',
-    //         //     'Tingkat Risiko',
-    //         // ];
-
-    //         // // Styling untuk header (Kolom A)
-    //         // $sheet->getStyle('A1:A' . count($headers))->applyFromArray([
-    //         //     'font' => [
-    //         //         'bold' => true,
-    //         //     ],
-    //         //     'alignment' => [
-    //         //         'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
-    //         //     ],
-    //         // ]);
-
-    //         // // Menulis header vertikal
-    //         // foreach ($headers as $index => $header) {
-    //         //     $sheet->setCellValue('A' . ($index + 1), $header);
-    //         // }
-
-    //         // // Ambil data dari database
-    //         // $petas = peta::all(); // Tambahkan filter sesuai kebutuhan
-    //         // $column = 'B'; // Kolom awal untuk data
-
-    //         // foreach ($petas as $peta) {
-    //         //     $data = [
-    //         // $peta->kegiatan->judul ?? '-', // Judul Kegiatan
-    //         // $peta->pernyataan ?? '-', // Pernyataan Risiko
-    //         // $peta->kategori ?? '-',  // Kategori Risiko
-    //         // $peta->uraian ?? '-',   // Uraian Dampak
-    //         // $peta->metode ?? '-', // Metode Pencapaian
-    //         // $peta->skor_kemungkinan ?? '-', // Skor Probabilitas
-    //         // $peta->skor_dampak ?? '-',      // Skor Dampak
-    //         // $peta->tingkat_risiko ?? '-',    // Level Risiko
-    //         //     ];
-
-    //         //     // Menulis data vertikal di kolom berikutnya
-    //         //     foreach ($data as $rowIndex => $value) {
-    //         //         $sheet->setCellValue($column . ($rowIndex + 1), $value);
-    //         //     }
-
-    //         //     // Pindah ke kolom berikutnya
-    //         //     $column++;
-    //         // }
-
-    //         // Set auto-width untuk kolom
-    //         // foreach (range('A', $column) as $col) {
-    //         //     $sheet->getColumnDimension($col)->setAutoSize(true);
-    //         // }
-
-    //         $sheet->setCellValue('A1', 'No');
-    //         $sheet->setCellValue('B1', 'Judul Kegiatan');
-    //         $sheet->setCellValue('C1', 'Program Kerja');
-    //         $sheet->setCellValue('D1', 'Indikator');
-    //         $sheet->setCellValue('E1', 'Kategori Risiko');
-    //         $sheet->setCellValue('F1', 'Metode Pencapaian');
-    //         $sheet->setCellValue('G1', 'Skor Probabilitas');
-    //         $sheet->setCellValue('H1', 'Skor Dampak');
-    //         $sheet->setCellValue('I1', 'Komentar Aspek Keuangan');
-    //         $sheet->setCellValue('J1', 'Komentar Analisis Risiko');
-
-
-    //         // Styling untuk header
-    //         $sheet->getStyle('A1:H1')->applyFromArray([
-    //             'font' => [
-    //                 'bold' => true,
-    //             ],
-    //             'fill' => [
-    //                 'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-    //                 'startColor' => [
-    //                     'rgb' => 'E2EFDA',
-    //                 ],
-    //             ],
-    //             'alignment' => [
-    //                 'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-    //             ],
-    //             'borders' => [
-    //                 'allBorders' => [
-    //                     'borderStyle' => Border::BORDER_THIN,
-    //                 ],
-    //             ],
-    //         ]);
-
-    //         // Baris awal untuk data
-    //         $row = 2;
-    //         $no = 1;
-
-    //         // Get data kegiatan
-    //         $petas = Peta::with(['kegiatan', 'comment_prs.user'])->get(); // Tambahkan filter sesuai kebutuhan
-
-    //         foreach ($petas as $peta) {
-    //             $sheet->setCellValue('A' . $row, $no);
-    //             $sheet->setCellValue('B' . $row, $peta->kegiatan->judul ?? '-');
-    //             $sheet->setCellValue('C' . $row, $peta->pernyataan ?? '-');
-    //             $sheet->setCellValue('D' . $row, $peta->uraian ?? '-');
-    //             $sheet->setCellValue('E' . $row, $peta->metode ?? '-');
-    //             $sheet->setCellValue('F' . $row, $peta->skor_kemungkinan ?? '-');
-    //             $sheet->setCellValue('G' . $row, $peta->skor_dampak ?? '-');
-    //             $sheet->setCellValue('H' . $row, $peta->tingkat_risiko ?? '-');
-
-    //             // Komentar Keuangan
-    //             $komentarKeuangan = $peta->komentarKeuangan->map(function ($comment_prs) {
-    //                 return $comment_prs->user->name . ': ' . $comment_prs->isi;
-    //             })->join("\n");
-    //             $sheet->setCellValue('I' . $row, $komentarKeuangan);
-
-    //             // Komentar Risiko
-    //             $komentarRisiko = $peta->komentarRisiko->map(function ($comment_prs) {
-    //                 return $comment_prs->user->name . ': ' . $comment_prs->isi;
-    //             })->join("\n");
-    //             $sheet->setCellValue('J' . $row, $komentarRisiko);
-
-    //             // Tambahkan style untuk komentar
-    //             $sheet->getStyle('I' . $row)->getAlignment()->setWrapText(true);
-    //             $sheet->getStyle('J' . $row)->getAlignment()->setWrapText(true);
-
-    //             // Tambahkan border untuk setiap baris
-    //             $sheet->getStyle('A' . $row . ':J' . $row)->applyFromArray([
-    //                 'borders' => [
-    //                     'allBorders' => [
-    //                         'borderStyle' => Border::BORDER_THIN,
-    //                     ],
-    //                 ],
-    //             ]);
-    //         }
-
-    //         $sheet->getColumnDimension('I')->setAutoSize(true);
-    //         $sheet->getColumnDimension('J')->setAutoSize(true);
-
-    //         // Set column width agar otomatis menyesuaikan konten
-    //         foreach (range('A', 'H') as $col) {
-    //             $sheet->getColumnDimension($col)->setAutoSize(true);
-    //         }
-
-    //         // Set filename
-    //         $filename = 'Peta_Risiko';
-    //         if ($request->year) {
-    //             $filename .= '_' . $request->year;
-    //         }
-    //         $filename .= '_' . date('d-m-Y') . '.xlsx';
-
-    //         // Create temporary file
-    //         $writer = new Xlsx($spreadsheet);
-    //         $temp_file = tempnam(sys_get_temp_dir(), $filename);
-    //         $writer->save($temp_file);
-
-    //         // Return response untuk download
-    //         return response()->download($temp_file, $filename, [
-    //             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    //             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-    //         ])->deleteFileAfterSend(true);
-    //     } catch (\Exception $e) {
-    //         return back()->with('error', 'Terjadi kesalahan saat mengexport data: ' . $e->getMessage());
-    //     }
-    // }
-
-    // public function exportExcelPR(Request $request)
-    // {
-    //     $spreadsheet = new Spreadsheet();
-    //     $sheet = $spreadsheet->getActiveSheet();
-
-    //     // Header
-    //     $sheet->setCellValue('A1', 'No');
-    //     $sheet->setCellValue('B1', 'Judul Kegiatan');
-    //     $sheet->setCellValue('C1', 'Program Kerja');
-    //     $sheet->setCellValue('D1', 'Indikator');
-    //     $sheet->setCellValue('E1', 'Kategori Risiko');
-    //     $sheet->setCellValue('F1', 'Metode Pencapaian');
-    //     $sheet->setCellValue('G1', 'Skor Probabilitas');
-    //     $sheet->setCellValue('H1', 'Skor Dampak');
-    //     $sheet->setCellValue('I1', 'Komentar Aspek Keuangan');
-    //     $sheet->setCellValue('J1', 'Komentar Analisis Risiko');
-
-    //     // Styling Header
-    //     $sheet->getStyle('A1:J1')->applyFromArray([
-    //         'font' => [
-    //             'bold' => true,
-    //         ],
-    //         'fill' => [
-    //             'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-    //             'startColor' => [
-    //                 'rgb' => 'E2EFDA',
-    //             ],
-    //         ],
-    //         'alignment' => [
-    //             'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-    //         ],
-    //         'borders' => [
-    //             'allBorders' => [
-    //                 'borderStyle' => Border::BORDER_THIN,
-    //             ],
-    //         ],
-    //     ]);
-
-    //     // Baris awal untuk data
-    //     $row = 2;
-    //     $no = 1;
-
-    //     // Get data kegiatan dengan eager loading
-    //     $petas = Peta::with([
-    //         'kegiatan',
-    //         'komentarKeuangan.user',
-    //         'komentarRisiko.user'
-    //     ])->get();
-
-    //     // Loop data kegiatan
-    //     foreach ($petas as $peta) {
-    //         $sheet->setCellValue('A' . $row, $no);
-    //         $sheet->setCellValue('B' . $row, $peta->kegiatan->judul ?? '-');
-    //         $sheet->setCellValue('C' . $row, $peta->pernyataan ?? '-');
-    //         $sheet->setCellValue('D' . $row, $peta->uraian ?? '-');
-    //         $sheet->setCellValue('E' . $row, $peta->metode ?? '-');
-    //         $sheet->setCellValue('F' . $row, $peta->skor_kemungkinan ?? '-');
-    //         $sheet->setCellValue('G' . $row, $peta->skor_dampak ?? '-');
-    //         $sheet->setCellValue('H' . $row, $peta->tingkat_risiko ?? '-');
-
-    //         // Komentar Keuangan
-    //         $komentarKeuangan = $peta->komentarKeuangan->map(function ($komentar) {
-    //             return $komentar->user->name . ': ' . $komentar->comment;
-    //         })->join("\n");
-    //         $sheet->setCellValue('I' . $row, $komentarKeuangan);
-
-    //         // Komentar Risiko
-    //         $komentarRisiko = $peta->komentarRisiko->map(function ($komentar) {
-    //             return $komentar->user->name . ': ' . $komentar->comment;
-    //         })->join("\n");
-    //         $sheet->setCellValue('J' . $row, $komentarRisiko);
-
-    //         // Tambahkan style untuk komentar
-    //         $sheet->getStyle('I' . $row)->getAlignment()->setWrapText(true);
-    //         $sheet->getStyle('J' . $row)->getAlignment()->setWrapText(true);
-
-    //         // Tambahkan border untuk setiap baris
-    //         $sheet->getStyle('A' . $row . ':J' . $row)->applyFromArray([
-    //             'borders' => [
-    //                 'allBorders' => [
-    //                     'borderStyle' => Border::BORDER_THIN,
-    //                 ],
-    //             ],
-    //         ]);
-
-    //         $row++; // Baris berikutnya
-    //         $no++;  // Nomor urut
-    //     }
-
-    //     $sheet->getStyle('A2:J' . $row)->applyFromArray([
-    //         'alignment' => [
-    //             'vertical' => Alignment::VERTICAL_TOP,
-    //         ],
-    //     ]);
-
-    //     // Atur lebar kolom otomatis
-    //     foreach (range('A', 'J') as $col) {
-    //         $sheet->getColumnDimension($col)->setAutoSize(true);
-    //     }
-
-    //     // Set filename
-    //     $filename = 'Peta_Risiko';
-    //     if ($request->year) {
-    //         $filename .= '_' . $request->year;
-    //     }
-    //     $filename .= '_' . date('d-m-Y') . '.xlsx';
-
-    //     // Simpan file sementara
-    //     $writer = new Xlsx($spreadsheet);
-    //     $temp_file = tempnam(sys_get_temp_dir(), $filename);
-    //     $writer->save($temp_file);
-
-    //     // Return response untuk download
-    //     return response()->download($temp_file, $filename, [
-    //         'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    //         'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-    //     ])->deleteFileAfterSend(true);
-    // }
 
     public function exportExcelPR(Request $request)
     {
@@ -1430,7 +877,6 @@ class PetaController extends Controller
 
         // Buat query dasar dengan join ke tabel kegiatan
         $query = Peta::query()
-            // ->join('kegiatans', 'petas.id_kegiatan', '=', 'kegiatans.id')
             ->with('comment_prs')
             ->with('ketuaPenelaah')
             ->where('jenis', $jenis);
@@ -1654,29 +1100,6 @@ class PetaController extends Controller
 
         return redirect()->back()->with('success', 'Komentar berhasil disimpan.');
     }
-
-    // public function import(Request $request)
-    // {
-    //     $request->validate([
-    //         'file' => 'required|mimes:xlsx,xls'
-    //     ]);
-
-    //     try {
-    //         Excel::import(new PetaRisikoImport, $request->file('file'));
-
-    //         if (session()->has('import_details')) {
-    //             $details = session('import_details');
-    //             return redirect()->back()
-    //                 ->with('success', $details['success'])
-    //                 ->with('warning', $details['warning'])
-    //                 ->with('skipped_details', $details['skipped_details']);
-    //         }
-
-    //         return redirect()->back()->with('success', 'Semua data berhasil diimport!');
-    //     } catch (\Exception $e) {
-    //         return redirect()->back()->with('error', $e->getMessage());
-    //     }
-    // }
 
     public function import(Request $request)
     {

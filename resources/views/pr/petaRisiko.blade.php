@@ -120,7 +120,8 @@
                                             <a href="{{ route('imported-excel.index') }}" class="btn btn-success mb-1">
                                                 <i class="fas fa-file-excel"></i> Import Excel
                                             </a>
-                                            <a href="{{ route('peta.penelaah') }}" class="btn btn-md btn-outline-primary mb-1">
+                                            <a href="{{ route('peta.penelaah') }}"
+                                                class="btn btn-md btn-outline-primary mb-1">
                                                 Tambah Penelaah
                                             </a>
                                             <a href="{{ route('peta.export-excel') }}" class="btn btn-success mb-1">
@@ -148,7 +149,7 @@
                                                 <td class="text-center">
                                                     {{ $no++ }}
                                                 </td>
-                                                <td>
+                                                <td class="text-center">
                                                     {{ $item->jenis }}
                                                 </td>
                                                 <td class="text-center">

@@ -145,19 +145,94 @@ Route::get('/rtm/export-excel', [RTMController::class, 'exportExcel'])->name('rt
     ->middleware('auth');
 
 Route::get('/welcome/berita-acara', WelcomeBeritaAcaraController::class)->name('welcome.berita-acara');
-Route::post('/detailPR/{id}/comment', [PetaController::class, 'postComment'])->name('postComment')
-    ->middleware('auth');
-Route::post('/tambah-tugas-ketua/{jenis}', [PetaController::class, 'tambahTugasKetua'])->name('tambahTugasKetua')->middleware('auth');
-Route::get('/tambah-anggota/{jenis}', [PetaController::class, 'tambahAnggota'])->name('tambahAnggota')->middleware('auth');
-Route::post('/store-anggota/{jenis}', [PetaController::class, 'storeAnggota'])->name('storeAnggota')->middleware('auth');
-Route::get('/peta/export-excel', [PetaController::class, 'exportExcelPR'])->name('peta.export-excel')
-    ->middleware('auth');
-Route::get('/peta/export-excel/jenis', [PetaController::class, 'exportExcelPRJenis'])->name('peta.export-excel-jenis')
-    ->middleware('auth');
-Route::post('/peta/import', [PetaController::class, 'import'])->name('peta.import')->middleware('auth');
-Route::get('/peta/penelaah', [PetaController::class, 'penelaahPeta'])->name('peta.penelaah')->middleware('auth');
-Route::put('/peta/penelaah', [PetaController::class, 'updatePenelaahPeta'])->name('peta.update-penelaah');
-Route::resource('/imported-excel', ImportedExcelController::class)->middleware('auth');
+
+/*
+|--------------------------------------------------------------------------
+| PETA RISIKO ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->group(function () {
+    /* ======================
+     |  Peta Risiko - View
+     ====================== */
+    Route::get('/petas/search', [PetaController::class, 'searchPetaRisiko'])
+        ->name('petaRisiko.search');
+
+    Route::get('/petas/tabel', [PetaController::class, 'tabelMatrik'])
+        ->name('petas.tabel');
+
+    Route::get('/petas/tabel/{unitKerja}', [PetaController::class, 'tabelUnitKerja'])
+        ->name('petas.tabelUnitKerja');
+
+    Route::get('/petas/detail/{jenis}', [PetaController::class, 'detailByJenis'])
+        ->name('petaRisikoDetail');
+
+    Route::get('/petas/{id}/detail', [PetaController::class, 'detailPR'])
+        ->name('petas.detailPR');
+    /* ======================
+     |  Peta Risiko - Tugas & Anggota
+     ====================== */
+    Route::get('/petas/tugas/{jenis}', [PetaController::class, 'tugas'])
+        ->name('petas.tugas');
+
+    Route::post('/petas/tambahtugas/{jenis}', [PetaController::class, 'tambahtugas'])
+        ->name('petas.tambahtugas');
+
+    Route::post('/tambah-tugas-ketua/{jenis}', [PetaController::class, 'tambahTugasKetua'])
+        ->name('tambahTugasKetua');
+
+    Route::get('/tambah-anggota/{jenis}', [PetaController::class, 'tambahAnggota'])
+        ->name('tambahAnggota');
+
+    Route::post('/store-anggota/{jenis}', [PetaController::class, 'storeAnggota'])
+        ->name('storeAnggota');
+    /* ======================
+     |  Peta Risiko - Dokumen & Update
+     ====================== */
+    Route::post('/petas/upload/{jenis}', [PetaController::class, 'uploadDokumenByJenis'])
+        ->name('petas.uploadDokumen');
+
+    Route::patch('/petas/update-data/{jenis}', [PetaController::class, 'updateData'])
+        ->name('petas.updateData');
+    /* ======================
+     |  Approval & Comment
+     ====================== */
+    Route::post('/petas/{id}/approve', [PetaController::class, 'approve'])
+        ->name('petas.approve');
+
+    Route::post('/petas/{id}/disapprove', [PetaController::class, 'disapprove'])
+        ->name('petas.disapprove');
+
+    Route::post('/detailPR/{id}/comment', [PetaController::class, 'postComment'])
+        ->name('postComment');
+    /* ======================
+     |  Export, Import, Penelaah
+     ====================== */
+    Route::get('/peta/export-excel', [PetaController::class, 'exportExcelPR'])
+        ->name('peta.export-excel');
+    Route::get('/peta/export-excel/jenis', [PetaController::class, 'exportExcelPRJenis'])
+        ->name('peta.export-excel-jenis');
+    Route::post('/peta/import', [PetaController::class, 'import'])
+        ->name('peta.import');
+    Route::get('/peta/penelaah', [PetaController::class, 'penelaahPeta'])
+        ->name('peta.penelaah');
+    Route::put('/peta/penelaah', [PetaController::class, 'updatePenelaahPeta'])
+        ->name('peta.update-penelaah');
+    /* ======================
+     |  Resource
+     ====================== */
+    Route::resource('/petas', PetaController::class);
+    Route::resource('/imported-excel', ImportedExcelController::class);
+});
+
+/*
+|--------------------------------------------------------------------------
+| WELCOME / PUBLIC
+|--------------------------------------------------------------------------
+*/
+Route::get('/welcome/berita-acara', WelcomeBeritaAcaraController::class)
+    ->name('welcome.berita-acara');
+
 
 
 //Route CRUD User
@@ -371,4 +446,7 @@ Route::get('/template-dokumen/search', [TemplateDokumenController::class, 'searc
 
 // Route Manajemen Risiko
 Route::get('/manajemen-risiko', [App\Http\Controllers\ManajemenRisikoController::class, 'index'])->name('manajemen-risiko.index')->middleware('auth');
-Route::get('/manajemen-risiko/detail/{jenis}', [App\Http\Controllers\ManajemenRisikoController::class, 'detailUnit'])->name('manajemen-risiko.detail')->middleware('auth');
+Route::get('/manajemen-risiko/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'show'])->name('manajemen-risiko.show')->middleware('auth');
+Route::post('/manajemen-risiko/{id}/comment', [App\Http\Controllers\ManajemenRisikoController::class, 'comment'])->name('manajemen-risiko.comment')->middleware('auth');
+Route::put('/manajemen-risiko/{id}/update-status', [App\Http\Controllers\ManajemenRisikoController::class, 'updateStatus'])->name('manajemen-risiko.update-status')->middleware('auth');
+Route::get('/manajemen-risiko/export/excel', [App\Http\Controllers\ManajemenRisikoController::class, 'export'])->name('manajemen-risiko.export')->middleware('auth');

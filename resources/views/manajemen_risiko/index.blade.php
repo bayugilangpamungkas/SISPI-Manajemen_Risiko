@@ -175,14 +175,14 @@
                                         <thead class="thead-light">
                                             <tr class="text-center">
                                                 <th scope="col" width="3%">No</th>
-                                                <th scope="col" width="15%">Unit</th>
-                                                <th scope="col" width="10%">Kategori</th>
-                                                <th scope="col" width="20%">Judul</th>
-                                                <th scope="col" width="7%">Skor</th>
+                                                <th scope="col" width="12%">Unit</th>
+                                                <th scope="col" width="15%">Kegiatan</th>
+                                                <th scope="col" width="8%">Kategori</th>
+                                                <th scope="col" width="15%">Judul</th>
+                                                <th scope="col" width="6%">Skor</th>
                                                 <th scope="col" width="10%">Tingkat Risiko</th>
                                                 <th scope="col" width="8%">Status</th>
-                                                {{-- <th scope="col" width="10%">Komentar</th> --}}
-                                                <th scope="col" width="12%">Aksi</th>
+                                                <th scope="col" width="10%">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -212,12 +212,26 @@
                                                         <strong>{{ $peta->jenis }}</strong><br>
                                                         <small class="text-muted">{{ $peta->kode_regist }}</small>
                                                     </td>
+                                                    <td>
+                                                        @if ($peta->kegiatan)
+                                                            <span class="badge badge-primary badge-pill"
+                                                                data-toggle="tooltip"
+                                                                title="{{ $peta->kegiatan->judul }}">
+                                                                {{ Str::limit($peta->kegiatan->judul, 35) }}
+                                                            </span>
+                                                        @else
+                                                            <span class="text-muted text-center d-block">
+                                                                <small><i class="fas fa-minus-circle"></i> Tidak
+                                                                    ada</small>
+                                                            </span>
+                                                        @endif
+                                                    </td>
                                                     <td class="text-center">
                                                         <span class="badge badge-secondary">{{ $peta->kategori }}</span>
                                                     </td>
                                                     <td>
-                                                        {{ Str::limit($peta->judul, 60) }}
-                                                        @if ($peta->judul && strlen($peta->judul) > 60)
+                                                        {{ Str::limit($peta->judul, 50) }}
+                                                        @if ($peta->judul && strlen($peta->judul) > 50)
                                                             <i class="fas fa-info-circle text-info" data-toggle="tooltip"
                                                                 title="{{ $peta->judul }}"></i>
                                                         @endif
@@ -243,17 +257,6 @@
                                                             </span>
                                                         @endif
                                                     </td>
-                                                    {{-- <td class="text-center">
-                                                        <button class="btn btn-sm btn-info" data-toggle="modal"
-                                                            data-target="#commentModal{{ $peta->id }}"
-                                                            title="Komentar">
-                                                            <i class="fas fa-comment"></i>
-                                                            @if ($peta->comment_prs->count() > 0)
-                                                                <span
-                                                                    class="badge badge-light">{{ $peta->comment_prs->count() }}</span>
-                                                            @endif
-                                                        </button>
-                                                    </td> --}}
                                                     <td class="text-center">
                                                         <a href="{{ route('manajemen-risiko.show', $peta->id) }}"
                                                             class="btn btn-sm btn-primary" title="Detail">
@@ -277,87 +280,6 @@
                                                         @endif
                                                     </td>
                                                 </tr>
-
-                                                {{-- Comment Modal --}}
-                                                <div class="modal fade" id="commentModal{{ $peta->id }}"
-                                                    tabindex="-1" role="dialog"
-                                                    aria-labelledby="commentModalLabel{{ $peta->id }}"
-                                                    aria-hidden="true" data-backdrop="true" data-keyboard="true">
-                                                    <div class="modal-dialog modal-lg" role="document">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title"
-                                                                    id="commentModalLabel{{ $peta->id }}">
-                                                                    <i class="fas fa-comments"></i> Komentar & Catatan
-                                                                </h5>
-                                                                <button type="button" class="close"
-                                                                    data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                @if ($peta->comment_prs->count() > 0)
-                                                                    <div class="mb-3">
-                                                                        <h6 class="font-weight-bold">Komentar Sebelumnya:
-                                                                        </h6>
-                                                                        @foreach ($peta->comment_prs as $comment)
-                                                                            <div class="alert alert-light border mb-2">
-                                                                                <div
-                                                                                    class="d-flex justify-content-between mb-2">
-                                                                                    <strong>{{ $comment->user->name ?? 'Unknown' }}</strong>
-                                                                                    <small class="text-muted">
-                                                                                        {{ $comment->created_at->diffForHumans() }}
-                                                                                    </small>
-                                                                                </div>
-                                                                                <span
-                                                                                    class="badge badge-info mb-2">{{ ucfirst($comment->jenis) }}</span>
-                                                                                <p class="mb-0">{{ $comment->comment }}
-                                                                                </p>
-                                                                            </div>
-                                                                        @endforeach
-                                                                    </div>
-                                                                    <hr>
-                                                                @endif
-
-                                                                <h6 class="font-weight-bold mb-3">Tambah Komentar Baru</h6>
-                                                                <form
-                                                                    action="{{ route('manajemen-risiko.comment', $peta->id) }}"
-                                                                    method="POST">
-                                                                    @csrf
-                                                                    <div class="form-group">
-                                                                        <label class="font-weight-bold">JENIS
-                                                                            KOMENTAR</label>
-                                                                        <select name="jenis" class="form-control"
-                                                                            required>
-                                                                            <option value="">-- Pilih Jenis --
-                                                                            </option>
-                                                                            <option value="keuangan">Aspek Keuangan
-                                                                            </option>
-                                                                            <option value="analisis">Analisis Risiko
-                                                                            </option>
-                                                                            <option value="mitigasi">Strategi Mitigasi
-                                                                            </option>
-                                                                        </select>
-                                                                    </div>
-                                                                    <div class="form-group">
-                                                                        <label class="font-weight-bold">KOMENTAR</label>
-                                                                        <textarea name="comment" class="form-control" rows="4" placeholder="Masukkan komentar..." required></textarea>
-                                                                    </div>
-                                                                    <div class="form-group mb-0">
-                                                                        <button type="submit" class="btn btn-primary">
-                                                                            <i class="fas fa-paper-plane"></i> Kirim
-                                                                            Komentar
-                                                                        </button>
-                                                                        <button type="button" class="btn btn-secondary"
-                                                                            data-dismiss="modal">
-                                                                            <i class="fas fa-times"></i> Tutup
-                                                                        </button>
-                                                                    </div>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             @empty
                                                 <tr>
                                                     <td colspan="9" class="text-center">

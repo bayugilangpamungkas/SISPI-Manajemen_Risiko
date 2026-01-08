@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreign('id_level')->references('id')->on('levels')->onDelete('cascade');
             $table->unsignedBigInteger('id_menu');
             $table->foreign('id_menu')->references('id')->on('menus')->onDelete('cascade');
+            
 
             $table->timestamps();
         });

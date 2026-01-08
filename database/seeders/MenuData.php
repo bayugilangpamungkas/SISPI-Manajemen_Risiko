@@ -98,13 +98,69 @@ class MenuData extends Seeder
             [
                 'id' => 21,
                 'name' => 'Manajemen Risiko',
-                'link' => '/manajemen-risiko',
+                'link' => '#', // parent biasanya #
                 'icon' => 'fas fa-shield-halved',
+                'children' => [
+                    [
+                        'id' => 22,
+                        'name' => 'Daftar Risiko',
+                        'link' => '/manajemen-risiko',
+                        'icon' => 'fas fa-search',
+                    ],
+                    [
+                        'id' => 23,
+                        'name' => '',
+                        'link' => '/manajemen-risiko/generate_report',
+                        'icon' => 'fas fa-chart-line',
+                    ],
+
+                ],
             ],
+            // [
+            //     'id' => 22,
+            //     'name' => 'Je',
+            //     'link' => '/jenis-template',
+            //     'icon' => 'fas fa-paste',
+            // ],
+
         ];
 
-        foreach ($menu as $key => $value) {
-            Menu::create($value);
+        // foreach ($menu as $key => $value) {
+        //     Menu::create($value);
+        // }
+
+        foreach ($menu as $key) {
+            $parentData = [
+                'name' => $key['name'],
+                'link' => $key['link'],
+                'icon' => $key['icon'],
+                'parent_id' => null,
+            ];
+
+            // Add id if it exists in the menu definition
+            if (isset($key['id'])) {
+                $parentData['id'] = $key['id'];
+            }
+
+            $parent = Menu::create($parentData);
+
+            if (isset($key['children'])) {
+                foreach ($key['children'] as $child) {
+                    $childData = [
+                        'name' => $child['name'],
+                        'link' => $child['link'],
+                        'icon' => $child['icon'],
+                        'parent_id' => $parent->id,
+                    ];
+
+                    // Add id if it exists in the child definition
+                    if (isset($child['id'])) {
+                        $childData['id'] = $child['id'];
+                    }
+
+                    Menu::create($childData);
+                }
+            }
         }
     }
 }

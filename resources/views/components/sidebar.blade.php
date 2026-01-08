@@ -63,12 +63,52 @@
             @endforeach
 
             @foreach ($panel_menus as $menu)
-                <li class="{{ $currentPanelActive == $menu->id ? 'active' : '' }}">
-                    <a href="{{ $menu->link }}" class="nav-link">
-                        <i class="nav-icon {{ $menu->icon }}"></i>
-                        <span>{{ $menu->name }}</span>
-                    </a>
-                </li>
+                @php
+                    $has_children = $menu->children->count() > 0;
+                    $accessible_children = [];
+
+                    // Check if user has access to any children
+                    if ($has_children) {
+                        foreach ($menu->children as $child) {
+                            $child_level_menu = $child->Level_menu->pluck('id_level')->toArray();
+                            if (in_array(auth()->user()->id_level, $child_level_menu)) {
+                                $accessible_children[] = $child;
+                            }
+                        }
+                    }
+                    $menuPath = ltrim($menu->link, '/');
+                @endphp
+
+                @if ($has_children && count($accessible_children) > 0)
+                    {{-- Menu with dropdown/children --}}
+                    <li class="dropdown">
+                        <a href="#" class="nav-link has-dropdown">
+                            <i class="{{ $menu->icon }}"></i>
+                            <span>{{ $menu->name }}</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            @foreach ($accessible_children as $child)
+                                @php
+                                    $childPath = ltrim($child->link, '/');
+                                @endphp
+                                <li class="{{ Request::is($childPath) ? 'active' : '' }}">
+                                    <a href="{{ $child->link }}" class="nav-link">
+                                        <i class="{{ $child->icon }}"></i>
+                                        <span>{{ $child->name }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
+                @else
+                    {{-- Regular menu without children --}}
+                    <li class="{{ Request::is($menuPath) || $currentPanelActive == $menu->id ? 'active' : '' }}">
+                        <a href="{{ $menu->link }}" class="nav-link">
+                            <i class="{{ $menu->icon }}"></i>
+                            <span>{{ $menu->name }}</span>
+                        </a>
+                    </li>
+                @endif
             @endforeach
 
             <li>

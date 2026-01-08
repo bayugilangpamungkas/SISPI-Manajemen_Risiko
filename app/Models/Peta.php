@@ -40,6 +40,9 @@ class Peta extends Model
         'waktu_telaah_subtansi',
         'waktu_telaah_teknis',
         'waktu_telaah_spi',
+        'auditor_id',
+        'laporan_unit',
+        'laporan_spi',
     ];
 
     public function getApprovalStatusAttribute()
@@ -87,5 +90,10 @@ class Peta extends Model
     public function kegiatan()
     {
         return $this->belongsTo(Kegiatan::class, 'id_kegiatan', 'id');
+    }
+
+    public function auditor()
+    {
+        return $this->belongsTo(User::class, 'auditor_id', 'id');
     }
 }

@@ -140,6 +140,10 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '3',
                 'id_menu' => '19',
             ],
+            [
+                'id_level' => '3',
+                'id_menu' => '21', // Menu: Manajemen Risiko
+            ],
 
             // ========================================
             // LEVEL 4: ANGGOTA
@@ -170,6 +174,10 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '4',
                 'id_menu' => '19',
             ],
+            [
+                'id_level' => '4',
+                'id_menu' => '21', // Menu: Manajemen Risiko
+            ],
 
             // ========================================
             // LEVEL 5: AUDITEE
@@ -199,6 +207,10 @@ class LevelMenuSeeder extends Seeder
             [
                 'id_level' => '5',
                 'id_menu' => '19',
+            ],
+            [
+                'id_level' => '5',
+                'id_menu' => '21', // Menu: Manajemen Risiko
             ],
 
             // ========================================
@@ -237,7 +249,11 @@ class LevelMenuSeeder extends Seeder
             [
                 'id_level' => '6',
                 'id_menu' => '20',
-            ]
+            ],
+            [
+                'id_level' => '6',
+                'id_menu' => '21', // Menu: Manajemen Risiko
+            ],
 
         ];
 

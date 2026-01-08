@@ -2,20 +2,74 @@
 @section('title', 'Detail Risiko')
 
 @section('main')
+    @php
+        $user = Auth::user();
+        $isAuditor = in_array($user->Level->name ?? '', ['Ketua', 'Anggota', 'Sekretaris']);
+        $isAdmin = in_array($user->Level->name ?? '', ['Super Admin', 'Admin']);
+        $isAuditee = !$isAdmin && !$isAuditor; // Role Auditee (Unit Kerja)
+    @endphp
+
     <div class="main-content">
         <section class="section">
             <div class="section-header d-flex align-items-center">
-                <a href="{{ route('manajemen-risiko.index') }}" class="mr-3">
+                <a href="{{ $isAuditee ? route('manajemen-risiko.auditee.index') : ($isAuditor ? route('manajemen-risiko.auditor.index') : route('manajemen-risiko.index')) }}"
+                    class="mr-3">
                     <i class="fas fa-arrow-left" style="font-size: 1.3rem"></i>
                 </a>
-                <h1>Detail Risiko</h1>
+                <h1></h1>
+                @if ($isAuditor)
+                    Detail Review Risiko
+                @elseif($isAuditee)
+                    Detail Risiko
+                @else
+                    Detail Risiko
+                @endif
+                </h1>
+                {{-- Badge Clustering Result --}}
+                @php
+                    $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
+                    if ($skorTotal >= 20) {
+                        $clusterBadgeClass = 'badge-danger';
+                        $clusterText = 'HIGH RISK';
+                        $clusterIcon = 'fa-exclamation-triangle';
+                    } elseif ($skorTotal >= 15) {
+                        $clusterBadgeClass = 'badge-warning';
+                        $clusterText = 'MODERATE RISK';
+                        $clusterIcon = 'fa-exclamation-circle';
+                    } else {
+                        $clusterBadgeClass = 'badge-success';
+                        $clusterText = 'LOW RISK';
+                        $clusterIcon = 'fa-check-circle';
+                    }
+                @endphp
+                <span class="badge {{ $clusterBadgeClass }} ml-3" style="font-size: 16px; padding: 10px 20px;">
+                    <i class="fas {{ $clusterIcon }}"></i> {{ $clusterText }}
+                </span>
             </div>
+
+            {{-- Info Alert for Auditee --}}
+            @if ($isAuditee && empty($peta->pernyataan))
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <h5><i class="fas fa-info-circle"></i> <strong>Data Risiko dari Upload Excel</strong></h5>
+                    <p class="mb-2">Risiko ini telah di-<strong>clustering otomatis</strong> dari file Excel yang Anda
+                        upload dengan hasil: <span class="badge {{ $clusterBadgeClass }}">{{ $clusterText }}</span></p>
+                    <hr>
+                    <p class="mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        <strong>Silakan lengkapi data monitoring</strong> (Pernyataan Risiko, Uraian Dampak, Metode
+                        Pengendalian) sebelum submit ke Auditor.
+                    </p>
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
 
             <div class="section-body">
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <i class="fas fa-check-circle"></i> {{ session('success') }}
+                        <button type="button" class="close" data-dismiss="alert">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
@@ -25,8 +79,9 @@
                     <div class="col-md-8">
                         {{-- Informasi Risiko --}}
                         <div class="card border-0 shadow rounded">
-                            <div class="card-header">
-                                <h4><i class="fas fa-info-circle"></i> Informasi Risiko</h4>
+                            <div
+                                class="card-header {{ $isAuditor ? 'bg-primary' : ($isAuditee ? 'bg-success' : 'bg-info') }} text-white">
+                                <h4 class="text-white"><i class="fas fa-info-circle"></i> Informasi Risiko</h4>
                             </div>
                             <div class="card-body">
                                 <table class="table table-bordered">
@@ -40,36 +95,68 @@
                                     </tr>
                                     <tr>
                                         <th>Judul Risiko</th>
-                                        <td>{{ $peta->judul }}</td>
+                                        <td><strong>{{ $peta->judul }}</strong></td>
                                     </tr>
                                     <tr>
                                         <th>Kategori</th>
                                         <td><span class="badge badge-secondary">{{ $peta->kategori }}</span></td>
                                     </tr>
+                                    @if ($peta->kegiatan)
+                                        <tr>
+                                            <th>Kegiatan Terkait</th>
+                                            <td><strong>{{ $peta->kegiatan->judul }}</strong></td>
+                                        </tr>
+                                    @endif
                                     <tr>
                                         <th>Anggaran</th>
                                         <td>Rp {{ number_format($peta->anggaran, 0, ',', '.') }}</td>
                                     </tr>
                                     <tr>
                                         <th>Pernyataan Risiko</th>
-                                        <td>{{ $peta->pernyataan }}</td>
+                                        <td>{{ $peta->pernyataan ?: '-' }}</td>
                                     </tr>
                                     <tr>
                                         <th>Uraian Dampak</th>
-                                        <td>{{ $peta->uraian }}</td>
+                                        <td>{{ $peta->uraian ?: '-' }}</td>
                                     </tr>
                                     <tr>
                                         <th>Metode Pengendalian</th>
-                                        <td>{{ $peta->metode }}</td>
+                                        <td>{{ $peta->metode ?: '-' }}</td>
                                     </tr>
                                 </table>
+
+                                {{-- Action buttons for Auditee --}}
+                                @if ($isAuditee)
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        @if ($peta->koreksiPr == 'rejected' || empty($peta->pernyataan))
+                                            <a href="{{ route('manajemen-risiko.auditee.edit', $peta->id) }}"
+                                                class="btn btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                                {{ empty($peta->pernyataan) ? 'Isi Data Monitoring' : 'Perbaiki Data' }}
+                                            </a>
+                                        @endif
+
+                                        @if (!empty($peta->pernyataan) && !$peta->status_telaah && $peta->koreksiPr != 'submitted')
+                                            <form action="{{ route('manajemen-risiko.auditee.submit', $peta->id) }}"
+                                                method="POST" style="display: inline;"
+                                                onsubmit="return confirm('Submit data risiko ini ke Auditor untuk direview?')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-info">
+                                                    <i class="fas fa-paper-plane"></i> Submit ke Auditor
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
-                        {{-- Komentar --}}
+                        {{-- Komentar & Review --}}
                         <div class="card border-0 shadow rounded">
                             <div class="card-header">
-                                <h4><i class="fas fa-comments"></i> Komentar & Catatan</h4>
+                                <h4><i class="fas fa-comments"></i>
+                                    {{ $isAuditor ? 'Riwayat Review & Komentar' : 'Komentar & Catatan' }}</h4>
                             </div>
                             <div class="card-body">
                                 @if ($peta->comment_prs->count() > 0)
@@ -103,7 +190,8 @@
 
                                 <hr>
 
-                                <h6 class="font-weight-bold mb-3">Tambah Komentar Baru</h6>
+                                <h6 class="font-weight-bold mb-3">
+                                    {{ $isAuditor ? 'Tambah Komentar Review' : 'Tambah Komentar Baru' }}</h6>
                                 <form action="{{ route('manajemen-risiko.comment', $peta->id) }}" method="POST">
                                     @csrf
                                     <div class="form-group">
@@ -117,7 +205,8 @@
                                     </div>
                                     <div class="form-group">
                                         <label class="font-weight-bold">KOMENTAR</label>
-                                        <textarea name="comment" class="form-control" rows="4" placeholder="Masukkan komentar Anda..." required></textarea>
+                                        <textarea name="comment" class="form-control" rows="4"
+                                            placeholder="{{ $isAuditor ? 'Masukkan komentar review Anda...' : 'Masukkan komentar Anda...' }}" required></textarea>
                                     </div>
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-paper-plane"></i> Kirim Komentar
@@ -130,7 +219,8 @@
                     <div class="col-md-4">
                         {{-- Skor Risiko --}}
                         <div class="card border-0 shadow rounded">
-                            <div class="card-header bg-primary text-white">
+                            <div
+                                class="card-header {{ $isAuditor ? 'bg-danger' : ($isAuditee ? 'bg-info' : 'bg-primary') }} text-white">
                                 <h4 class="text-white"><i class="fas fa-chart-bar"></i> Skor Risiko</h4>
                             </div>
                             <div class="card-body text-center">
@@ -173,14 +263,16 @@
                         {{-- Status --}}
                         <div class="card border-0 shadow rounded">
                             <div class="card-header">
-                                <h4><i class="fas fa-tasks"></i> Status</h4>
+                                <h4><i class="fas {{ $isAuditor ? 'fa-clipboard-check' : 'fa-tasks' }}"></i>
+                                    {{ $isAuditor ? 'Status Review' : 'Status' }}</h4>
                             </div>
                             <div class="card-body">
                                 <div class="mb-3">
-                                    <label class="font-weight-bold d-block">Status Telaah:</label>
+                                    <label class="font-weight-bold d-block">Status:</label>
                                     @if ($peta->status_telaah)
                                         <span class="badge badge-success" style="font-size: 14px;">
-                                            <i class="fas fa-check-circle"></i> Sudah Ditelaah
+                                            <i class="fas fa-check-circle"></i>
+                                            {{ $isAuditor ? 'Sudah Direview' : 'Sudah Ditelaah' }}
                                         </span>
                                         @if ($peta->waktu_telaah_spi)
                                             <p class="text-muted mt-2 mb-0">
@@ -194,22 +286,49 @@
                                                 </small>
                                             </p>
                                         @endif
+                                    @elseif($peta->koreksiPr == 'rejected')
+                                        <span class="badge badge-danger" style="font-size: 14px;">
+                                            <i class="fas fa-times-circle"></i> Ditolak - Perlu Revisi
+                                        </span>
+                                    @elseif($peta->koreksiPr == 'submitted')
+                                        <span class="badge badge-info" style="font-size: 14px;">
+                                            <i class="fas fa-paper-plane"></i> Menunggu Review
+                                        </span>
                                     @else
                                         <span class="badge badge-warning" style="font-size: 14px;">
-                                            <i class="fas fa-clock"></i> Belum Ditelaah
+                                            <i class="fas fa-clock"></i>
+                                            {{ $isAuditor ? 'Menunggu Review' : 'Belum Ditelaah' }}
                                         </span>
-                                        <form action="{{ route('manajemen-risiko.update-status', $peta->id) }}"
-                                            method="POST" class="mt-3"
-                                            onsubmit="return confirm('Tandai risiko ini sebagai sudah ditelaah?')">
-                                            @csrf
-                                            @method('PUT')
-                                            <input type="hidden" name="status_telaah" value="1">
-                                            <button type="submit" class="btn btn-success btn-block">
-                                                <i class="fas fa-check"></i> Tandai Selesai Ditelaah
-                                            </button>
-                                        </form>
                                     @endif
                                 </div>
+
+                                @if ($isAuditor && !$peta->status_telaah)
+                                    {{-- Auditor Actions --}}
+                                    <hr>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-success btn-block mb-2" data-toggle="modal"
+                                            data-target="#approveModal">
+                                            <i class="fas fa-check"></i> Setujui Risiko
+                                        </button>
+                                        <button class="btn btn-danger btn-block" data-toggle="modal"
+                                            data-target="#rejectModal">
+                                            <i class="fas fa-times"></i> Tolak & Kembalikan
+                                        </button>
+                                    </div>
+                                @elseif($isAdmin && !$peta->status_telaah)
+                                    {{-- Admin Actions --}}
+                                    <hr>
+                                    <form action="{{ route('manajemen-risiko.update-status', $peta->id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Tandai risiko ini sebagai sudah ditelaah?')">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="status_telaah" value="1">
+                                        <button type="submit" class="btn btn-success btn-block">
+                                            <i class="fas fa-check"></i> Tandai Selesai Ditelaah
+                                        </button>
+                                    </form>
+                                @endif
 
                                 <hr>
 
@@ -221,6 +340,23 @@
                                         </span>
                                     </h4>
                                 </div>
+
+                                @if ($isAuditee)
+                                    <hr>
+                                    <div>
+                                        <label class="font-weight-bold d-block">Auditor:</label>
+                                        @if ($peta->auditor)
+                                            <p class="mb-0">
+                                                <i class="fas fa-user"></i> {{ $peta->auditor->name }}
+                                                <br>
+                                                <small
+                                                    class="text-muted">{{ $peta->auditor->Level->name ?? 'N/A' }}</small>
+                                            </p>
+                                        @else
+                                            <small class="text-muted">Belum ditugaskan</small>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
@@ -243,12 +379,99 @@
             </div>
         </section>
     </div>
+
+    {{-- MODALS for Auditor --}}
+    @if ($isAuditor)
+        {{-- Modal Approve --}}
+        <div class="modal fade" id="approveModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-check-circle"></i> Setujui Risiko
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ route('manajemen-risiko.auditor.approve', $peta->id) }}" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <p><strong>Apakah Anda yakin data risiko ini sudah sesuai dan siap dikirim ke Admin?</strong>
+                            </p>
+                            <hr>
+                            <p><strong>Unit:</strong> {{ $peta->jenis }}</p>
+                            <p><strong>Judul:</strong> {{ $peta->judul }}</p>
+                            <p><strong>Skor:</strong> {{ $peta->skor_kemungkinan * $peta->skor_dampak }}</p>
+                            <div class="form-group mt-3">
+                                <label class="font-weight-bold">Catatan Review (Opsional)</label>
+                                <textarea name="comment" class="form-control" rows="3" placeholder="Tambahkan catatan hasil review Anda..."></textarea>
+                            </div>
+                            <div class="alert alert-success">
+                                <i class="fas fa-info-circle"></i>
+                                Data akan diteruskan ke Admin SPI untuk diproses lebih lanjut.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Ya, Setujui & Kirim
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal Reject --}}
+        <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-times-circle"></i> Tolak & Kembalikan ke Auditee
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ route('manajemen-risiko.auditor.reject', $peta->id) }}" method="POST">
+                        @csrf
+                        <div class="modal-body">
+                            <p><strong>Data risiko akan dikembalikan ke Auditee untuk dilakukan perbaikan</strong></p>
+                            <hr>
+                            <p><strong>Unit:</strong> {{ $peta->jenis }}</p>
+                            <p><strong>Judul:</strong> {{ $peta->judul }}</p>
+                            <div class="form-group mt-3">
+                                <label class="font-weight-bold">Alasan Penolakan & Perbaikan yang Diperlukan <span
+                                        class="text-danger">*</span></label>
+                                <textarea name="comment" class="form-control" rows="5"
+                                    placeholder="Jelaskan secara detail:&#10;1. Alasan penolakan&#10;2. Perbaikan yang harus dilakukan&#10;3. Aspek yang perlu ditinjau ulang"
+                                    required></textarea>
+                            </div>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Perhatian:</strong> Auditee akan menerima notifikasi dan wajib melakukan revisi
+                                sesuai catatan Anda.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Ya, Tolak & Kembalikan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
 
 @push('scripts')
     <script>
         $(document).ready(function() {
-            // Auto-hide success alerts
+            // Auto-hide alerts
             setTimeout(function() {
                 $('.alert-success').fadeOut('slow');
             }, 3000);

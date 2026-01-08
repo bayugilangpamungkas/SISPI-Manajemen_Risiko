@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('peta_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('jenis', ['keuangan', 'analisis']);
+            $table->enum('jenis', ['keuangan', 'analisis', 'mitigasi']);
             $table->text('comment');
             $table->timestamps();
         });

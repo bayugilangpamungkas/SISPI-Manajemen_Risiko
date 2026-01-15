@@ -15,7 +15,6 @@ class Peta extends Model
      */
     protected $fillable = [
         'id_kegiatan',
-        // 'nama',
         'waktu',
         'anggota',
         'jenis',
@@ -23,11 +22,8 @@ class Peta extends Model
         'dokumen',
         'approvalPr',
         'koreksiPr',
+        'koreksiPr_at',
         'kode_regist',
-        // 'iku',
-        // 'sasaran',
-        // 'proker',
-        // 'indikator',
         'anggaran',
         'pernyataan',
         'kategori',
@@ -41,6 +37,10 @@ class Peta extends Model
         'waktu_telaah_teknis',
         'waktu_telaah_spi',
         'auditor_id',
+        'template_data',
+        'template_sent_at',
+        'auditee_response',
+        'tampil_manajemen_risiko',
         'laporan_unit',
         'laporan_spi',
     ];

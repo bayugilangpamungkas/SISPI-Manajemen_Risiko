@@ -98,30 +98,24 @@ class MenuData extends Seeder
             [
                 'id' => 21,
                 'name' => 'Manajemen Risiko',
-                'link' => '#', // parent biasanya #
+                'link' => '/manajemen-risiko',
                 'icon' => 'fas fa-shield-halved',
                 'children' => [
                     [
                         'id' => 22,
-                        'name' => 'Daftar Risiko',
-                        'link' => '/manajemen-risiko',
-                        'icon' => 'fas fa-search',
+                        'name' => 'Data Manajemen Risiko',
+                        'link' => '/manajemen-risiko/data',
+                        'icon' => 'fas fa-database',
                     ],
                     [
                         'id' => 23,
-                        'name' => '',
-                        'link' => '/manajemen-risiko/generate_report',
+                        'name' => 'Sub menu 2',
+                        'link' => '/manajemen-risiko/sub-menu-2',
                         'icon' => 'fas fa-chart-line',
                     ],
 
                 ],
             ],
-            // [
-            //     'id' => 22,
-            //     'name' => 'Je',
-            //     'link' => '/jenis-template',
-            //     'icon' => 'fas fa-paste',
-            // ],
 
         ];
 

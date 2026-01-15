@@ -16,7 +16,7 @@ class UserData extends Seeder
      */
     public function run()
     {
-        $user=[
+        $user = [
             [
                 'name' => 'Super Admin',
                 'username' => '198609232015041001',
@@ -150,6 +150,17 @@ class UserData extends Seeder
                 'is_approved' => true,
             ],
             [
+                'name' => 'Tes Auditee',
+                'username' => 'Auditee2',
+                'password' => bcrypt('123456'),
+                'nip' => '2222222222222',
+                'id_level' => 5,
+                'id_unit_kerja' => 1,
+                'email' => 'auditee2@gmail.com',
+                'email_verified_at' => now(),
+                'is_approved' => true,
+            ],
+            [
                 'name' => 'sekretaris_test',
                 'username' => 'sekretaris_test',
                 'password' => bcrypt('123456'),
@@ -173,7 +184,7 @@ class UserData extends Seeder
             ],
         ];
 
-        foreach($user as $key => $value){
+        foreach ($user as $key => $value) {
             User::create($value);
         }
     }

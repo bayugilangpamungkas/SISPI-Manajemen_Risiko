@@ -16,6 +16,7 @@
         "laravel/sanctum": "^2.14",
         "laravel/tinker": "^2.7",
         "maatwebsite/excel": "^3.1",
+        "phpoffice/phpspreadsheet": "^1.30",
         "phpoffice/phpword": "^1.2",
         "setasign/fpdi-fpdf": "^2.3"
     },

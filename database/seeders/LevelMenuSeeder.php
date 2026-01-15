@@ -68,18 +68,18 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '1',
                 'id_menu' => '20',
             ],
-            [
-                'id_level' => '1',
-                'id_menu' => '21', // Menu: Manajemen Risiko (Parent)
-            ],
-            [
-                'id_level' => '1',
-                'id_menu' => '22', // Submenu: Daftar Risiko
-            ],
-            [
-                'id_level' => '1',
-                'id_menu' => '23', // Submenu: Sub menu 2
-            ],
+            // [
+            //     'id_level' => '1',
+            //     'id_menu' => '21', // Menu: Manajemen Risiko (Parent)
+            // ],
+            // [
+            //     'id_level' => '1',
+            //     'id_menu' => '22', // Submenu: Daftar Risiko
+            // ],
+            // [
+            //     'id_level' => '1',
+            //     'id_menu' => '23', // Submenu: Sub menu 2
+            // ],
 
             // ========================================
             // LEVEL 2: ADMIN
@@ -172,14 +172,14 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '3',
                 'id_menu' => '21', // Menu: Manajemen Risiko
             ],
-            [
-                'id_level' => '3',
-                'id_menu' => '22', // Submenu: Daftar Risiko
-            ],
-            [
-                'id_level' => '3',
-                'id_menu' => '23', // Submenu: Sub menu 2
-            ],
+            // [
+            //     'id_level' => '3',
+            //     'id_menu' => '22', // Submenu: Daftar Risiko
+            // ],
+            // [
+            //     'id_level' => '3',
+            //     'id_menu' => '23', // Submenu: Sub menu 2
+            // ],
 
             // ========================================
             // LEVEL 4: ANGGOTA
@@ -214,14 +214,14 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '4',
                 'id_menu' => '21', // Menu: Manajemen Risiko
             ],
-            [
-                'id_level' => '4',
-                'id_menu' => '22', // Submenu: Daftar Risiko
-            ],
-            [
-                'id_level' => '4',
-                'id_menu' => '23', // Submenu: Sub menu 2
-            ],
+            // [
+            //     'id_level' => '4',
+            //     'id_menu' => '22', // Submenu: Daftar Risiko
+            // ],
+            // [
+            //     'id_level' => '4',
+            //     'id_menu' => '23', // Submenu: Sub menu 2
+            // ],
 
             // ========================================
             // LEVEL 5: AUDITEE
@@ -256,14 +256,14 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '5',
                 'id_menu' => '21', // Menu: Manajemen Risiko
             ],
-            [
-                'id_level' => '5',
-                'id_menu' => '22', // Submenu: Daftar Risiko
-            ],
-            [
-                'id_level' => '5',
-                'id_menu' => '23', // Submenu: Sub menu 2
-            ],
+            // [
+            //     'id_level' => '5',
+            //     'id_menu' => '22', // Submenu: Daftar Risiko
+            // ],
+            // [
+            //     'id_level' => '5',
+            //     'id_menu' => '23', // Submenu: Sub menu 2
+            // ],
 
             // ========================================
             // LEVEL 6: SEKRETARIS
@@ -306,14 +306,14 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '6',
                 'id_menu' => '21', // Menu: Manajemen Risiko
             ],
-            [
-                'id_level' => '6',
-                'id_menu' => '22', // Submenu: Daftar Risiko
-            ],
-            [
-                'id_level' => '6',
-                'id_menu' => '23', // Submenu: Sub menu 2
-            ],
+            // [
+            //     'id_level' => '6',
+            //     'id_menu' => '22', // Submenu: Daftar Risiko
+            // ],
+            // [
+            //     'id_level' => '6',
+            //     'id_menu' => '23', // Submenu: Sub menu 2
+            // ],
 
         ];
 

@@ -60,8 +60,7 @@
     <div class="main-content">
         <section class="section">
             <div class="section-header d-flex align-items-center">
-                <a href="{{ url()->previous() }}" class="mr-3"><i class="fas fa-arrow-left"
-                        style="font-size: 1.3rem"></i></a>
+                <a href="/petas" class="mr-3"><i class="fas fa-arrow-left" style="font-size: 1.3rem"></i></a>
                 <h1>Rincian Peta Risiko</h1>
             </div>
             <div class="section-body">
@@ -143,7 +142,7 @@
                                         </form>
                                     </div>
                                     {{-- <div class="mt-3 col-7"> --}}
-                                        
+
                                     {{-- </div> --}}
                                 </div>
 

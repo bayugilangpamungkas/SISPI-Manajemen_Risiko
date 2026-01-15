@@ -11,6 +11,7 @@ class Kegiatan extends Model
 
     protected $fillable = [
         'id_unit_kerja',
+        'id_kegiatan',
         'judul',
         'iku',
         'sasaran',

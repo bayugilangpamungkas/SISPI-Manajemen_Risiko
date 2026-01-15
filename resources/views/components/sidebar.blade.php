@@ -1,4 +1,4 @@
-<div class="main-sidebar sidebar-style-2">
+ia<div class="main-sidebar sidebar-style-2">
     <aside id="sidebar-wrapper">
         <div class="sidebar-brand">
             <a href="#">SPI POLINEMA</a>
@@ -82,9 +82,9 @@
                 @if ($has_children && count($accessible_children) > 0)
                     {{-- Menu with dropdown/children --}}
                     <li class="dropdown">
-                        <a href="#" class="nav-link has-dropdown">
+                        <a href="{{ $menu->link }}" class="nav-link has-dropdown">
                             <i class="{{ $menu->icon }}"></i>
-                            <span>{{ $menu->name }}</span>
+                            <span class="menu-text">{{ $menu->name }}</span>
                         </a>
                         <ul class="dropdown-menu">
                             @foreach ($accessible_children as $child)

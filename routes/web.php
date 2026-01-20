@@ -462,6 +462,10 @@ Route::middleware('auth')->group(function () {
     // Detail Unit Kerja - Rincian Kegiatan per Unit
     Route::get('/manajemen-risiko/detail-unit/{unitKerja}', [App\Http\Controllers\ManajemenRisikoController::class, 'detailUnitKerja'])
         ->name('manajemen-risiko.detail-unit');
+    // Tampilkan kegiatan terpilih di Manajemen Risiko
+    Route::post('/manajemen-risiko/tampilkan-kegiatan', [App\Http\Controllers\ManajemenRisikoController::class, 'tampilkanKegiatan'])
+        ->name('manajemen-risiko.tampilkan-kegiatan')
+        ->middleware(['auth']);
     // Detail Risiko per Kegiatan (AJAX untuk Modal)
     Route::get('/manajemen-risiko/detail-unit/{unitKerja}/kegiatan/{kegiatanId}', [App\Http\Controllers\ManajemenRisikoController::class, 'detailRisikoKegiatan'])
         ->name('manajemen-risiko.detail-risiko-kegiatan');

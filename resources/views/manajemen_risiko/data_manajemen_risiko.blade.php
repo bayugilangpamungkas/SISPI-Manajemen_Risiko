@@ -185,7 +185,7 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <div class="card shadow-sm border-0">
-                            <div class="card-header bg-light py-3 border-bottom">
+                            <div class="card-header bg-primary text-white py-3 border-bottom">
                                 <h6 class="mb-0 font-weight-bold d-flex align-items-center">
                                     <i class="fas fa-filter mr-2"></i> Filter & Download
                                 </h6>
@@ -337,7 +337,7 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card shadow-sm border-0">
-                            <div class="card-header bg-light py-3 border-bottom">
+                            <div class="card-header bg-primary text-white py-3 border-bottom">
                                 <h6 class="mb-0 font-weight-bold d-flex align-items-center">
                                     <i class="fas fa-table mr-2"></i> Data Peta Risiko
                                 </h6>
@@ -388,11 +388,22 @@
                                                             'nama_unit_kerja',
                                                             $peta->jenis,
                                                         )->first();
-                                                        $kodeUnit = $unitKerjaModel ? $unitKerjaModel->kode_unit : '-';
 
-                                                        $jumlahKegiatan = 0;
+                                                        // Kode kegiatan
+                                                        if ($peta->kegiatan && !empty($peta->kegiatan->id_kegiatan)) {
+                                                            $kodeUnit = $peta->kegiatan->id_kegiatan;
+                                                        } else {
+                                                            $kodeUnit = '-';
+                                                        }
+
+                                                        // ✅ PERBAIKAN: Ambil jumlah kegiatan tampil dari array yang sudah dihitung
+                                                        $jumlahKegiatanTampil =
+                                                            $kegiatanTampilPerUnit[$peta->jenis] ?? 0;
+
+                                                        // Total semua kegiatan di unit
+                                                        $totalKegiatanUnit = 0;
                                                         if ($unitKerjaModel) {
-                                                            $jumlahKegiatan = \App\Models\Kegiatan::where(
+                                                            $totalKegiatanUnit = \App\Models\Kegiatan::where(
                                                                 'id_unit_kerja',
                                                                 $unitKerjaModel->id,
                                                             )->count();
@@ -406,6 +417,18 @@
                                                         <td class="text-center align-middle">{{ $no++ }}</td>
                                                         <td class="align-middle">
                                                             <div class="font-weight-medium">{{ $peta->jenis }}</div>
+                                                            <small class="text-muted">
+                                                                {{-- Tampilkan jumlah risiko di unit ini --}}
+                                                                @php
+                                                                    $jumlahRisikoUnit = \App\Models\Peta::where(
+                                                                        'jenis',
+                                                                        $peta->jenis,
+                                                                    )
+                                                                        ->whereYear('created_at', $tahun)
+                                                                        ->count();
+                                                                @endphp
+                                                                {{ $jumlahRisikoUnit }} risiko
+                                                            </small>
                                                         </td>
                                                         <td class="text-center align-middle">
                                                             <span class="badge badge-secondary">{{ $kodeUnit }}</span>
@@ -414,12 +437,26 @@
                                                             <div class="d-flex flex-column align-items-center">
                                                                 <div class="d-flex align-items-center mb-1">
                                                                     <i class="fas fa-tasks text-primary mr-2"></i>
+                                                                    {{-- ✅ INI YANG AKAN BERUBAH SETELAH UPDATE --}}
                                                                     <span class="font-weight-bold"
                                                                         style="font-size: 1.1rem; color: #1976d2;">
-                                                                        {{ $jumlahKegiatan }}
+                                                                        {{ $jumlahKegiatanTampil }}
                                                                     </span>
+                                                                    @if ($totalKegiatanUnit > 0)
+                                                                        <small
+                                                                            class="text-muted ml-1">/{{ $totalKegiatanUnit }}</small>
+                                                                    @endif
                                                                 </div>
-                                                                <small class="text-muted">kegiatan</small>
+                                                                <small class="text-muted">
+                                                                    @if ($jumlahKegiatanTampil == 0)
+                                                                        <span class="text-danger">Tidak ada kegiatan
+                                                                            ditampilkan</span>
+                                                                    @elseif($jumlahKegiatanTampil == 1)
+                                                                        1 kegiatan ditampilkan
+                                                                    @else
+                                                                        {{ $jumlahKegiatanTampil }} kegiatan ditampilkan
+                                                                    @endif
+                                                                </small>
                                                             </div>
                                                         </td>
                                                         <td class="text-center align-middle">

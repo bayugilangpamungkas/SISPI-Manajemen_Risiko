@@ -18,6 +18,7 @@ class Peta extends Model
         'waktu',
         'anggota',
         'jenis',
+        // 'tahun',
         'judul',
         'dokumen',
         'approvalPr',

@@ -29,4 +29,25 @@ class Kegiatan extends Model
     {
         return $this->belongsTo(UnitKerja::class, 'id_unit_kerja', 'id');
     }
+
+    /**
+     * SCOPE: Kegiatan yang memiliki risiko TAMPIL di tahun tertentu
+     */
+    public function scopeDenganRisikoTampil($query, $tahun)
+    {
+        return $query->whereHas('peta', function ($q) use ($tahun) {
+            $q->whereYear('created_at', $tahun)
+                ->where('tampil_manajemen_risiko', 1);
+        });
+    }
+
+    /**
+     * METHOD: Hitung jumlah kegiatan dengan risiko tampil untuk unit kerja tertentu
+     */
+    public static function hitungKegiatanTampil($unitKerjaId, $tahun)
+    {
+        return self::where('id_unit_kerja', $unitKerjaId)
+            ->denganRisikoTampil($tahun)
+            ->count();
+    }
 }

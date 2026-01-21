@@ -9,6 +9,8 @@ class Kegiatan extends Model
 {
     use HasFactory;
 
+    protected $table = 'kegiatans';
+
     protected $fillable = [
         'id_unit_kerja',
         'id_kegiatan',
@@ -22,7 +24,7 @@ class Kegiatan extends Model
 
     public function peta()
     {
-        return $this->hasOne(Peta::class, 'id', 'id_kegiatan');
+        return $this->hasOne(Peta::class, 'id_kegiatan', 'id');
     }
 
     public function unitKerja()
@@ -30,9 +32,6 @@ class Kegiatan extends Model
         return $this->belongsTo(UnitKerja::class, 'id_unit_kerja', 'id');
     }
 
-    /**
-     * SCOPE: Kegiatan yang memiliki risiko TAMPIL di tahun tertentu
-     */
     public function scopeDenganRisikoTampil($query, $tahun)
     {
         return $query->whereHas('peta', function ($q) use ($tahun) {
@@ -41,9 +40,6 @@ class Kegiatan extends Model
         });
     }
 
-    /**
-     * METHOD: Hitung jumlah kegiatan dengan risiko tampil untuk unit kerja tertentu
-     */
     public static function hitungKegiatanTampil($unitKerjaId, $tahun)
     {
         return self::where('id_unit_kerja', $unitKerjaId)

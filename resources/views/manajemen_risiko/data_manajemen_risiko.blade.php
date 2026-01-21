@@ -365,7 +365,35 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @php $no = ($petas->currentPage() - 1) * $petas->perPage() + 1; @endphp
+                                                @php
+                                                    $no = ($petas->currentPage() - 1) * $petas->perPage() + 1;
+
+                                                    // ✅ PERBAIKAN: Hitung semua unit kerja yang unik dari data petas
+                                                    $uniqueUnits = collect();
+                                                    foreach ($petas as $peta) {
+                                                        if ($peta->jenis && !$uniqueUnits->contains($peta->jenis)) {
+                                                            $uniqueUnits->push($peta->jenis);
+                                                        }
+                                                    }
+
+                                                    // ✅ PERBAIKAN: Hitung jumlah kegiatan tampil per unit SEKARANG
+                                                    $kegiatanTampilPerUnit = [];
+                                                    foreach ($uniqueUnits as $unitName) {
+                                                        $unitModel = \App\Models\UnitKerja::where(
+                                                            'nama_unit_kerja',
+                                                            $unitName,
+                                                        )->first();
+                                                        if ($unitModel) {
+                                                            // Gunakan method dari Model Kegiatan sesuai dengan struktur Anda
+                                                            $jumlahKegiatanTampil = \App\Models\Kegiatan::hitungKegiatanTampil(
+                                                                $unitModel->id,
+                                                                $tahun,
+                                                            );
+                                                            $kegiatanTampilPerUnit[$unitName] = $jumlahKegiatanTampil;
+                                                        }
+                                                    }
+                                                @endphp
+
                                                 @forelse($petas as $peta)
                                                     @php
                                                         $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
@@ -389,26 +417,62 @@
                                                             $peta->jenis,
                                                         )->first();
 
-                                                        // Kode kegiatan
-                                                        if ($peta->kegiatan && !empty($peta->kegiatan->id_kegiatan)) {
-                                                            $kodeUnit = $peta->kegiatan->id_kegiatan;
-                                                        } else {
-                                                            $kodeUnit = '-';
+                                                        // ✅ PERBAIKAN: Kode kegiatan - cek dengan benar
+                                                        $kodeUnit = '-';
+                                                        if ($peta->kegiatan) {
+                                                            // Coba beberapa kemungkinan nama field
+                                                            if (!empty($peta->kegiatan->id_kegiatan)) {
+                                                                $kodeUnit = $peta->kegiatan->id_kegiatan;
+                                                            } elseif (!empty($peta->kegiatan->kode)) {
+                                                                $kodeUnit = $peta->kegiatan->kode;
+                                                            } elseif (!empty($peta->kegiatan->id)) {
+                                                                $kodeUnit = $peta->kegiatan->id;
+                                                            }
                                                         }
 
-                                                        // ✅ PERBAIKAN: Ambil jumlah kegiatan tampil dari array yang sudah dihitung
-                                                        $jumlahKegiatanTampil =
-                                                            $kegiatanTampilPerUnit[$peta->jenis] ?? 0;
-
-                                                        // Total semua kegiatan di unit
+                                                        // ✅ PERBAIKAN: Hitung jumlah kegiatan tampil untuk unit ini
+                                                        $jumlahKegiatanTampil = 0;
                                                         $totalKegiatanUnit = 0;
+
                                                         if ($unitKerjaModel) {
+                                                            // Method 1: Gunakan array yang sudah dihitung
+                                                            $jumlahKegiatanTampil =
+                                                                $kegiatanTampilPerUnit[$peta->jenis] ?? 0;
+
+                                                            // Method 2: Atau hitung langsung (fallback)
+                                                            if (
+                                                                $jumlahKegiatanTampil == 0 &&
+                                                                isset($kegiatanTampilPerUnit[$peta->jenis])
+                                                            ) {
+                                                                // Hitung langsung jika tidak ada di array
+                                                                $jumlahKegiatanTampil = \App\Models\Kegiatan::hitungKegiatanTampil(
+                                                                    $unitKerjaModel->id,
+                                                                    $tahun,
+                                                                );
+                                                            }
+
                                                             $totalKegiatanUnit = \App\Models\Kegiatan::where(
                                                                 'id_unit_kerja',
                                                                 $unitKerjaModel->id,
                                                             )->count();
                                                         }
+
+                                                        // ✅ PERBAIKAN: Hitung jumlah risiko di unit ini (optimasi query)
+                                                        $jumlahRisikoUnit = 0;
+                                                        if ($peta->jenis) {
+                                                            // Gunakan caching atau hitung sekali per unit
+                                                            static $risikoCountCache = [];
+                                                            if (!isset($risikoCountCache[$peta->jenis])) {
+                                                                $risikoCountCache[
+                                                                    $peta->jenis
+                                                                ] = \App\Models\Peta::where('jenis', $peta->jenis)
+                                                                    ->whereYear('created_at', $tahun)
+                                                                    ->count();
+                                                            }
+                                                            $jumlahRisikoUnit = $risikoCountCache[$peta->jenis];
+                                                        }
                                                     @endphp
+
                                                     <tr>
                                                         <td class="text-center align-middle">
                                                             <input type="checkbox" name="selected_ids[]"
@@ -418,17 +482,15 @@
                                                         <td class="align-middle">
                                                             <div class="font-weight-medium">{{ $peta->jenis }}</div>
                                                             <small class="text-muted">
-                                                                {{-- Tampilkan jumlah risiko di unit ini --}}
-                                                                @php
-                                                                    $jumlahRisikoUnit = \App\Models\Peta::where(
-                                                                        'jenis',
-                                                                        $peta->jenis,
-                                                                    )
-                                                                        ->whereYear('created_at', $tahun)
-                                                                        ->count();
-                                                                @endphp
                                                                 {{ $jumlahRisikoUnit }} risiko
                                                             </small>
+                                                            {{-- ✅ DEBUG: Tampilkan info debugging --}}
+                                                            @if (config('app.debug'))
+                                                                <br>
+                                                                <small class="text-danger">
+                                                                    Unit ID: {{ $unitKerjaModel->id ?? 'null' }}
+                                                                </small>
+                                                            @endif
                                                         </td>
                                                         <td class="text-center align-middle">
                                                             <span class="badge badge-secondary">{{ $kodeUnit }}</span>
@@ -457,6 +519,15 @@
                                                                         {{ $jumlahKegiatanTampil }} kegiatan ditampilkan
                                                                     @endif
                                                                 </small>
+
+                                                                {{-- ✅ DEBUG: Tampilkan info perhitungan --}}
+                                                                @if (config('app.debug'))
+                                                                    <br>
+                                                                    <small class="text-info" style="font-size: 10px;">
+                                                                        (Dihitung:
+                                                                        {{ \App\Models\Kegiatan::hitungKegiatanTampil($unitKerjaModel->id ?? 0, $tahun) }})
+                                                                    </small>
+                                                                @endif
                                                             </div>
                                                         </td>
                                                         <td class="text-center align-middle">

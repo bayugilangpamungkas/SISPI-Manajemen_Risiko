@@ -63,15 +63,6 @@
                             Data Risiko
                         @endif
                     </span>
-                    {{-- <span style="color: #6777ef;">
-                        @if ($isAuditor)
-                            Peta Risiko
-                        @elseif($isAuditee)
-                            Data Risiko
-                        @else
-                            Clustering Risiko
-                        @endif
-                    </span> --}}
                 </h4>
 
                 {{-- ALERTS --}}
@@ -91,108 +82,6 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                @endif
-
-                {{-- STATISTICS CARDS --}}
-                @if ($isAdmin)
-                    {{-- Admin: 6 Cards --}}
-                    {{-- <div class="row mb-3">
-                        <div class="col-lg-2 col-md-4 col-sm-6 col-12">
-                            <div class="card card-statistic-1">
-                                <div class="card-icon bg-primary">
-                                    <i class="fas fa-list"></i>
-                                </div>
-                                <div class="card-wrap">
-                                    <div class="card-header">
-                                        <h4>Total Risiko</h4>
-                                    </div>
-                                    <div class="card-body">
-                                        {{ $statistics['total'] }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-2 col-md-4 col-sm-6 col-12">
-                            <div class="card card-statistic-1">
-                                <div class="card-icon bg-danger">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                                <div class="card-wrap">
-                                    <div class="card-header">
-                                        <h4>Risiko Tinggi</h4>
-                                    </div>
-                                    <div class="card-body">
-                                        {{ $statistics['high_risk'] }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-2 col-md-4 col-sm-6 col-12">
-                            <div class="card card-statistic-1">
-                                <div class="card-icon bg-warning">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                </div>
-                                <div class="card-wrap">
-                                    <div class="card-header">
-                                        <h4>Risiko Sedang</h4>
-                                    </div>
-                                    <div class="card-body">
-                                        {{ $statistics['middle_risk'] }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-2 col-md-4 col-sm-6 col-12">
-                            <div class="card card-statistic-1">
-                                <div class="card-icon bg-success">
-                                    <i class="fas fa-check-circle"></i>
-                                </div>
-                                <div class="card-wrap">
-                                    <div class="card-header">
-                                        <h4>Risiko Rendah</h4>
-                                    </div>
-                                    <div class="card-body">
-                                        {{ $statistics['low_risk'] }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-2 col-md-4 col-sm-6 col-12">
-                            <div class="card card-statistic-1">
-                                <div class="card-icon bg-info">
-                                    <i class="fas fa-user-check"></i>
-                                </div>
-                                <div class="card-wrap">
-                                    <div class="card-header">
-                                        <h4>Ditugaskan</h4>
-                                    </div>
-                                    <div class="card-body">
-                                        {{ $statistics['assigned_auditor'] }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-2 col-md-4 col-sm-6 col-12">
-                            <div class="card card-statistic-1">
-                                <div class="card-icon bg-secondary">
-                                    <i class="fas fa-check-double"></i>
-                                </div>
-                                <div class="card-wrap">
-                                    <div class="card-header">
-                                        <h4>Ditelaah</h4>
-                                    </div>
-                                    <div class="card-body">
-                                        {{ $statistics['reviewed'] ?? ($statistics['approved'] ?? 0) }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
                 @endif
 
                 {{-- FILTER SECTION --}}
@@ -418,7 +307,7 @@
                                                         </td>
                                                     @endif
                                                     <td>
-                                                        @if ($peta->kegiatan)
+                                                        {{-- @if ($peta->kegiatan)
                                                             <span class="badge badge-primary badge-pill"
                                                                 data-toggle="tooltip"
                                                                 title="{{ $peta->kegiatan->judul }}">
@@ -429,7 +318,7 @@
                                                                 <small><i class="fas fa-minus-circle"></i> Tidak
                                                                     ada</small>
                                                             </span>
-                                                        @endif
+                                                        @endif --}}
                                                     </td>
                                                     <td class="text-center">
                                                         <span class="badge badge-secondary">{{ $peta->kategori }}</span>
@@ -530,12 +419,6 @@
                                                                     <i class="fas fa-user-edit"></i> Ubah
                                                                 </button>
                                                             @else
-                                                                {{-- <button class="btn btn-sm btn-warning mb-1"
-                                                                    data-toggle="modal"
-                                                                    data-target="#assignAuditorModal{{ $peta->id }}"
-                                                                    title="Tugaskan Auditor">
-                                                                    <i class="fas fa-user-plus"></i> Tugaskan
-                                                                </button> --}}
                                                             @endif
                                                         @elseif($isAuditor)
                                                             {{-- ========= AUDITOR ACTIONS ========= --}}

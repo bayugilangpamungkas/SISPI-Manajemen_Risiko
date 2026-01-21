@@ -475,18 +475,17 @@ class ManajemenRisikoController extends Controller
         }
 
         // ✅ AMBIL DATA DENGAN PAGINATION BIASA
+        $perPage = 20;
         $petas = $query->orderByRaw('(skor_kemungkinan * skor_dampak) DESC')
-            ->paginate(20);
+            ->paginate($perPage);
 
         // ✅ HITUNG STATISTICS DARI QUERY YANG SAMA (tanpa pagination)
-        $allPetasForStats = clone $query;
-        $allPetas = $allPetasForStats->get();
-
+        $allPetasForStats = Peta::whereYear('created_at', $tahun)->get();
         $statistics = [
-            'total' => $allPetas->count(),
-            'high_risk' => $allPetas->whereIn('tingkat_risiko', ['Extreme', 'High'])->count(),
-            'middle_risk' => $allPetas->where('tingkat_risiko', 'Moderate')->count(),
-            'low_risk' => $allPetas->where('tingkat_risiko', 'Low')->count(),
+            'total' => $allPetasForStats->count(),
+            'high_risk' => $allPetasForStats->whereIn('tingkat_risiko', ['Extreme', 'High'])->count(),
+            'middle_risk' => $allPetasForStats->where('tingkat_risiko', 'Moderate')->count(),
+            'low_risk' => $allPetasForStats->where('tingkat_risiko', 'Low')->count(),
         ];
 
         // ✅ GET UNTUK PERHITUNGAN GROUPED (untuk display di table)
@@ -497,8 +496,7 @@ class ManajemenRisikoController extends Controller
         $groupedPetas = $allPetasForGroup->groupBy('jenis');
 
         return view('manajemen_risiko.data_manajemen_risiko', compact(
-            'petas',           // Untuk pagination
-            'groupedPetas',    // Untuk perhitungan jumlah kegiatan
+            'petas',
             'statistics',
             'tahun',
             'unitKerja',
@@ -662,41 +660,21 @@ class ManajemenRisikoController extends Controller
 
     public function tampilkanKegiatan(Request $request)
     {
-        // DEBUG: Log request untuk troubleshooting
         Log::info('=== TAMPILKAN KEGIATAN REQUEST ===');
         Log::info('Request Data:', $request->all());
 
-        // Validasi input
-        $validator = Validator::make($request->all(), [
+        // Validasi
+        $request->validate([
             'kegiatan_ids' => 'required|array|min:1',
-            'kegiatan_ids.*' => 'required|integer|exists:kegiatans,id',
-            'unit_kerja' => 'required|string|max:255',
-            'tahun' => 'required|integer|digits:4|min:2000|max:' . (date('Y') + 5)
-        ], [
-            'kegiatan_ids.required' => 'Pilih minimal satu kegiatan',
-            'kegiatan_ids.array' => 'Format data kegiatan tidak valid',
-            'kegiatan_ids.min' => 'Pilih minimal satu kegiatan',
-            'kegiatan_ids.*.exists' => 'Salah satu kegiatan tidak ditemukan di database',
-            'unit_kerja.required' => 'Unit kerja harus diisi',
-            'tahun.required' => 'Tahun harus diisi',
-            'tahun.integer' => 'Format tahun tidak valid'
+            'kegiatan_ids.*' => 'required|string',
+            'unit_kerja' => 'required|string',
+            'tahun' => 'required|integer'
         ]);
 
-        // Jika validasi gagal
-        if ($validator->fails()) {
-            Log::error('Validasi gagal:', $validator->errors()->toArray());
-            return redirect()
-                ->back()
-                ->withErrors($validator)
-                ->withInput()
-                ->with('error', 'Terjadi kesalahan validasi. ' . implode(' ', $validator->errors()->all()));
-        }
-
         try {
-            // Ambil data dari request
             $kegiatanIds = $request->kegiatan_ids;
-            $unitKerja = trim($request->unit_kerja);
-            $tahun = (int) $request->tahun;
+            $unitKerja = $request->unit_kerja;
+            $tahun = $request->tahun;
 
             Log::info('Processing request:', [
                 'unit_kerja' => $unitKerja,
@@ -705,15 +683,11 @@ class ManajemenRisikoController extends Controller
                 'kegiatan_ids' => $kegiatanIds
             ]);
 
-            // 1. Cari unit kerja berdasarkan nama
+            // 1. Cari unit kerja
             $unitKerjaModel = \App\Models\UnitKerja::where('nama_unit_kerja', $unitKerja)->first();
 
             if (!$unitKerjaModel) {
-                Log::error('Unit kerja tidak ditemukan: ' . $unitKerja);
-                return redirect()
-                    ->back()
-                    ->withInput()
-                    ->with('error', "Unit kerja '{$unitKerja}' tidak ditemukan dalam database.");
+                return redirect()->back()->with('error', 'Unit kerja tidak ditemukan!');
             }
 
             Log::info('Unit kerja ditemukan:', [
@@ -721,9 +695,9 @@ class ManajemenRisikoController extends Controller
                 'nama' => $unitKerjaModel->nama_unit_kerja
             ]);
 
-            // 2. Cari semua kegiatan yang valid untuk unit kerja ini
+            // 2. Cek apakah kegiatan valid (berdasarkan id_kegiatan)
             $validKegiatanIds = \App\Models\Kegiatan::where('id_unit_kerja', $unitKerjaModel->id)
-                ->whereIn('id', $kegiatanIds)
+                ->whereIn('id_kegiatan', $kegiatanIds)
                 ->pluck('id')
                 ->toArray();
 
@@ -740,12 +714,16 @@ class ManajemenRisikoController extends Controller
                 'ids' => $validKegiatanIds
             ]);
 
-            // 3. Mulai database transaction untuk konsistensi data
+            // 3. Mulai transaction
             DB::beginTransaction();
 
             try {
-                // 3A. Reset SEMUA risiko dari unit kerja ini di tahun tertentu (tidak tampil)
-                $resetCount = Peta::where('jenis', $unitKerja)
+                // 3A. Reset semua risiko dari unit kerja ini
+                $resetCount = Peta::whereIn('id_kegiatan', function ($query) use ($unitKerjaModel) {
+                    $query->select('id_kegiatan')
+                        ->from('kegiatans')
+                        ->where('id_unit_kerja', $unitKerjaModel->id);
+                })
                     ->whereYear('created_at', $tahun)
                     ->update(['tampil_manajemen_risiko' => 0]);
 
@@ -755,7 +733,7 @@ class ManajemenRisikoController extends Controller
                     'tahun' => $tahun
                 ]);
 
-                // 3B. Tampilkan hanya risiko dari kegiatan yang dipilih
+                // 3B. Tampilkan risiko dari kegiatan yang dipilih
                 if (!empty($validKegiatanIds)) {
                     $updateCount = Peta::whereIn('id_kegiatan', $validKegiatanIds)
                         ->whereYear('created_at', $tahun)
@@ -767,60 +745,42 @@ class ManajemenRisikoController extends Controller
                     ]);
                 }
 
-                // 4. Hitung statistik setelah update
-                // 4A. Hitung jumlah kegiatan yang memiliki risiko TAMPIL
-                $jumlahKegiatanTampil = \App\Models\Kegiatan::where('id_unit_kerja', $unitKerjaModel->id)
-                    ->whereHas('petas', function ($query) use ($tahun) {
-                        $query->whereYear('created_at', $tahun)
-                            ->where('tampil_manajemen_risiko', 1);
-                    })
-                    ->distinct()
-                    ->count('id');
+                $jumlahKegiatanTampil = count($validKegiatanIds);
 
-                // 4B. Hitung total risiko yang TAMPIL untuk kegiatan yang dipilih
-                $jumlahRisikoTampil = Peta::whereIn('id_kegiatan', $validKegiatanIds)
+
+                // Hitung total risiko yang tampil
+                $jumlahRisikoTampil = Peta::whereIn('id_kegiatan', function ($query) use ($unitKerjaModel) {
+                    $query->select('id_kegiatan')
+                        ->from('kegiatans')
+                        ->where('id_unit_kerja', $unitKerjaModel->id);
+                })
                     ->whereYear('created_at', $tahun)
                     ->where('tampil_manajemen_risiko', 1)
                     ->count();
 
-                // 4C. Hitung total semua kegiatan di unit kerja (untuk informasi)
+                // Total semua kegiatan di unit
                 $totalKegiatanUnit = \App\Models\Kegiatan::where('id_unit_kerja', $unitKerjaModel->id)->count();
 
-                // 4D. Hitung total semua risiko di unit kerja (untuk informasi)
-                $totalRisikoUnit = Peta::where('jenis', $unitKerja)
-                    ->whereYear('created_at', $tahun)
-                    ->count();
-
                 Log::info('Statistik setelah update:', [
-                    'kegiatan_tampil' => $jumlahKegiatanTampil,
-                    'risiko_tampil' => $jumlahRisikoTampil,
+                    'kegiatan_dipilih' => count($validKegiatanIds),
+                    'risiko_diupdate' => $updateCount,
                     'total_kegiatan_unit' => $totalKegiatanUnit,
-                    'total_risiko_unit' => $totalRisikoUnit
+                    'catatan' => 'Jumlah kegiatan tampil mengikuti pilihan user'
                 ]);
 
                 // 5. Commit transaction
                 DB::commit();
 
-                // 6. Clear cache jika menggunakan cache
-                if (\Illuminate\Support\Facades\Cache::supportsTags()) {
-                    \Illuminate\Support\Facades\Cache::tags(['manajemen-risiko', 'kegiatan'])->flush();
-                }
-
-                // Hapus cache spesifik
-                $cacheKey = 'kegiatan_tampil_' . $unitKerjaModel->id . '_' . $tahun;
-                \Illuminate\Support\Facades\Cache::forget($cacheKey);
-
-                // 7. Siapkan pesan sukses
+                // 6. Pesan sukses
                 $successMessage = "✅ **Update Berhasil!**\n\n";
                 $successMessage .= "**Detail Update:**\n";
                 $successMessage .= "• Unit Kerja: **{$unitKerja}**\n";
                 $successMessage .= "• Tahun: **{$tahun}**\n";
                 $successMessage .= "• Kegiatan Dipilih: **" . count($validKegiatanIds) . "** dari {$totalKegiatanUnit}\n";
                 $successMessage .= "• Kegiatan Ditampilkan: **{$jumlahKegiatanTampil}**\n";
-                $successMessage .= "• Risiko Ditampilkan: **{$jumlahRisikoTampil}** dari {$totalRisikoUnit}\n\n";
-                $successMessage .= "Jumlah kegiatan di halaman Data Manajemen Risiko sekarang akan menampilkan: **{$jumlahKegiatanTampil} kegiatan**";
+                $successMessage .= "• Risiko Ditampilkan: **{$jumlahRisikoTampil}**\n\n";
+                $successMessage .= "**Sekarang di halaman Data Manajemen Risiko akan menampilkan: {$jumlahKegiatanTampil} kegiatan**";
 
-                // 8. Redirect dengan data lengkap
                 return redirect()
                     ->route('manajemen-risiko.detail-unit', [
                         'unitKerja' => $unitKerja,
@@ -828,46 +788,21 @@ class ManajemenRisikoController extends Controller
                     ])
                     ->with([
                         'success' => $successMessage,
-                        'statistics' => [
-                            'kegiatan_dipilih' => count($validKegiatanIds),
-                            'kegiatan_tampil' => $jumlahKegiatanTampil,
-                            'risiko_tampil' => $jumlahRisikoTampil,
-                            'total_kegiatan' => $totalKegiatanUnit,
-                            'total_risiko' => $totalRisikoUnit
-                        ],
-                        'auto_refresh' => true, // Flag untuk auto-refresh halaman utama
+                        'auto_refresh' => true,
                         'updated_unit' => $unitKerja,
-                        'updated_tahun' => $tahun
+                        'updated_tahun' => $tahun,
+                        'kegiatan_tampil_count' => $jumlahKegiatanTampil // Data untuk debugging
                     ]);
             } catch (\Exception $e) {
-                // Rollback transaction jika error
                 DB::rollBack();
                 throw $e;
             }
-        } catch (\Illuminate\Database\QueryException $e) {
-            Log::error('Database Error:', [
-                'message' => $e->getMessage(),
-                'sql' => $e->getSql(),
-                'bindings' => $e->getBindings(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return redirect()
-                ->back()
-                ->withInput()
-                ->with('error', "❌ **Database Error:** " . $e->getMessage());
         } catch (\Exception $e) {
-            Log::error('General Error:', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
+            Log::error('Error in tampilkanKegiatan: ' . $e->getMessage());
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', "❌ **Terjadi Kesalahan Sistem:** " . $e->getMessage());
+                ->with('error', "❌ Error: " . $e->getMessage());
         }
     }
 

@@ -79,6 +79,20 @@
                     </div>
                 @endif
 
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Terjadi kesalahan:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
+
                 {{-- INFO PANEL: Status --}}
                 <div class="row mb-4">
                     <div class="col-md-12">
@@ -91,7 +105,7 @@
                                             <i class="fas fa-info-circle"></i>
                                             <strong>Status Pengerjaan</strong>
                                         </h5>
-                                        <div class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center flex-wrap">
                                             @if ($isApproved)
                                                 <span class="badge badge-light badge-lg mr-2" style="font-size: 14px;">
                                                     <i class="fas fa-check-circle text-success"></i> <strong>Disetujui
@@ -308,7 +322,7 @@
                                                 </tbody>
                                             </table>
                                         @else
-                                            {{-- Tampilan Tabel Umum Sesuai Format Lembar Monitoring --}}
+                                            {{-- Tampilan Tabel Umum --}}
                                             <h5 class="mb-3 text-primary">
                                                 <i class="fas fa-clipboard-list"></i> Lembar Monitoring dan Evaluasi
                                                 Manajemen Risiko
@@ -341,9 +355,7 @@
                                                                 <td class="bg-success-light">
                                                                     {{ $templateData['status_konfirmasi'][$index] ?? '-' }}
                                                                 </td>
-                                                                <td class="bg-success-light">
-                                                                    {!! nl2br(e($templateData['mitigasi_risiko'][$index] ?? '-')) !!}
-                                                                </td>
+                                                                <td class="bg-success-light">{!! nl2br(e($templateData['mitigasi_risiko'][$index] ?? '-')) !!}</td>
                                                                 <td class="bg-success-light">
                                                                     {{ $templateData['komentar'][$index] ?? '-' }}</td>
                                                             </tr>
@@ -420,93 +432,109 @@
                                         @method('PUT')
 
                                         <div class="form-group">
-                                            <label class="font-weight-bold">
-                                                1. Rencana Tindak Lanjut <span class="text-danger">*</span>
-                                            </label>
-                                            <textarea name="rencana_tindak_lanjut" class="form-control" rows="4" required
-                                                {{ $isReadOnly ? 'readonly' : '' }} placeholder="Jelaskan rencana tindak lanjut untuk mengelola risiko ini...">{{ old('rencana_tindak_lanjut', $auditeeResponse['rencana_tindak_lanjut'] ?? '') }}</textarea>
+                                            <label class="font-weight-bold">1. Rencana Tindak Lanjut <span
+                                                    class="text-danger">*</span></label>
+                                            <textarea name="rencana_tindak_lanjut" class="form-control @error('rencana_tindak_lanjut') is-invalid @enderror"
+                                                rows="4" required {{ $isReadOnly ? 'readonly' : '' }}
+                                                placeholder="Jelaskan rencana tindak lanjut untuk mengelola risiko ini...">{{ old('rencana_tindak_lanjut', $auditeeResponse['rencana_tindak_lanjut'] ?? '') }}</textarea>
                                             <small class="text-muted">Contoh: Melakukan sosialisasi, pelatihan, perbaikan
                                                 SOP, dll.</small>
+                                            @error('rencana_tindak_lanjut')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
                                         </div>
 
                                         <div class="form-group">
-                                            <label class="font-weight-bold">
-                                                2. Penanggung Jawab <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="text" name="penanggung_jawab" class="form-control" required
-                                                {{ $isReadOnly ? 'readonly' : '' }}
+                                            <label class="font-weight-bold">2. Penanggung Jawab <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" name="penanggung_jawab"
+                                                class="form-control @error('penanggung_jawab') is-invalid @enderror"
+                                                required {{ $isReadOnly ? 'readonly' : '' }}
                                                 value="{{ old('penanggung_jawab', $auditeeResponse['penanggung_jawab'] ?? '') }}"
                                                 placeholder="Nama penanggung jawab pelaksanaan">
                                             <small class="text-muted">Sebutkan nama lengkap dan jabatan penanggung
                                                 jawab.</small>
+                                            @error('penanggung_jawab')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
                                         </div>
 
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label class="font-weight-bold">
-                                                        3. Target Waktu Mulai <span class="text-danger">*</span>
-                                                    </label>
-                                                    <input type="date" name="target_waktu_mulai" class="form-control"
+                                                    <label class="font-weight-bold">3. Target Waktu Mulai <span
+                                                            class="text-danger">*</span></label>
+                                                    <input type="date" name="target_waktu_mulai"
+                                                        class="form-control @error('target_waktu_mulai') is-invalid @enderror"
                                                         required {{ $isReadOnly ? 'readonly' : '' }}
                                                         value="{{ old('target_waktu_mulai', $auditeeResponse['target_waktu_mulai'] ?? '') }}">
+                                                    @error('target_waktu_mulai')
+                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                    @enderror
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label class="font-weight-bold">
-                                                        4. Target Waktu Selesai <span class="text-danger">*</span>
-                                                    </label>
+                                                    <label class="font-weight-bold">4. Target Waktu Selesai <span
+                                                            class="text-danger">*</span></label>
                                                     <input type="date" name="target_waktu_selesai"
-                                                        class="form-control" required {{ $isReadOnly ? 'readonly' : '' }}
+                                                        class="form-control @error('target_waktu_selesai') is-invalid @enderror"
+                                                        required {{ $isReadOnly ? 'readonly' : '' }}
                                                         value="{{ old('target_waktu_selesai', $auditeeResponse['target_waktu_selesai'] ?? '') }}">
+                                                    @error('target_waktu_selesai')
+                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                    @enderror
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="form-group">
-                                            <label class="font-weight-bold">
-                                                5. Anggaran yang Dibutuhkan
-                                            </label>
+                                            <label class="font-weight-bold">5. Anggaran yang Dibutuhkan</label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text">Rp</span>
                                                 </div>
-                                                <input type="number" name="anggaran" class="form-control"
+                                                <input type="number" name="anggaran"
+                                                    class="form-control @error('anggaran') is-invalid @enderror"
                                                     {{ $isReadOnly ? 'readonly' : '' }}
                                                     value="{{ old('anggaran', $auditeeResponse['anggaran'] ?? '') }}"
                                                     placeholder="0">
                                             </div>
                                             <small class="text-muted">Kosongkan jika tidak membutuhkan anggaran.</small>
+                                            @error('anggaran')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
                                         </div>
 
                                         <div class="form-group">
-                                            <label class="font-weight-bold">
-                                                6. Indikator Keberhasilan <span class="text-danger">*</span>
-                                            </label>
-                                            <textarea name="indikator_keberhasilan" class="form-control" rows="3" required
-                                                {{ $isReadOnly ? 'readonly' : '' }}
+                                            <label class="font-weight-bold">6. Indikator Keberhasilan <span
+                                                    class="text-danger">*</span></label>
+                                            <textarea name="indikator_keberhasilan" class="form-control @error('indikator_keberhasilan') is-invalid @enderror"
+                                                rows="3" required {{ $isReadOnly ? 'readonly' : '' }}
                                                 placeholder="Jelaskan indikator yang digunakan untuk mengukur keberhasilan tindak lanjut...">{{ old('indikator_keberhasilan', $auditeeResponse['indikator_keberhasilan'] ?? '') }}</textarea>
                                             <small class="text-muted">Contoh: Persentase peserta pelatihan, jumlah SOP yang
                                                 diperbaiki, dll.</small>
+                                            @error('indikator_keberhasilan')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
                                         </div>
 
                                         <div class="form-group">
-                                            <label class="font-weight-bold">
-                                                7. Keterangan Tambahan
-                                            </label>
-                                            <textarea name="keterangan_tambahan" class="form-control" rows="3" {{ $isReadOnly ? 'readonly' : '' }}
-                                                placeholder="Tambahkan keterangan jika diperlukan...">{{ old('keterangan_tambahan', $auditeeResponse['keterangan_tambahan'] ?? '') }}</textarea>
+                                            <label class="font-weight-bold">7. Keterangan Tambahan</label>
+                                            <textarea name="keterangan_tambahan" class="form-control @error('keterangan_tambahan') is-invalid @enderror"
+                                                rows="3" {{ $isReadOnly ? 'readonly' : '' }} placeholder="Tambahkan keterangan jika diperlukan...">{{ old('keterangan_tambahan', $auditeeResponse['keterangan_tambahan'] ?? '') }}</textarea>
+                                            @error('keterangan_tambahan')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
                                         </div>
 
                                         @if (!$isReadOnly)
                                             <div class="form-group">
-                                                <label class="font-weight-bold">
-                                                    8. Bukti Pendukung (Upload File)
-                                                </label>
+                                                <label class="font-weight-bold">8. Bukti Pendukung (Upload File)</label>
                                                 <div class="custom-file">
                                                     <input type="file" name="bukti_pendukung"
-                                                        class="custom-file-input" id="buktiFile"
+                                                        class="custom-file-input @error('bukti_pendukung') is-invalid @enderror"
+                                                        id="buktiFile"
                                                         accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
                                                     <label class="custom-file-label" for="buktiFile">Pilih file...</label>
                                                 </div>
@@ -717,14 +745,32 @@
         .table-sm th {
             padding: 0.5rem;
         }
+
+        .custom-file-input:disabled~.custom-file-label {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        .alert-light {
+            border-left: 4px solid #007bff;
+        }
+
+        .timeline {
+            position: relative;
+        }
+
+        .timeline .alert {
+            margin-bottom: 15px;
+            padding: 15px;
+        }
     </style>
 @endpush
 
 @push('scripts')
     <script>
         // Custom file input label
-        document.querySelector('.custom-file-input').addEventListener('change', function(e) {
-            var fileName = e.target.files[0].name;
+        document.querySelector('#buktiFile')?.addEventListener('change', function(e) {
+            var fileName = e.target.files[0] ? e.target.files[0].name : 'Pilih file...';
             var label = e.target.nextElementSibling;
             label.textContent = fileName;
         });

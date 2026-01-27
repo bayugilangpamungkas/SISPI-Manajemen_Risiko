@@ -7,8 +7,8 @@
             {{-- HEADER SECTION --}}
             <div class="section-header">
                 <div class="d-flex align-items-center">
-                    <a href="{{ url('/dashboard') }}" class="btn btn-icon btn-light mr-3">
-                        <i class="fas fa-arrow-left"></i>
+                    <a href="{{ url('/dashboard') }}" class="mr-3">
+                        <i class="fas fa-arrow-left" style="font-size: 1.3rem"></i>
                     </a>
                     <div>
                         <h1 class="mb-0">Data Manajemen Risiko</h1>
@@ -181,157 +181,7 @@
                     </div>
                 </div>
 
-                {{-- FILTER & DOWNLOAD SECTION --}}
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-header bg-primary text-white py-3 border-bottom">
-                                <h6 class="mb-0 font-weight-bold d-flex align-items-center">
-                                    <i class="fas fa-filter mr-2"></i> Filter & Download
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <form method="GET" action="{{ route('manajemen-risiko.data') }}" id="filterForm">
-                                    <div class="row">
-                                        {{-- Filter Columns --}}
-                                        <div class="col-lg-9 mb-3 mb-lg-0">
-                                            <div class="row">
-                                                <div class="col-md-3 mb-3">
-                                                    <label class="form-label font-weight-bold small">TAHUN</label>
-                                                    <select name="tahun" class="form-control"
-                                                        onchange="document.getElementById('filterForm').submit()">
-                                                        @foreach ($years as $year)
-                                                            <option value="{{ $year }}"
-                                                                {{ $tahun == $year ? 'selected' : '' }}>
-                                                                {{ $year }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
 
-                                                <div class="col-md-3 mb-3">
-                                                    <label class="form-label font-weight-bold small">UNIT KERJA</label>
-                                                    <select name="unit_kerja" class="form-control"
-                                                        onchange="document.getElementById('filterForm').submit()">
-                                                        <option value="all"
-                                                            {{ $unitKerja == 'all' ? 'selected' : '' }}>
-                                                            Semua Unit Kerja
-                                                        </option>
-                                                        @foreach ($unitKerjas as $uk)
-                                                            <option value="{{ $uk->nama_unit_kerja }}"
-                                                                {{ $unitKerja == $uk->nama_unit_kerja ? 'selected' : '' }}>
-                                                                {{ $uk->nama_unit_kerja }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-
-                                                <div class="col-md-3 mb-3">
-                                                    <label class="form-label font-weight-bold small">KEGIATAN</label>
-                                                    <select name="id_kegiatan" class="form-control"
-                                                        onchange="document.getElementById('filterForm').submit()">
-                                                        <option value="all"
-                                                            {{ $kegiatanId == 'all' ? 'selected' : '' }}>
-                                                            Semua Kegiatan
-                                                        </option>
-                                                        @foreach ($kegiatans as $kegiatan)
-                                                            <option value="{{ $kegiatan->id }}"
-                                                                {{ $kegiatanId == $kegiatan->id ? 'selected' : '' }}>
-                                                                {{ Str::limit($kegiatan->judul, 35) }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-
-                                                <div class="col-md-3 mb-3">
-                                                    <label class="form-label font-weight-bold small">TINGKAT RISIKO</label>
-                                                    <select name="cluster" class="form-control"
-                                                        onchange="document.getElementById('filterForm').submit()">
-                                                        <option value="all" {{ $cluster == 'all' ? 'selected' : '' }}>
-                                                            Semua
-                                                        </option>
-                                                        <option value="high" {{ $cluster == 'high' ? 'selected' : '' }}>
-                                                            Tinggi
-                                                        </option>
-                                                        <option value="middle"
-                                                            {{ $cluster == 'middle' ? 'selected' : '' }}>
-                                                            Sedang
-                                                        </option>
-                                                        <option value="low" {{ $cluster == 'low' ? 'selected' : '' }}>
-                                                            Rendah
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Download Template Column --}}
-                                        <div class="col-lg-3">
-                                            <div class="form-group mb-0">
-                                                <label class="form-label font-weight-bold small">DOWNLOAD TEMPLATE</label>
-                                                <div class="d-grid gap-2">
-                                                    <a href="{{ route('manajemen-risiko.template.pdf') }}?tahun={{ $tahun }}&unit_kerja={{ $unitKerja }}"
-                                                        class="btn btn-danger" title="Download Template PDF">
-                                                        <i class="fas fa-file-pdf mr-1"></i> Format PDF
-                                                    </a>
-                                                    <a href="{{ route('manajemen-risiko.template.excel') }}?tahun={{ $tahun }}&unit_kerja={{ $unitKerja }}"
-                                                        class="btn btn-success" title="Download Template Excel">
-                                                        <i class="fas fa-file-excel mr-1"></i> Format Excel
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ACTION BUTTONS SECTION --}}
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body py-3">
-                                <div class="row align-items-center">
-                                    <div class="col-lg-5 mb-3 mb-lg-0">
-                                        <h6 class="text-dark font-weight-bold mb-2">
-                                            <i class="fas fa-info-circle text-primary mr-1"></i> Petunjuk Penggunaan
-                                        </h6>
-                                        <div class="text-muted">
-                                            <p class="mb-1 d-flex align-items-center">
-                                                <i class="fas fa-check text-success mr-2"></i>
-                                                Centang data yang akan ditampilkan di halaman <strong>Manajemen
-                                                    Risiko</strong>
-                                            </p>
-                                            <p class="mb-0 d-flex align-items-center">
-                                                <i class="fas fa-check text-success mr-2"></i>
-                                                Gunakan tombol "Pilih Semua" untuk memilih semua data sekaligus
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-7">
-                                        <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
-                                            <button type="button" class="btn btn-primary" onclick="showSelectedData()">
-                                                <i class="fas fa-eye mr-1"></i> Tampilkan Data
-                                            </button>
-                                            <button type="button" class="btn btn-info text-white" onclick="selectAll()">
-                                                <i class="fas fa-check-square mr-1"></i> Pilih Semua
-                                            </button>
-                                            <button type="button" class="btn btn-warning text-white"
-                                                onclick="deselectAll()">
-                                                <i class="fas fa-square mr-1"></i> Batal Pilih
-                                            </button>
-                                            <a href="{{ route('manajemen-risiko.index') }}" class="btn btn-dark">
-                                                <i class="fas fa-arrow-right mr-1"></i> Ke Manajemen Risiko
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 {{-- DATA TABLE SECTION --}}
                 <div class="row">
@@ -341,6 +191,174 @@
                                 <h6 class="mb-0 font-weight-bold d-flex align-items-center">
                                     <i class="fas fa-table mr-2"></i> Data Peta Risiko
                                 </h6>
+                            </div>
+                            {{-- FILTER & DOWNLOAD SECTION --}}
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card shadow-sm border-0">
+                                        <div class="card-body">
+                                            <form method="GET" action="{{ route('manajemen-risiko.data') }}"
+                                                id="filterForm">
+                                                <div class="row">
+                                                    {{-- Filter Columns --}}
+                                                    <div class="col-lg-9 mb-3 mb-lg-0">
+                                                        <div class="row">
+                                                            <div class="col-md-3 mb-3">
+                                                                <label
+                                                                    class="form-label font-weight-bold small">TAHUN</label>
+                                                                <select name="tahun" class="form-control"
+                                                                    onchange="document.getElementById('filterForm').submit()">
+                                                                    @foreach ($years as $year)
+                                                                        <option value="{{ $year }}"
+                                                                            {{ $tahun == $year ? 'selected' : '' }}>
+                                                                            {{ $year }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+
+                                                            <div class="col-md-3 mb-3">
+                                                                <label class="form-label font-weight-bold small">UNIT
+                                                                    KERJA</label>
+                                                                <select name="unit_kerja" class="form-control"
+                                                                    onchange="document.getElementById('filterForm').submit()">
+                                                                    <option value="all"
+                                                                        {{ $unitKerja == 'all' ? 'selected' : '' }}>
+                                                                        Semua Unit Kerja
+                                                                    </option>
+                                                                    @foreach ($unitKerjas as $uk)
+                                                                        <option value="{{ $uk->nama_unit_kerja }}"
+                                                                            {{ $unitKerja == $uk->nama_unit_kerja ? 'selected' : '' }}>
+                                                                            {{ $uk->nama_unit_kerja }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+
+                                                            <div class="col-md-3 mb-3">
+                                                                <label
+                                                                    class="form-label font-weight-bold small">KEGIATAN</label>
+                                                                <select name="id_kegiatan" class="form-control"
+                                                                    onchange="document.getElementById('filterForm').submit()">
+                                                                    <option value="all"
+                                                                        {{ $kegiatanId == 'all' ? 'selected' : '' }}>
+                                                                        Semua Kegiatan
+                                                                    </option>
+                                                                    @foreach ($kegiatans as $kegiatan)
+                                                                        <option value="{{ $kegiatan->id }}"
+                                                                            {{ $kegiatanId == $kegiatan->id ? 'selected' : '' }}>
+                                                                            {{ Str::limit($kegiatan->judul, 35) }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+
+                                                            <div class="col-md-3 mb-3">
+                                                                <label class="form-label font-weight-bold small">TINGKAT
+                                                                    RISIKO</label>
+                                                                <select name="cluster" class="form-control"
+                                                                    onchange="document.getElementById('filterForm').submit()">
+                                                                    <option value="all"
+                                                                        {{ $cluster == 'all' ? 'selected' : '' }}>
+                                                                        Semua
+                                                                    </option>
+                                                                    <option value="high"
+                                                                        {{ $cluster == 'high' ? 'selected' : '' }}>
+                                                                        Tinggi
+                                                                    </option>
+                                                                    <option value="middle"
+                                                                        {{ $cluster == 'middle' ? 'selected' : '' }}>
+                                                                        Sedang
+                                                                    </option>
+                                                                    <option value="low"
+                                                                        {{ $cluster == 'low' ? 'selected' : '' }}>
+                                                                        Rendah
+                                                                    </option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Download Template Column --}}
+                                                    <div class="col-lg-3">
+                                                        <div class="form-group mb-0">
+                                                            <label class="form-label font-weight-bold small">DOWNLOAD
+                                                                TEMPLATE</label>
+                                                            <div class="d-grid gap-2">
+                                                                <a href="{{ route('manajemen-risiko.template.pdf') }}?tahun={{ $tahun }}&unit_kerja={{ $unitKerja }}"
+                                                                    class="btn btn-danger" title="Download Template PDF">
+                                                                    <i class="fas fa-file-pdf mr-1"></i> Format PDF
+                                                                </a>
+                                                                <a href="{{ route('manajemen-risiko.template.excel') }}?tahun={{ $tahun }}&unit_kerja={{ $unitKerja }}"
+                                                                    class="btn btn-success"
+                                                                    title="Download Template Excel">
+                                                                    <i class="fas fa-file-excel mr-1"></i> Format Excel
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- ACTION BUTTONS SECTION --}}
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card shadow-sm border-0">
+                                        <div class="card-body py-3">
+                                            <div class="row align-items-center">
+                                                <div class="col-lg-5 mb-3 mb-lg-0">
+                                                    <h6 class="text-dark font-weight-bold mb-2">
+                                                        <i class="fas fa-info-circle text-primary mr-1"></i> Petunjuk
+                                                        Penggunaan
+                                                    </h6>
+                                                    <div class="text-muted">
+                                                        <p class="mb-1 d-flex align-items-center">
+                                                            <i class="fas fa-check text-success mr-2"></i>
+                                                            Centang data yang akan ditampilkan di halaman <strong>Manajemen
+                                                                Risiko</strong>
+                                                        </p>
+                                                        <p class="mb-0 d-flex align-items-center">
+                                                            <i class="fas fa-check text-success mr-2"></i>
+                                                            Gunakan tombol "Pilih Semua" untuk memilih semua data sekaligus
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-7">
+                                                    <div class="form-group mb-0">
+                                                        <label class="form-label font-weight-bold small">AKSI MANAJEMEN
+                                                            RISIKO</label>
+                                                        <div class="d-grid gap-2">
+                                                            <button type="button" class="btn btn-primary"
+                                                                onclick="showSelectedData()">
+                                                                <i class="fas fa-eye mr-2"></i> Submit Data ke Manajemen
+                                                                Risiko
+                                                            </button>
+
+                                                            <button type="button" class="btn btn-info text-white"
+                                                                onclick="selectAll()">
+                                                                <i class="fas fa-check-square mr-2"></i> Pilih Semua
+                                                            </button>
+
+                                                            <button type="button" class="btn btn-warning text-white"
+                                                                onclick="deselectAll()">
+                                                                <i class="fas fa-square mr-2"></i> Batal Pilih
+                                                            </button>
+
+                                                            <a href="{{ route('manajemen-risiko.index') }}"
+                                                                class="btn btn-dark">
+                                                                <i class="fas fa-arrow-right mr-2"></i> ke Manajemen Risiko
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="card-body p-0">
                                 <form id="selectionForm" method="POST">
@@ -357,6 +375,7 @@
                                                     <th>Unit Kerja</th>
                                                     <th width="100" class="text-center">Kode</th>
                                                     <th width="120" class="text-center">Kegiatan</th>
+                                                    <th width="130" class="text-center">Risiko Terpilih</th>
                                                     <th width="120" class="text-center">Kategori</th>
                                                     <th>Judul Risiko</th>
                                                     <th width="90" class="text-center">Skor</th>
@@ -459,9 +478,12 @@
 
                                                         // ✅ PERBAIKAN: Hitung jumlah risiko di unit ini (optimasi query)
                                                         $jumlahRisikoUnit = 0;
+                                                        $jumlahRisikoTerpilih = 0;
                                                         if ($peta->jenis) {
                                                             // Gunakan caching atau hitung sekali per unit
                                                             static $risikoCountCache = [];
+                                                            static $risikoTerpilihCache = [];
+
                                                             if (!isset($risikoCountCache[$peta->jenis])) {
                                                                 $risikoCountCache[
                                                                     $peta->jenis
@@ -470,6 +492,17 @@
                                                                     ->count();
                                                             }
                                                             $jumlahRisikoUnit = $risikoCountCache[$peta->jenis];
+
+                                                            // Hitung jumlah risiko yang sudah terpilih (tampil_manajemen_risiko = 1)
+                                                            if (!isset($risikoTerpilihCache[$peta->jenis])) {
+                                                                $risikoTerpilihCache[
+                                                                    $peta->jenis
+                                                                ] = \App\Models\Peta::where('jenis', $peta->jenis)
+                                                                    ->whereYear('created_at', $tahun)
+                                                                    ->where('tampil_manajemen_risiko', 1)
+                                                                    ->count();
+                                                            }
+                                                            $jumlahRisikoTerpilih = $risikoTerpilihCache[$peta->jenis];
                                                         }
                                                     @endphp
 
@@ -531,6 +564,31 @@
                                                             </div>
                                                         </td>
                                                         <td class="text-center align-middle">
+                                                            <div class="d-flex flex-column align-items-center">
+                                                                <div class="d-flex align-items-center mb-1">
+                                                                    <i class="fas fa-check-circle text-success mr-2"></i>
+                                                                    <span class="font-weight-bold"
+                                                                        style="font-size: 1.1rem; color: #28a745;">
+                                                                        {{ $jumlahRisikoTerpilih }}
+                                                                    </span>
+                                                                    @if ($jumlahRisikoUnit > 0)
+                                                                        <small
+                                                                            class="text-muted ml-1">/{{ $jumlahRisikoUnit }}</small>
+                                                                    @endif
+                                                                </div>
+                                                                <small class="text-muted">
+                                                                    @if ($jumlahRisikoTerpilih == 0)
+                                                                        <span class="text-danger">Belum ada risiko
+                                                                            dipilih</span>
+                                                                    @elseif($jumlahRisikoTerpilih == 1)
+                                                                        1 risiko dipilih
+                                                                    @else
+                                                                        {{ $jumlahRisikoTerpilih }} risiko dipilih
+                                                                    @endif
+                                                                </small>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-center align-middle">
                                                             <span class="badge badge-light border text-dark">
                                                                 {{ $peta->kategori }}
                                                             </span>
@@ -563,8 +621,8 @@
                                                         <td class="text-center align-middle">
                                                             <a href="{{ route('manajemen-risiko.detail-unit', ['unitKerja' => $peta->jenis, 'tahun' => $tahun]) }}"
                                                                 class="btn btn-sm btn-outline-primary"
-                                                                title="Lihat Detail">
-                                                                <i class="fas fa-eye"></i>
+                                                                title="Pilih Kegiatan">
+                                                                <i class="fas fa-list-ul mr-1"></i> Pilih Kegiatan
                                                             </a>
                                                         </td>
                                                     </tr>
@@ -1000,6 +1058,11 @@
                 timer: 1500
             });
         }
+
+
+        // =============================================
+        // MODAL FUNCTIONS
+        // =============================================
 
         function showSelectedData() {
             const selectedCount = $('.data-checkbox:checked').length;

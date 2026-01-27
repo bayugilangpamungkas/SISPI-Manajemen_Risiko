@@ -41,21 +41,34 @@
 
     <div class="main-content">
         <section class="section">
-            <div class="section-header text-center flex-column">
-                <h1 class="font-weight-bold mb-0" style="font-size:19px">LEMBAR MONITORING DAN EVALUASI MANAJEMEN RISIKO UNIT
-                </h1>
-                <span style="font-size:15px">SATUAN PENGAWAS INTERNAL</span>
-                <span style="font-size:15px">POLITEKNIK NEGERI MALANG</span>
+            <div class="section-header position-relative" style="padding-top: 10px; padding-bottom: 10px;">
+                <a href="{{ url('/manajemen-risiko') }}" class="mr-3">
+                    <i class="fas fa-arrow-left" style="font-size: 1.3rem"></i>
+                </a>
+                <div class="w-100 text-center px-5">
+                    <h1 class="font-weight-bold mb-0" style="font-size:19px">
+                        LEMBAR MONITORING DAN EVALUASI MANAJEMEN RISIKO UNIT
+                    </h1>
+                    <div style="font-size:15px; line-height: 1.2;">
+                        <span class="d-block">SATUAN PENGAWAS INTERNAL</span>
+                        <span>POLITEKNIK NEGERI MALANG</span>
+                    </div>
+                </div>
             </div>
+
             <div class="section-body mt-4">
-                <form action="{{ route('manajemen-risiko.auditor.show', $peta->id) }}" method="POST">
+                {{-- === TAHAP 1: INPUT & SIMPAN DATA === --}}
+                <form action="{{ route('manajemen-risiko.auditor.update-template', $peta->id) }}" method="POST">
                     @csrf
+                    @method('PUT')
+
+                    {{-- TAMPILAN TABEL FORM INPUT (Sama seperti sebelumnya) --}}
                     <table class="table table-bordered" style="border: 2px solid #333; width: 100%; font-size:15px;">
                         <tr>
                             <td width="49%">
                                 <div>
                                     <span class="font-weight-bold">UNIT</span><br>
-                                    <span>{{ $peta->jenis ?? '-' }}</span>
+                                    <span>{{ $peta->jenis }}</span>
                                 </div>
                             </td>
                             <td width="2%" style="border-left:0;"></td>
@@ -131,9 +144,13 @@
                             </td>
                         </tr>
                     </table>
+
+                    {{-- Bagian Tanda Tangan --}}
                     <div class="row mt-5">
                         <div class="col-8">
                             <span>Unit.</span>
+                            <br>
+                            <span class="font-weight-bold">{{ $peta->jenis }}</span>
                         </div>
                         <div class="col-4 text-right">
                             <span>
@@ -147,12 +164,65 @@
                             </span>
                         </div>
                     </div>
-                    <div class="text-center mt-3">
-                        <button type="submit" class="btn btn-success px-5">
-                            <i class="fas fa-check"></i> Simpan
+
+                    {{-- TOMBOL SIMPAN DATABASE --}}
+                    <div class="alert alert-light border mt-4">
+                        <h6 class="font-weight-bold text-primary"><i class="fas fa-save"></i> Langkah 1: Simpan Data</h6>
+                        <p class="mb-2 text-muted small">Simpan perubahan data (komentar, mitigasi, status) ke sistem
+                            sebelum mengunduh.</p>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save"></i> Simpan Perubahan Data
                         </button>
                     </div>
                 </form>
+                {{-- === END TAHAP 1 === --}}
+
+
+
+                {{-- === TAHAP 2: DOWNLOAD FILE (Untuk Direview Auditor) === --}}
+                {{-- Note: Anda harus membuat route 'export-pdf' di controller yang menggunakan DomPDF atau library lain --}}
+                <div class="alert alert-light border mt-3">
+                    <h6 class="font-weight-bold text-warning"><i class="fas fa-file-download"></i> Langkah 2: Review
+                        Template</h6>
+                    <p class="mb-2 text-muted small">Unduh file hasil inputan di atas untuk diperiksa kembali sebelum
+                        dikirim ke Auditee.</p>
+
+                    {{-- Ganti href ini dengan route export PDF Anda --}}
+                    <a href="{{ route('manajemen-risiko.auditor.export-pdf', $peta->id) }}" target="_blank"
+                        class="btn btn-warning px-4 text-dark">
+                        <i class="fas fa-file-pdf"></i> Download PDF Hasil Inputan
+                    </a>
+                </div>
+                {{-- === END TAHAP 2 === --}}
+
+
+
+                {{-- === TAHAP 3: UPLOAD FILE FINAL (Kirim ke Auditee) === --}}
+                <div class="alert alert-light border mt-3" style="background-color: #f8f9fa;">
+                    <h6 class="font-weight-bold text-success"><i class="fas fa-paper-plane"></i> Langkah 3: Kirim ke
+                        Auditee</h6>
+                    <p class="mb-2 text-muted small">Jika file hasil download sudah oke (atau sudah Anda beri catatan
+                        tambahan), upload di sini untuk dikirim ke Auditee.</p>
+
+                    <form action="{{ route('manajemen-risiko.auditor.upload-lampiran', $peta->id) }}" method="POST"
+                        enctype="multipart/form-data">
+                        @csrf
+                        @method('POST')
+
+                        <div class="form-group row align-items-center">
+                            <div class="col-md-8">
+                                <input type="file" name="file_pendukung" id="file_pendukung"
+                                    class="form-control h-auto py-2" accept=".pdf, .xls, .xlsx" required>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-success btn-block">
+                                    <i class="fas fa-upload"></i> Kirim ke Auditee
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                {{-- === END TAHAP 3 === --}}
             </div>
         </section>
     </div>

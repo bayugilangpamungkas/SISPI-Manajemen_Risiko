@@ -42,8 +42,13 @@ class Peta extends Model
         'template_sent_at',
         'auditee_response',
         'tampil_manajemen_risiko',
+        'file_lampiran',
         'laporan_unit',
         'laporan_spi',
+        'pengendalian',
+        'mitigasi',
+        'status_konfirmasi_auditee',
+        'status_konfirmasi_auditor',
     ];
 
     public function getApprovalStatusAttribute()

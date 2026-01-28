@@ -22,7 +22,7 @@
                         <h1>
                             @if ($isAuditor)
                                 Review Risiko
-                            @elseif($isAuditee)
+                            @elseif ($isAuditee)
                                 Monitoring Risiko
                             @else
                                 Manajemen Risiko
@@ -31,7 +31,7 @@
                         @if ($isAuditor)
                             <small class="text-muted">Auditor: {{ $user->name }}
                                 ({{ $user->Level->name ?? 'N/A' }})</small>
-                        @elseif($isAuditee)
+                        @elseif ($isAuditee)
                             <small class="text-muted">Unit Kerja: {{ $user->unitKerja->nama_unit_kerja ?? 'N/A' }}</small>
                         @endif
                     </div>
@@ -57,7 +57,7 @@
                     <span style="color: #6c757d;">
                         @if ($isAuditor)
                             Review dan Analisis
-                        @elseif($isAuditee)
+                        @elseif ($isAuditee)
                             Input dan Monitoring
                         @else
                             Data Risiko
@@ -101,13 +101,18 @@
                                                     <select name="cluster" class="form-control"
                                                         onchange="document.getElementById('filterForm').submit()">
                                                         <option value="all" {{ $cluster == 'all' ? 'selected' : '' }}>
-                                                            Semua</option>
+                                                            Semua
+                                                        </option>
                                                         <option value="high" {{ $cluster == 'high' ? 'selected' : '' }}>
-                                                            Tinggi</option>
+                                                            Tinggi
+                                                        </option>
                                                         <option value="middle"
-                                                            {{ $cluster == 'middle' ? 'selected' : '' }}>Sedang</option>
+                                                            {{ $cluster == 'middle' ? 'selected' : '' }}>
+                                                            Sedang
+                                                        </option>
                                                         <option value="low" {{ $cluster == 'low' ? 'selected' : '' }}>
-                                                            Rendah</option>
+                                                            Rendah
+                                                        </option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -137,7 +142,8 @@
                                                         onchange="document.getElementById('filterForm').submit()">
                                                         <option value="all"
                                                             {{ ($kegiatanId ?? 'all') == 'all' ? 'selected' : '' }}>
-                                                            Semua Kegiatan</option>
+                                                            Semua Kegiatan
+                                                        </option>
                                                         @foreach ($kegiatans ?? [] as $kegiatan)
                                                             <option value="{{ $kegiatan->id }}"
                                                                 {{ ($kegiatanId ?? '') == $kegiatan->id ? 'selected' : '' }}>
@@ -154,7 +160,8 @@
                                                     <select name="unit_kerja" class="form-control"
                                                         onchange="document.getElementById('filterForm').submit()">
                                                         <option value="all" {{ $unitKerja == 'all' ? 'selected' : '' }}>
-                                                            Semua Unit Kerja</option>
+                                                            Semua Unit Kerja
+                                                        </option>
                                                         @foreach ($unitKerjas as $uk)
                                                             <option value="{{ $uk->nama_unit_kerja }}"
                                                                 {{ $unitKerja == $uk->nama_unit_kerja ? 'selected' : '' }}>
@@ -174,10 +181,13 @@
                                                     <select name="auditor" class="form-control"
                                                         onchange="document.getElementById('filterForm').submit()">
                                                         <option value="all"
-                                                            {{ $auditorFilter == 'all' ? 'selected' : '' }}>Semua</option>
+                                                            {{ $auditorFilter == 'all' ? 'selected' : '' }}>
+                                                            Semua
+                                                        </option>
                                                         <option value="unassigned"
-                                                            {{ $auditorFilter == 'unassigned' ? 'selected' : '' }}>Belum
-                                                            Ditugaskan</option>
+                                                            {{ $auditorFilter == 'unassigned' ? 'selected' : '' }}>
+                                                            Belum Ditugaskan
+                                                        </option>
                                                         @foreach ($auditors as $auditor)
                                                             <option value="{{ $auditor->id }}"
                                                                 {{ $auditorFilter == $auditor->id ? 'selected' : '' }}>
@@ -196,25 +206,31 @@
                                                     <select name="status_review" class="form-control"
                                                         onchange="document.getElementById('filterForm').submit()">
                                                         <option value="all"
-                                                            {{ ($statusReview ?? 'all') == 'all' ? 'selected' : '' }}>Semua
+                                                            {{ ($statusReview ?? 'all') == 'all' ? 'selected' : '' }}>
+                                                            Semua
                                                         </option>
                                                         @if ($isAuditee)
                                                             <option value="approved"
                                                                 {{ ($statusReview ?? '') == 'approved' ? 'selected' : '' }}>
-                                                                Disetujui</option>
+                                                                Disetujui
+                                                            </option>
                                                             <option value="rejected"
                                                                 {{ ($statusReview ?? '') == 'rejected' ? 'selected' : '' }}>
-                                                                Ditolak / Perlu Revisi</option>
+                                                                Ditolak / Perlu Revisi
+                                                            </option>
                                                             <option value="pending"
                                                                 {{ ($statusReview ?? '') == 'pending' ? 'selected' : '' }}>
-                                                                Menunggu Review</option>
+                                                                Menunggu Review
+                                                            </option>
                                                         @else
                                                             <option value="reviewed"
                                                                 {{ ($statusReview ?? '') == 'reviewed' ? 'selected' : '' }}>
-                                                                Sudah Review</option>
+                                                                Sudah Review
+                                                            </option>
                                                             <option value="pending"
                                                                 {{ ($statusReview ?? '') == 'pending' ? 'selected' : '' }}>
-                                                                Belum Review</option>
+                                                                Belum Review
+                                                            </option>
                                                         @endif
                                                     </select>
                                                 </div>
@@ -254,31 +270,49 @@
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-hover mt-2">
                                         <thead class="thead-light">
-                                            <tr class="text-center">
-                                                <th scope="col" width="3%">No</th>
+                                            <tr>
+                                                <th scope="col" width="3%" class="text-center">No</th>
                                                 @if (!$isAuditee)
-                                                    <th scope="col" width="10%">Unit Kerja</th>
+                                                    <th scope="col" width="10%" class="text-left">Unit Kerja</th>
                                                 @endif
-                                                <th scope="col" width="{{ $isAuditee ? '12%' : '10%' }}">Kegiatan</th>
-                                                <th scope="col" width="{{ $isAuditee ? '10%' : '8%' }}">Risiko
-                                                    Terpilih</th>
-                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}">Kategori</th>
+                                                <th scope="col" width="{{ $isAuditee ? '10%' : '8%' }}"
+                                                    class="text-center">
+                                                    Risiko Kegiatan
+                                                </th>
+                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}"
+                                                    class="text-center">
+                                                    Kategori
+                                                </th>
                                                 <th scope="col"
-                                                    width="{{ $isAdmin ? '13%' : ($isAuditee ? '18%' : '15%') }}">Judul
-                                                    Risiko</th>
+                                                    width="{{ $isAdmin ? '13%' : ($isAuditee ? '18%' : '15%') }}"
+                                                    class="text-left">
+                                                    Judul Risiko
+                                                </th>
                                                 @if ($isAdmin)
-                                                    <th scope="col" width="10%">Auditor</th>
+                                                    <th scope="col" width="10%" class="text-center">Auditor</th>
                                                 @endif
-                                                <th scope="col" width="{{ $isAuditee ? '6%' : '5%' }}">Skor</th>
-                                                <th scope="col" width="7%">Tingkat</th>
-                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}">Status</th>
-                                                <th scope="col" width="{{ $isAuditee ? '9%' : '8%' }}">Komentar</th>
-                                                <th scope="col" width="{{ $isAuditee ? '10%' : '11%' }}">Aksi</th>
+                                                <th scope="col" width="{{ $isAuditee ? '6%' : '5%' }}"
+                                                    class="text-center">
+                                                    Skor
+                                                </th>
+                                                <th scope="col" width="7%" class="text-center">Tingkat</th>
+                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}"
+                                                    class="text-center">
+                                                    Status
+                                                </th>
+                                                <th scope="col" width="{{ $isAuditee ? '9%' : '8%' }}"
+                                                    class="text-center">
+                                                    Komentar
+                                                </th>
+                                                <th scope="col" width="{{ $isAuditee ? '10%' : '11%' }}"
+                                                    class="text-center">
+                                                    Aksi
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @php $no = ($petas->currentPage() - 1) * $petas->perPage() + 1; @endphp
-                                            @forelse($petas as $peta)
+                                            @forelse ($petas as $peta)
                                                 @php
                                                     $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
 
@@ -296,21 +330,19 @@
                                                         $badgeText = 'Low';
                                                     }
 
-                                                    // Hitung jumlah komentar
                                                     $jumlahKomentar = $peta->comment_prs->count();
                                                 @endphp
 
                                                 <tr>
                                                     <td class="text-center">{{ $no++ }}</td>
                                                     @if (!$isAuditee)
-                                                        <td class="text-center">
+                                                        <td class="text-left">
                                                             <strong>{{ $peta->jenis }}</strong><br>
                                                             <small class="text-muted">{{ $peta->kode_regist }}</small>
                                                         </td>
                                                     @endif
                                                     <td class="text-center align-middle">
                                                         @php
-                                                            // Hitung jumlah risiko dan risiko terpilih dengan cache
                                                             static $risikoCountCache = [];
                                                             static $risikoTerpilihCache = [];
 
@@ -336,53 +368,8 @@
 
                                                             $jumlahRisikoUnit = $risikoCountCache[$unitName];
                                                             $jumlahRisikoTerpilih = $risikoTerpilihCache[$unitName];
-
-                                                            // Hitung unit kerja model untuk kegiatan
-                                                            $unitKerjaModel = \App\Models\UnitKerja::where(
-                                                                'nama_unit_kerja',
-                                                                $peta->jenis,
-                                                            )->first();
-
-                                                            // Default
-                                                            $jumlahKegiatanTampil = 0;
-                                                            $totalKegiatanUnit = 0;
-
-                                                            // Hitung jika unit ditemukan
-                                                            if ($unitKerjaModel) {
-                                                                $jumlahKegiatanTampil = \App\Models\Kegiatan::hitungKegiatanTampil(
-                                                                    $unitKerjaModel->id,
-                                                                    $tahun,
-                                                                );
-                                                                $totalKegiatanUnit = \App\Models\Kegiatan::where(
-                                                                    'id_unit_kerja',
-                                                                    $unitKerjaModel->id,
-                                                                )->count();
-                                                            }
                                                         @endphp
 
-                                                        <div class="d-flex flex-column align-items-center">
-                                                            <div class="d-flex align-items-center mb-1">
-                                                                <i class="fas fa-tasks text-primary mr-1"></i>
-                                                                <span class="font-weight-bold"
-                                                                    style="font-size: 1rem; color: #1976d2;">
-                                                                    {{ $jumlahKegiatanTampil }}
-                                                                </span>
-                                                                @if ($totalKegiatanUnit > 0)
-                                                                    <small
-                                                                        class="text-muted ml-1">/{{ $totalKegiatanUnit }}</small>
-                                                                @endif
-                                                            </div>
-                                                            <small class="text-muted" style="font-size: 0.75rem;">
-                                                                @if ($jumlahKegiatanTampil == 0)
-                                                                    <span class="text-danger">Tidak ada</span>
-                                                                @else
-                                                                    {{ $jumlahKegiatanTampil }} kegiatan
-                                                                @endif
-                                                            </small>
-                                                        </div>
-                                                    </td>
-
-                                                    <td class="text-center align-middle">
                                                         <div class="d-flex flex-column align-items-center">
                                                             <div class="d-flex align-items-center mb-1">
                                                                 <i class="fas fa-check-circle text-success mr-1"></i>
@@ -391,8 +378,9 @@
                                                                     {{ $jumlahRisikoTerpilih }}
                                                                 </span>
                                                                 @if ($jumlahRisikoUnit > 0)
-                                                                    <small
-                                                                        class="text-muted ml-1">/{{ $jumlahRisikoUnit }}</small>
+                                                                    <small class="text-muted ml-1">
+                                                                        /{{ $jumlahRisikoUnit }}
+                                                                    </small>
                                                                 @endif
                                                             </div>
                                                             <small class="text-muted" style="font-size: 0.75rem;">
@@ -404,11 +392,10 @@
                                                             </small>
                                                         </div>
                                                     </td>
-
                                                     <td class="text-center">
                                                         <span class="badge badge-secondary">{{ $peta->kategori }}</span>
                                                     </td>
-                                                    <td>
+                                                    <td class="text-left">
                                                         {{ Str::limit($peta->judul, $isAdmin ? 40 : ($isAuditee ? 60 : 50)) }}
                                                         @if ($peta->judul && strlen($peta->judul) > ($isAdmin ? 40 : ($isAuditee ? 60 : 50)))
                                                             <i class="fas fa-info-circle text-info" data-toggle="tooltip"
@@ -432,8 +419,9 @@
                                                     @endif
                                                     <td class="text-center">
                                                         <strong style="font-size: 16px;">{{ $skorTotal }}</strong><br>
-                                                        <small class="text-muted">{{ $peta->skor_kemungkinan }} ×
-                                                            {{ $peta->skor_dampak }}</small>
+                                                        <small class="text-muted">
+                                                            {{ $peta->skor_kemungkinan }} × {{ $peta->skor_dampak }}
+                                                        </small>
                                                     </td>
                                                     <td class="text-center">
                                                         <span class="badge {{ $badgeClass }}" style="font-size: 12px;">
@@ -441,7 +429,6 @@
                                                         </span>
                                                     </td>
                                                     <td class="text-center">
-                                                        {{-- BADGE STATUS YANG BISA DIKLIK --}}
                                                         @if ($peta->status_telaah)
                                                             <a href="{{ $isAuditee ? route('manajemen-risiko.auditee.show-detail', $peta->id) : ($isAuditor ? route('manajemen-risiko.auditor.show-detail', $peta->id) : route('manajemen-risiko.show', $peta->id)) }}"
                                                                 class="badge badge-success"
@@ -449,14 +436,14 @@
                                                                 title="Klik untuk melihat detail hasil review">
                                                                 <i class="fas fa-check"></i> Selesai
                                                             </a>
-                                                        @elseif($peta->koreksiPr == 'rejected')
+                                                        @elseif ($peta->koreksiPr == 'rejected')
                                                             <a href="{{ $isAuditee ? route('manajemen-risiko.auditee.show-detail', $peta->id) : ($isAuditor ? route('manajemen-risiko.auditor.show-detail', $peta->id) : route('manajemen-risiko.show', $peta->id)) }}"
                                                                 class="badge badge-danger"
                                                                 style="text-decoration: none; cursor: pointer;"
                                                                 title="Klik untuk melihat alasan penolakan">
                                                                 <i class="fas fa-times"></i> Ditolak
                                                             </a>
-                                                        @elseif($peta->koreksiPr == 'submitted')
+                                                        @elseif ($peta->koreksiPr == 'submitted')
                                                             <a href="{{ $isAuditee ? route('manajemen-risiko.auditee.show-detail', $peta->id) : ($isAuditor ? route('manajemen-risiko.auditor.show-detail', $peta->id) : route('manajemen-risiko.show', $peta->id)) }}"
                                                                 class="badge badge-info"
                                                                 style="text-decoration: none; cursor: pointer;"
@@ -474,7 +461,6 @@
                                                     </td>
                                                     <td class="text-center">
                                                         @if ($jumlahKomentar > 0)
-                                                            {{-- Tombol untuk memicu Modal --}}
                                                             <button type="button"
                                                                 class="badge badge-primary badge-pill border-0"
                                                                 data-toggle="modal"
@@ -489,15 +475,13 @@
                                                         @endif
                                                     </td>
                                                     <td class="text-center">
-                                                        {{-- TOMBOL DETAIL UNTUK SEMUA ROLE --}}
                                                         <a href="{{ $isAuditee ? route('manajemen-risiko.auditee.show-detail', $peta->id) : ($isAuditor ? route('manajemen-risiko.auditor.show-detail', $peta->id) : route('manajemen-risiko.show', $peta->id)) }}"
                                                             class="btn btn-sm btn-primary mb-1" title="Detail">
                                                             <i class="fas fa-eye"></i> Detail
                                                         </a>
 
                                                         @if ($isAdmin)
-                                                            {{-- ========= ADMIN ACTIONS ========= --}}
-                                                            {{-- Admin hanya bisa tugaskan/ubah Auditor --}}
+                                                            {{-- Admin actions --}}
                                                             @if ($peta->auditor)
                                                                 <button class="btn btn-sm btn-info mb-1"
                                                                     data-toggle="modal"
@@ -505,11 +489,9 @@
                                                                     title="Ubah Auditor">
                                                                     <i class="fas fa-user-edit"></i> Ubah
                                                                 </button>
-                                                            @else
                                                             @endif
-                                                        @elseif($isAuditor)
-                                                            {{-- ========= AUDITOR ACTIONS ========= --}}
-                                                            {{-- Auditor hanya bisa approve/reject setelah Auditee submit --}}
+                                                        @elseif ($isAuditor)
+                                                            {{-- Auditor actions --}}
                                                             @if ($peta->koreksiPr == 'submitted' && !$peta->status_telaah)
                                                                 <button class="btn btn-sm btn-success mb-1"
                                                                     data-toggle="modal"
@@ -523,23 +505,23 @@
                                                                     title="Tolak">
                                                                     <i class="fas fa-times-circle"></i> Tolak
                                                                 </button>
-                                                            @elseif(!$peta->template_sent_at)
+                                                            @elseif (!$peta->template_sent_at)
                                                                 <span class="badge badge-secondary"
                                                                     title="Isi template terlebih dahulu">
                                                                     <i class="fas fa-info-circle"></i> Belum Kirim Template
                                                                 </span>
-                                                            @elseif(!$peta->koreksiPr || $peta->koreksiPr == 'rejected')
+                                                            @elseif (!$peta->koreksiPr || $peta->koreksiPr == 'rejected')
                                                                 <span class="badge badge-warning"
                                                                     title="Menunggu Auditee mengerjakan">
                                                                     <i class="fas fa-clock"></i> Menunggu Auditee
                                                                 </span>
-                                                            @elseif($peta->status_telaah)
+                                                            @elseif ($peta->status_telaah)
                                                                 <span class="badge badge-success" title="Sudah disetujui">
                                                                     <i class="fas fa-check"></i> Sudah ACC
                                                                 </span>
                                                             @endif
-                                                        @elseif($isAuditee)
-                                                            {{-- ========= AUDITEE ACTIONS ========= --}}
+                                                        @elseif ($isAuditee)
+                                                            {{-- Auditee actions --}}
                                                             @if (!$peta->auditor_id)
                                                                 <span class="badge badge-secondary"
                                                                     title="Belum ada auditor">
@@ -586,7 +568,7 @@
                                                                 class="fas {{ $isAuditee || $isAuditor ? 'fa-info-circle' : 'fa-exclamation-triangle' }}"></i>
                                                             @if ($isAuditee)
                                                                 Tidak ada data risiko untuk unit kerja Anda.
-                                                            @elseif($isAuditor)
+                                                            @elseif ($isAuditor)
                                                                 Tidak ada risiko yang ditugaskan kepada Anda.
                                                             @else
                                                                 Data risiko tidak tersedia untuk filter yang dipilih.
@@ -608,49 +590,50 @@
                 </div>
             </div>
         </section>
-        @foreach ($petas as $peta)
-            <div class="modal fade" id="modalKomentar{{ $peta->id }}" tabindex="-1" role="dialog"
-                aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title"><i class="fas fa-comments"></i> Komentar Auditor -
-                                {{ $peta->judul }}</h5>
-                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="list-group">
-                                @forelse($peta->comment_prs as $comment)
-                                    <div
-                                        class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm border">
-                                        <div class="d-flex w-100 justify-content-between">
-                                            <h6 class="mb-1 text-primary">
-                                                <b>{{ $comment->user->name ?? 'Auditor' }}</b>
-                                            </h6>
-                                            <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
-                                        </div>
-                                        <p class="mb-1 text-dark">{{ $comment->komentar }}</p>
-                                    </div>
-                                @empty
-                                    <p class="text-center text-muted">Belum ada rincian komentar.</p>
-                                @endforelse
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endforeach
     </div>
 
     {{-- MODALS --}}
     @foreach ($petas as $peta)
+        {{-- MODAL KOMENTAR --}}
+        <div class="modal fade" id="modalKomentar{{ $peta->id }}" tabindex="-1" role="dialog"
+            aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-comments"></i> Komentar Auditor - {{ $peta->judul }}
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="list-group">
+                            @forelse ($peta->comment_prs as $comment)
+                                <div
+                                    class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm border">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1 text-primary">
+                                            <b>{{ $comment->user->name ?? 'Auditor' }}</b>
+                                        </h6>
+                                        <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
+                                    </div>
+                                    <p class="mb-1 text-dark">{{ $comment->komentar }}</p>
+                                </div>
+                            @empty
+                                <p class="text-center text-muted">Belum ada rincian komentar.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ADMIN MODAL --}}
         @if ($isAdmin)
-            {{-- Modal Assign Auditor (Admin only) --}}
             <div class="modal fade" id="assignAuditorModal{{ $peta->id }}" tabindex="-1" role="dialog">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -692,8 +675,11 @@
                     </div>
                 </div>
             </div>
-        @elseif($isAuditor)
-            {{-- Modal Approve (Auditor only) --}}
+        @endif
+
+        {{-- AUDITOR MODALS --}}
+        @if ($isAuditor)
+            {{-- APPROVE MODAL --}}
             <div class="modal fade" id="approveModal{{ $peta->id }}" tabindex="-1" role="dialog">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -727,51 +713,45 @@
                     </div>
                 </div>
             </div>
-        @endsection
 
-        {{-- Modal Reject (Auditor only) --}}
-        <div class="modal fade" id="rejectModal{{ $peta->id }}" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-times-circle"></i> Tolak & Kembalikan
-                        </h5>
-                        <button type="button" class="close text-white" data-dismiss="modal">
-                            <span>&times;</span>
-                        </button>
-                    </div>
-                    <form action="{{ route('manajemen-risiko.auditor.reject', $peta->id) }}" method="POST">
-                        @csrf
-                        <div class="modal-body">
-                            <p><strong>Data akan dikembalikan ke Auditee untuk revisi</strong></p>
-                            <hr>
-                            <p><strong>Unit:</strong> {{ $peta->jenis }}</p>
-                            <p><strong>Judul:</strong> {{ $peta->judul }}</p>
-                            <div class="form-group">
-                                <label class="font-weight-bold">Alasan Penolakan <span
-                                        class="text-danger">*</span></label>
-                                <textarea name="comment" class="form-control" rows="4"
-                                    placeholder="Jelaskan alasan penolakan dan perbaikan yang diperlukan..." required></textarea>
-                            </div>
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <strong>Perhatian:</strong> Auditee akan menerima notifikasi dan harus melakukan
-                                perbaikan.
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-times"></i> Ya, Tolak
+            {{-- REJECT MODAL --}}
+            <div class="modal fade" id="rejectModal{{ $peta->id }}" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-times-circle"></i> Tolak Risiko
+                            </h5>
+                            <button type="button" class="close text-white" data-dismiss="modal">
+                                <span>&times;</span>
                             </button>
                         </div>
-                    </form>
+                        <form action="{{ route('manajemen-risiko.auditor.reject', $peta->id) }}" method="POST">
+                            @csrf
+                            <div class="modal-body">
+                                <p><strong>Apakah Anda yakin menolak risiko ini?</strong></p>
+                                <hr>
+                                <p><strong>Unit:</strong> {{ $peta->jenis }}</p>
+                                <p><strong>Judul:</strong> {{ $peta->judul }}</p>
+                                <div class="form-group">
+                                    <label class="font-weight-bold">Alasan Penolakan (Wajib)</label>
+                                    <textarea name="comment" class="form-control" rows="3" required placeholder="Berikan alasan penolakan..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times"></i> Ya, Tolak
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    @endif
-@endforeach
+        @endif
+    @endforeach
+
+@endsection
 
 @push('scripts')
     <script>

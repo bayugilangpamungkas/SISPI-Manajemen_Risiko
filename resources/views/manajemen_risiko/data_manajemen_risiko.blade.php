@@ -374,10 +374,11 @@
                                                     <th width="60" class="text-center">No</th>
                                                     <th>Unit Kerja</th>
                                                     <th width="100" class="text-center">Kode</th>
-                                                    <th width="120" class="text-center">Kegiatan</th>
-                                                    <th width="130" class="text-center">Risiko Terpilih</th>
+                                                    {{-- <th width="120" class="text-center">Kegiatan</th> --}} <th width="130" class="text-center">Risiko
+                                                        Kegiatan</th>
+
                                                     <th width="120" class="text-center">Kategori</th>
-                                                    <th>Judul Risiko</th>
+                                                    <th class="text-center"> Judul Risiko</th>
                                                     <th width="90" class="text-center">Skor</th>
                                                     <th width="100" class="text-center">Tingkat</th>
                                                     <th width="80" class="text-center">Aksi</th>
@@ -411,6 +412,7 @@
                                                             $kegiatanTampilPerUnit[$unitName] = $jumlahKegiatanTampil;
                                                         }
                                                     }
+
                                                 @endphp
 
                                                 @forelse($petas as $peta)
@@ -449,7 +451,6 @@
                                                             }
                                                         }
 
-                                                        // ✅ PERBAIKAN: Hitung jumlah kegiatan tampil untuk unit ini
                                                         $jumlahKegiatanTampil = 0;
                                                         $totalKegiatanUnit = 0;
 
@@ -476,11 +477,11 @@
                                                             )->count();
                                                         }
 
-                                                        // ✅ PERBAIKAN: Hitung jumlah risiko di unit ini (optimasi query)
+                                                        //    ✅ PERBAIKAN: Hitung jumlah risiko di unit ini (optimasi query)
                                                         $jumlahRisikoUnit = 0;
                                                         $jumlahRisikoTerpilih = 0;
                                                         if ($peta->jenis) {
-                                                            // Gunakan caching atau hitung sekali per unit
+                                                            //   Gunakan caching atau hitung sekali per unit
                                                             static $risikoCountCache = [];
                                                             static $risikoTerpilihCache = [];
 
@@ -504,6 +505,7 @@
                                                             }
                                                             $jumlahRisikoTerpilih = $risikoTerpilihCache[$peta->jenis];
                                                         }
+
                                                     @endphp
 
                                                     <tr>
@@ -528,41 +530,41 @@
                                                         <td class="text-center align-middle">
                                                             <span class="badge badge-secondary">{{ $kodeUnit }}</span>
                                                         </td>
-                                                        <td class="text-center align-middle">
+                                                        {{-- <td class="text-center align-middle">
                                                             <div class="d-flex flex-column align-items-center">
                                                                 <div class="d-flex align-items-center mb-1">
                                                                     <i class="fas fa-tasks text-primary mr-2"></i>
                                                                     {{-- ✅ INI YANG AKAN BERUBAH SETELAH UPDATE --}}
-                                                                    <span class="font-weight-bold"
-                                                                        style="font-size: 1.1rem; color: #1976d2;">
-                                                                        {{ $jumlahKegiatanTampil }}
-                                                                    </span>
-                                                                    @if ($totalKegiatanUnit > 0)
-                                                                        <small
-                                                                            class="text-muted ml-1">/{{ $totalKegiatanUnit }}</small>
-                                                                    @endif
-                                                                </div>
-                                                                <small class="text-muted">
-                                                                    @if ($jumlahKegiatanTampil == 0)
-                                                                        <span class="text-danger">Tidak ada kegiatan
-                                                                            ditampilkan</span>
-                                                                    @elseif($jumlahKegiatanTampil == 1)
-                                                                        1 kegiatan ditampilkan
-                                                                    @else
-                                                                        {{ $jumlahKegiatanTampil }} kegiatan ditampilkan
-                                                                    @endif
-                                                                </small>
+                                                        {{-- <span class="font-weight-bold"
+                                                            style="font-size: 1.1rem; color: #1976d2;">
+                                                            {{ $jumlahKegiatanTampil }}
+                                                        </span>
+                                                        @if ($totalKegiatanUnit > 0)
+                                                            <small
+                                                                class="text-muted ml-1">/{{ $totalKegiatanUnit }}</small>
+                                                        @endif
+                                    </div> --}}
+                                                        {{-- <small class="text-muted">
+                                        @if ($jumlahKegiatanTampil == 0)
+                                            <span class="text-danger">Tidak ada kegiatan
+                                                ditampilkan</span>
+                                        @elseif($jumlahKegiatanTampil == 1)
+                                            1 kegiatan ditampilkan
+                                        @else
+                                            {{ $jumlahKegiatanTampil }} kegiatan ditampilkan
+                                        @endif
+                                    </small>
 
-                                                                {{-- ✅ DEBUG: Tampilkan info perhitungan --}}
-                                                                @if (config('app.debug'))
-                                                                    <br>
-                                                                    <small class="text-info" style="font-size: 10px;">
-                                                                        (Dihitung:
-                                                                        {{ \App\Models\Kegiatan::hitungKegiatanTampil($unitKerjaModel->id ?? 0, $tahun) }})
-                                                                    </small>
-                                                                @endif
-                                                            </div>
-                                                        </td>
+                                    {{-- ✅ DEBUG: Tampilkan info perhitungan --}}
+                                                        {{-- @if (config('app.debug'))
+                                        <br>
+                                        <small class="text-info" style="font-size: 10px;">
+                                            (Dihitung:
+                                            {{ \App\Models\Kegiatan::hitungKegiatanTampil($unitKerjaModel->id ?? 0, $tahun) }})
+                                        </small>
+                                    @endif --}}
+                                                        {{-- </div> 
+                            </td>  --}}
                                                         <td class="text-center align-middle">
                                                             <div class="d-flex flex-column align-items-center">
                                                                 <div class="d-flex align-items-center mb-1">

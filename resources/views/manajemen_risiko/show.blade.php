@@ -116,30 +116,30 @@
                         <tr>
                             <td width="33%" valign="top">
                                 <span class="font-weight-bold">PENGENDALIAN</span>
-                                <textarea name="pengendalian" class="form-control mt-1" rows="5" required placeholder="…">{{ old('pengendalian') }}</textarea>
+                                <textarea name="pengendalian" class="form-control mt-1" rows="5" required placeholder="…">{{ old('pengendalian', $hasilAudit->pengendalian ?? '') }}</textarea>
                             </td>
                             <td width="33%" valign="top">
                                 <span class="font-weight-bold">MITIGASI RISIKO</span>
                                 <input type="text" name="mitigasi" class="form-control mt-1"
-                                    value="{{ old('mitigasi') }}" required placeholder="…">
+                                    value="{{ old('mitigasi', $hasilAudit->mitigasi ?? '') }}" required placeholder="…">
                             </td>
                             <td width="33%" valign="top">
                                 <span class="font-weight-bold">KOMENTAR</span>
-                                <textarea name="komentar_1" class="form-control mb-2 mt-1" rows="2" required placeholder="1. …">{{ old('komentar_1') }}</textarea>
-                                <textarea name="komentar_2" class="form-control mb-2" rows="2" required placeholder="2. …">{{ old('komentar_2') }}</textarea>
-                                <textarea name="komentar_3" class="form-control mb-2" rows="2" required placeholder="3. …">{{ old('komentar_3') }}</textarea>
+                                <textarea name="komentar_1" class="form-control mb-2 mt-1" rows="2" required placeholder="1. …">{{ old('komentar_1', $hasilAudit->komentar_1 ?? '') }}</textarea>
+                                <textarea name="komentar_2" class="form-control mb-2" rows="2" required placeholder="2. …">{{ old('komentar_2', $hasilAudit->komentar_2 ?? '') }}</textarea>
+                                <textarea name="komentar_3" class="form-control mb-2" rows="2" required placeholder="3. …">{{ old('komentar_3', $hasilAudit->komentar_3 ?? '') }}</textarea>
                                 <span class="font-weight-bold d-block mt-2">Status Konfirmasi</span>
                                 <select name="status_konfirmasi_auditee" class="form-control mb-1" style="width:90%">
                                     <option value="">- Auditee -</option>
-                                    <option value="disetujui">Disetujui</option>
-                                    <option value="ditolak">Ditolak</option>
-                                    <option value="perlu_revisi">Perlu Revisi</option>
+                                    <option value="disetujui" {{ old('status_konfirmasi_auditee', $hasilAudit->status_konfirmasi_auditee ?? '') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
+                                    <option value="ditolak" {{ old('status_konfirmasi_auditee', $hasilAudit->status_konfirmasi_auditee ?? '') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                                    <option value="perlu_revisi" {{ old('status_konfirmasi_auditee', $hasilAudit->status_konfirmasi_auditee ?? '') == 'perlu_revisi' ? 'selected' : '' }}>Perlu Revisi</option>
                                 </select>
                                 <select name="status_konfirmasi_auditor" class="form-control mb-1" style="width:90%">
                                     <option value="">- Auditor -</option>
-                                    <option value="disetujui">Disetujui</option>
-                                    <option value="ditolak">Ditolak</option>
-                                    <option value="perlu_revisi">Perlu Revisi</option>
+                                    <option value="disetujui" {{ old('status_konfirmasi_auditor', $hasilAudit->status_konfirmasi_auditor ?? '') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
+                                    <option value="ditolak" {{ old('status_konfirmasi_auditor', $hasilAudit->status_konfirmasi_auditor ?? '') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                                    <option value="perlu_revisi" {{ old('status_konfirmasi_auditor', $hasilAudit->status_konfirmasi_auditor ?? '') == 'perlu_revisi' ? 'selected' : '' }}>Perlu Revisi</option>
                                 </select>
                             </td>
                         </tr>
@@ -166,63 +166,18 @@
                     </div>
 
                     {{-- TOMBOL SIMPAN DATABASE --}}
-                    <div class="alert alert-light border mt-4">
-                        <h6 class="font-weight-bold text-primary"><i class="fas fa-save"></i> Langkah 1: Simpan Data</h6>
-                        <p class="mb-2 text-muted small">Simpan perubahan data (komentar, mitigasi, status) ke sistem
-                            sebelum mengunduh.</p>
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="fas fa-save"></i> Simpan Perubahan Data
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-save"></i> Simpan Data Audit
                         </button>
+                        @if(isset($hasilAudit) && $hasilAudit)
+                            <div class="alert alert-success mt-3">
+                                <i class="fas fa-check-circle"></i> Data audit terakhir disimpan pada: <strong>{{ $hasilAudit->updated_at->format('d/m/Y H:i') }}</strong>
+                            </div>
+                        @endif
                     </div>
                 </form>
-                {{-- === END TAHAP 1 === --}}
-
-
-
-                {{-- === TAHAP 2: DOWNLOAD FILE (Untuk Direview Auditor) === --}}
-                {{-- Note: Anda harus membuat route 'export-pdf' di controller yang menggunakan DomPDF atau library lain --}}
-                <div class="alert alert-light border mt-3">
-                    <h6 class="font-weight-bold text-warning"><i class="fas fa-file-download"></i> Langkah 2: Review
-                        Template</h6>
-                    <p class="mb-2 text-muted small">Unduh file hasil inputan di atas untuk diperiksa kembali sebelum
-                        dikirim ke Auditee.</p>
-
-                    {{-- Ganti href ini dengan route export PDF Anda --}}
-                    <a href="{{ route('manajemen-risiko.auditor.export-pdf', $peta->id) }}" target="_blank"
-                        class="btn btn-warning px-4 text-dark">
-                        <i class="fas fa-file-pdf"></i> Download PDF Hasil Inputan
-                    </a>
-                </div>
-                {{-- === END TAHAP 2 === --}}
-
-
-
-                {{-- === TAHAP 3: UPLOAD FILE FINAL (Kirim ke Auditee) === --}}
-                <div class="alert alert-light border mt-3" style="background-color: #f8f9fa;">
-                    <h6 class="font-weight-bold text-success"><i class="fas fa-paper-plane"></i> Langkah 3: Kirim ke
-                        Auditee</h6>
-                    <p class="mb-2 text-muted small">Jika file hasil download sudah oke (atau sudah Anda beri catatan
-                        tambahan), upload di sini untuk dikirim ke Auditee.</p>
-
-                    <form action="{{ route('manajemen-risiko.auditor.upload-lampiran', $peta->id) }}" method="POST"
-                        enctype="multipart/form-data">
-                        @csrf
-                        @method('POST')
-
-                        <div class="form-group row align-items-center">
-                            <div class="col-md-8">
-                                <input type="file" name="file_pendukung" id="file_pendukung"
-                                    class="form-control h-auto py-2" accept=".pdf, .xls, .xlsx" required>
-                            </div>
-                            <div class="col-md-4">
-                                <button type="submit" class="btn btn-success btn-block">
-                                    <i class="fas fa-upload"></i> Kirim ke Auditee
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                {{-- === END TAHAP 3 === --}}
+                {{-- === END FORM === --}}
             </div>
         </section>
     </div>

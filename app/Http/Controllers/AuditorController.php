@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Peta;
 use App\Models\CommentPr;
 use App\Models\User;
+use App\Models\HasilAudit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -164,7 +165,13 @@ class AuditorController extends Controller
             ->where('auditor_id', $user->id)
             ->findOrFail($id);
 
-        return view('manajemen_risiko.show', compact('active', 'peta'));
+        // Get hasil audit if exists
+        $hasilAudit = HasilAudit::where('peta_id', $peta->id)
+            ->where('auditor_id', $user->id)
+            ->where('tahun_anggaran', date('Y'))
+            ->first();
+
+        return view('manajemen_risiko.show', compact('active', 'peta', 'hasilAudit'));
     }
 
 
@@ -178,7 +185,7 @@ class AuditorController extends Controller
 
         // Pastikan auditor hanya update data miliknya
         // Saya hapus baris findOrFail kedua agar lebih efisien
-        $peta = Peta::where('auditor_id', $user->id)->findOrFail($id);
+        $peta = Peta::where('auditor_id', $user->id)->with('kegiatan')->findOrFail($id);
 
         // Validasi
         $request->validate([
@@ -191,15 +198,55 @@ class AuditorController extends Controller
             'status_konfirmasi_auditor' => 'nullable|string',
         ]);
 
-        // Simpan hasil review ke tabel utama
-        $peta->update([
-            'pengendalian' => $request->pengendalian,
-            'mitigasi' => $request->mitigasi,
-            'status_konfirmasi_auditee' => $request->status_konfirmasi_auditee,
-            'status_konfirmasi_auditor' => $request->status_konfirmasi_auditor,
-        ]);
+        // Calculate score and level
+        $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
 
-        // Simpan komentar auditor (gabung jadi satu log)
+        if ($skorTotal >= 15) {
+            $levelText = 'HIGH';
+        } elseif ($skorTotal >= 10) {
+            $levelText = 'MODERATE';
+        } else {
+            $levelText = 'LOW';
+        }
+
+        // Calculate residual risk
+        if ($skorTotal >= 20) {
+            $residualText = 'Extreme';
+        } elseif ($skorTotal >= 15) {
+            $residualText = 'High';
+        } elseif ($skorTotal >= 10) {
+            $residualText = 'Moderate';
+        } else {
+            $residualText = 'Low';
+        }
+
+        // Simpan hasil review ke tabel hasil_audit
+        $hasilAudit = HasilAudit::updateOrCreate(
+            [
+                'peta_id' => $peta->id,
+                'auditor_id' => $user->id,
+                'tahun_anggaran' => date('Y'),
+            ],
+            [
+                'komentar_1' => $request->komentar_1,
+                'komentar_2' => $request->komentar_2,
+                'komentar_3' => $request->komentar_3,
+                'pengendalian' => $request->pengendalian,
+                'mitigasi' => $request->mitigasi,
+                'status_konfirmasi_auditee' => $request->status_konfirmasi_auditee ?? null,
+                'status_konfirmasi_auditor' => $request->status_konfirmasi_auditor ?? null,
+                'unit_kerja' => $peta->jenis,
+                'kode_risiko' => $peta->kode_regist,
+                'kegiatan' => $peta->kegiatan->judul ?? $peta->judul,
+                'level_risiko' => $levelText,
+                'risiko_residual' => $residualText,
+                'skor_total' => $skorTotal,
+                'nama_pemonev' => $user->name,
+                'nip_pemonev' => $user->nip,
+            ]
+        );
+
+        // Simpan komentar auditor (gabung jadi satu log) - Keep existing CommentPr for backward compatibility
         CommentPr::create([
             'peta_id' => $peta->id,
             'user_id' => $user->id,
@@ -214,8 +261,9 @@ class AuditorController extends Controller
 
         return redirect()
             ->route('manajemen-risiko.auditor.show-detail', $peta->id)
-            ->with('success', 'Data berhasil diperbarui. Silakan unduh template untuk review pada langkah kedua.');
+            ->with('success', 'Data audit berhasil disimpan ke database.');
     }
+
 
 
 
@@ -430,10 +478,11 @@ class AuditorController extends Controller
     public function auditorUploadLampiran(Request $request, $id)
     {
         $request->validate([
-            'file_pendukung' => 'required|mimes:pdf,xls,xlsx|max:5120', // Max 5MB
+            'file_pendukung' => 'required|mimes:pdf,xls,xlsx|max:10240', // Max 10MB
         ]);
 
         $peta = Peta::findOrFail($id);
+        $user = Auth::user();
 
         if ($request->hasFile('file_pendukung')) {
             $file = $request->file('file_pendukung');
@@ -444,13 +493,13 @@ class AuditorController extends Controller
             // Simpan file ke storage (folder public/lampiran_auditor)
             $path = $file->storeAs('public/lampiran_auditor', $namaFile);
 
-            // Update database untuk menyimpan nama filenya
-            // Asumsi: Anda memiliki kolom 'file_lampiran' di tabel petas
-            $peta->update([
-                'file_lampiran' => $namaFile,
-                // Jika ingin otomatis mengubah status saat file dikirim:
-                'status_konfirmasi_auditor' => 'perlu_revisi'
-            ]);
+            // Update hasil audit dengan file lampiran
+            HasilAudit::where('peta_id', $peta->id)
+                ->where('auditor_id', $user->id)
+                ->where('tahun_anggaran', date('Y'))
+                ->update([
+                    'file_lampiran' => $namaFile,
+                ]);
 
             // dd($request->all());
 
@@ -470,20 +519,66 @@ class AuditorController extends Controller
         $peta = Peta::with(['kegiatan', 'auditor', 'comment_prs'])->findOrFail($id);
         $user = Auth::user();
 
+        // Get hasil audit if exists
+        $hasilAudit = HasilAudit::where('peta_id', $peta->id)
+            ->where('auditor_id', $user->id)
+            ->where('tahun_anggaran', date('Y'))
+            ->first();
+
+        // Calculate score and level
+        $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
+
+        // LEVEL
+        if ($skorTotal >= 20) {
+            $levelText = 'HIGH';
+            $badgeClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 15) {
+            $levelText = 'HIGH';
+            $badgeClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 10) {
+            $levelText = 'MODERATE';
+            $badgeClass = 'bg-warning text-dark';
+        } else {
+            $levelText = 'LOW';
+            $badgeClass = 'bg-success text-white';
+        }
+
+        // RESIDUAL
+        if ($skorTotal >= 20) {
+            $residualText = 'Extreme';
+            $residualClass = 'bg-danger text-white';
+        } elseif ($skorTotal >= 15) {
+            $residualText = 'High';
+            $residualClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 10) {
+            $residualText = 'Moderate';
+            $residualClass = 'bg-info text-dark';
+        } else {
+            $residualText = 'Low';
+            $residualClass = 'bg-success text-white';
+        }
+
         // Data yang akan dilempar ke view PDF
         $data = [
             'peta' => $peta,
+            'hasilAudit' => $hasilAudit,
             'user' => $user,
+            'skorTotal' => $skorTotal,
+            'levelText' => $levelText,
+            'badgeClass' => $badgeClass,
+            'residualText' => $residualText,
+            'residualClass' => $residualClass,
             'tanggal' => date('d F Y')
         ];
 
         // Menggunakan library DomPDF
-        $pdf = Pdf::loadView('manajemen_risiko.auditor_pdf_template', $data);
+        $pdf = Pdf::loadView('manajemen_risiko.export_audit_pdf', $data);
 
         // Set landscape jika tabel terlalu lebar
         $pdf->setPaper('a4', 'landscape');
 
-        return $pdf->download('Monev_Risiko_' . $peta->kode_regist . '.pdf');
+        $filename = 'Audit_' . $peta->kode_regist . '_' . date('Y-m-d') . '.pdf';
+        return $pdf->download($filename);
     }
 
 

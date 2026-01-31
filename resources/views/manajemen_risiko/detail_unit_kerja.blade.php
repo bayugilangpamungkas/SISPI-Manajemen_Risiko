@@ -21,7 +21,7 @@
 
             {{-- FILTER SECTION --}}
             <div class="row mb-4">
-                {{-- <div class="col-md-12">
+                <div class="col-md-12">
                     <div class="card border-0 shadow-sm rounded">
                         <div class="card-header bg-primary text-white border-bottom">
                             <h6 class="mb-0 font-weight-bold">
@@ -44,12 +44,24 @@
                                         </select>
                                     </div>
 
+                                    <div class="col-md-9 d-flex align-items-end justify-content-start">
+                                        <a href="{{ route('manajemen-risiko.data', ['tahun' => $tahun]) }}"
+                                            class="btn btn-secondary btn-sm mr-2">
+                                            <i class="fas fa-arrow-left"></i> Kembali ke Data Manajemen Risiko
+                                        </a>
 
+                                        {{-- PERBAIKAN TOMBOL UPDATE DI SINI --}}
+                                        <button type="button" class="btn btn-dark btn-sm" id="btn-update-kegiatan">
+                                            <i class="fas fa-sync-alt"></i> Update Kegiatan
+                                            <span id="selected-count" class="badge badge-info ml-1"
+                                                style="display:none">0</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
                     </div>
-                </div> --}}
+                </div>
 
                 {{-- DATA TABLE SECTION --}}
                 <div class="row">
@@ -90,11 +102,11 @@
 
                                                         {{-- 2. CHECKBOX --}}
                                                         <td class="text-center align-middle">
-                                                            <div
-                                                                class="custom-control custom-checkbox d-flex justify-content-center">
+                                                            <div class="custom-control custom-checkbox d-flex justify-content-center">
                                                                 <input type="checkbox" class="custom-control-input"
                                                                     id="check-peta-{{ $item['peta']->id }}-{{ $loop->index }}"
-                                                                    name="peta_ids[]" value="{{ $item['peta']->id }}">
+                                                                    name="peta_ids[]"
+                                                                    value="{{ $item['peta']->id }}">
                                                                 <label class="custom-control-label"
                                                                     for="check-peta-{{ $item['peta']->id }}-{{ $loop->index }}"></label>
                                                             </div>
@@ -142,44 +154,40 @@
                                                         {{-- 8. PREVIEW RISIKO --}}
                                                         <td class="align-middle" style="padding: 10px;">
                                                             @if ($item['peta'])
-                                                                <div class="d-flex align-items-center"
-                                                                    style="padding: 10px 12px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid 
+                                                                <div class="d-flex align-items-center" 
+                                                                     style="padding: 10px 12px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid 
                                                                             {{ $item['peta']->tingkat_risiko == 'Extreme' ? '#dc3545' : ($item['peta']->tingkat_risiko == 'High' ? '#ffc107' : ($item['peta']->tingkat_risiko == 'Moderate' ? '#17a2b8' : '#6c757d')) }};">
-
+                                                                    
                                                                     {{-- Badge Tingkat Risiko --}}
-                                                                    <span
-                                                                        class="badge badge-{{ $item['peta']->tingkat_risiko == 'Extreme' ? 'danger' : ($item['peta']->tingkat_risiko == 'High' ? 'warning text-dark' : ($item['peta']->tingkat_risiko == 'Moderate' ? 'info' : 'secondary')) }}"
-                                                                        style="min-width: 80px; font-size: 11px; padding: 5px 10px; margin-right: 12px; font-weight: 600;">
+                                                                    <span class="badge badge-{{ $item['peta']->tingkat_risiko == 'Extreme' ? 'danger' : ($item['peta']->tingkat_risiko == 'High' ? 'warning text-dark' : ($item['peta']->tingkat_risiko == 'Moderate' ? 'info' : 'secondary')) }}" 
+                                                                          style="min-width: 80px; font-size: 11px; padding: 5px 10px; margin-right: 12px; font-weight: 600;">
                                                                         {{ $item['peta']->tingkat_risiko }}
                                                                     </span>
-
+                                                                    
                                                                     {{-- Judul Risiko (Full Text) --}}
-                                                                    <span
-                                                                        style="flex: 1; font-size: 13px; color: #2c3e50; line-height: 1.4; font-weight: 500;">
+                                                                    <span style="flex: 1; font-size: 13px; color: #2c3e50; line-height: 1.4; font-weight: 500;">
                                                                         {{ $item['peta']->judul }}
                                                                     </span>
-
+                                                                    
                                                                     {{-- Icon Status Tampil --}}
                                                                     @if ($item['peta']->tampil_manajemen_risiko == 1)
-                                                                        <span class="badge badge-success ml-2"
-                                                                            style="font-size: 10px; padding: 4px 8px;"
-                                                                            title="Sudah ditampilkan">
+                                                                        <span class="badge badge-success ml-2" 
+                                                                              style="font-size: 10px; padding: 4px 8px;"
+                                                                              title="Sudah ditampilkan">
                                                                             <i class="fas fa-check"></i> Tampil
                                                                         </span>
                                                                     @else
-                                                                        <span class="badge badge-secondary ml-2"
-                                                                            style="font-size: 10px; padding: 4px 8px;"
-                                                                            title="Belum ditampilkan">
+                                                                        <span class="badge badge-secondary ml-2" 
+                                                                              style="font-size: 10px; padding: 4px 8px;"
+                                                                              title="Belum ditampilkan">
                                                                             <i class="fas fa-eye-slash"></i> Hidden
                                                                         </span>
                                                                     @endif
                                                                 </div>
                                                             @else
-                                                                <div class="alert alert-light text-center mb-0 py-2"
-                                                                    style="font-size: 12px;">
-                                                                    <i class="fas fa-info-circle text-muted mr-1"></i>
-                                                                    <span class="text-muted font-italic">Tidak ada
-                                                                        risiko</span>
+                                                                <div class="alert alert-light text-center mb-0 py-2" style="font-size: 12px;">
+                                                                    <i class="fas fa-info-circle text-muted mr-1"></i> 
+                                                                    <span class="text-muted font-italic">Tidak ada risiko</span>
                                                                 </div>
                                                             @endif
                                                         </td>
@@ -204,12 +212,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-9 d-flex align-items-end justify-content-start">
-                    <button type="button" class="btn btn-primary btn-sm" id="btn-update-kegiatan">
-                        <i class="fas fa-sync-alt"></i> Submit kegiatan
-                        <span id="selected-count" class="badge badge-info ml-1" style="display:none">0</span>
-                    </button>
                 </div>
             </div>
         </section>
@@ -247,7 +249,7 @@
         }
 
         .table tbody tr:hover td div[style*="border-left"] {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         /* Badge Custom Colors */
@@ -333,8 +335,7 @@
                                 // Buat form untuk submit
                                 var form = document.createElement('form');
                                 form.method = 'POST';
-                                form.action =
-                                    "{{ route('manajemen-risiko.update-tampil') }}";
+                                form.action = "{{ route('manajemen-risiko.update-tampil') }}";
 
                                 // CSRF Token
                                 var csrfInput = document.createElement('input');

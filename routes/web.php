@@ -503,12 +503,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/auditor/manajemen-risiko/export/excel', [App\Http\Controllers\AuditorController::class, 'auditorExport'])->name('manajemen-risiko.auditor.export')->middleware('auth');
     // Detail Auditor dengan Template Form
     Route::get('/auditor/manajemen-risiko/{id}/detail', [App\Http\Controllers\AuditorController::class, 'auditorShowDetail'])->name('manajemen-risiko.auditor.show-detail')->middleware('auth');
-    // LANGKAH 1: Update Template/Simpan Data Teks oleh Auditor
+    // Update audit form dan simpan ke database
     Route::put('/auditor/manajemen-risiko/{id}/update-template', [App\Http\Controllers\AuditorController::class, 'auditorUpdateTemplate'])->name('manajemen-risiko.auditor.update-template')->middleware('auth');
-    // LANGKAH 2: Export PDF Detail (Untuk Review Template sebelum dikirim)
-    Route::get('/auditor/manajemen-risiko/{id}/export-pdf', [App\Http\Controllers\AuditorController::class, 'auditorExportPdf'])->name('manajemen-risiko.auditor.export-pdf')->middleware('auth');
-    // LANGKAH 3: Upload Lampiran & Kirim ke Auditee
-    Route::post('/auditor/manajemen-risiko/{id}/upload-lampiran', [App\Http\Controllers\AuditorController::class, 'auditorUploadLampiran'])->name('manajemen-risiko.auditor.upload-lampiran')->middleware('auth');
     // Route Pendukung Lainnya
     Route::post('/auditor/manajemen-risiko/{id}/send-template', [App\Http\Controllers\AuditorController::class, 'auditorSendTemplate'])->name('manajemen-risiko.auditor.send-template')->middleware('auth');
     Route::post('/auditor/manajemen-risiko/{id}/approve', [App\Http\Controllers\AuditorController::class, 'auditorApprove'])->name('manajemen-risiko.auditor.approve')->middleware('auth');
@@ -527,5 +523,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/manajemen-risiko/{id}/update-status', [App\Http\Controllers\ManajemenRisikoController::class, 'updateStatus'])->name('manajemen-risiko.update-status')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/assign-auditor', [App\Http\Controllers\ManajemenRisikoController::class, 'assignAuditor'])->name('manajemen-risiko.assign-auditor')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/upload-report', [App\Http\Controllers\ManajemenRisikoController::class, 'uploadReport'])->name('manajemen-risiko.upload-report')->middleware('auth');
+    
+    // Hasil Audit Routes (Admin)
+    Route::get('/manajemen-risiko/hasil-audit', [App\Http\Controllers\ManajemenRisikoController::class, 'hasilAuditIndex'])->name('manajemen-risiko.hasil-audit.index')->middleware('auth');
+    Route::get('/manajemen-risiko/hasil-audit/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'hasilAuditShow'])->name('manajemen-risiko.hasil-audit.show')->middleware('auth');
+    Route::get('/manajemen-risiko/hasil-audit/{id}/print', [App\Http\Controllers\ManajemenRisikoController::class, 'hasilAuditPrint'])->name('manajemen-risiko.hasil-audit.print')->middleware('auth');
+    
     Route::get('/manajemen-risiko/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'show'])->name('manajemen-risiko.show')->middleware('auth');
 });

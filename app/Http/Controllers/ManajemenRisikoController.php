@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Peta;
 use App\Models\CommentPr;
 use App\Models\User;
+use App\Models\HasilAudit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -104,7 +105,7 @@ class ManajemenRisikoController extends Controller
 
         // Get paginated data, sorted by risk score (highest first)
         $petas = $query->orderByRaw('(skor_kemungkinan * skor_dampak) DESC')
-            ->paginate(10);
+            ->paginate(15);
 
         // Calculate statistics - HANYA UNTUK DATA YANG DITAMPILKAN
         $statistics = [
@@ -475,7 +476,7 @@ class ManajemenRisikoController extends Controller
         }
 
         // ✅ AMBIL DATA DENGAN PAGINATION BIASA
-        $perPage = 10;
+        $perPage = 20;
         $petas = $query->orderByRaw('(skor_kemungkinan * skor_dampak) DESC')
             ->paginate($perPage);
 
@@ -531,7 +532,7 @@ class ManajemenRisikoController extends Controller
 
         // ✅ UBAH: Expand setiap risiko menjadi baris terpisah
         $expandedRows = [];
-
+        
         foreach ($allKegiatans as $kegiatan) {
             // Get SEMUA peta risiko untuk kegiatan ini di tahun tertentu
             $petas = Peta::where('id_kegiatan', $kegiatan->id)
@@ -541,7 +542,7 @@ class ManajemenRisikoController extends Controller
 
             $jumlahRisiko = $petas->count();
             $sudahTampil = $petas->where('tampil_manajemen_risiko', 1)->count();
-
+            
             // Hitung total skor risiko untuk kegiatan ini
             $totalSkorRisiko = 0;
             foreach ($petas as $peta) {
@@ -581,7 +582,7 @@ class ManajemenRisikoController extends Controller
         });
 
         // ✅ Pagination manual
-        $perPage = 10; // Naikkan karena sekarang per-risiko
+        $perPage = 20; // Naikkan karena sekarang per-risiko
         $currentPage = $request->input('page', 1);
         $offset = ($currentPage - 1) * $perPage;
         $rowsPaginated = array_slice($expandedRows, $offset, $perPage);
@@ -917,5 +918,330 @@ class ManajemenRisikoController extends Controller
         $writer->save($temp_file);
 
         return response()->download($temp_file, $filename)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Update audit template (save to hasil_audit table)
+     */
+    public function updateAuditorTemplate(Request $request, $id)
+    {
+        $request->validate([
+            'pengendalian' => 'required|string',
+            'mitigasi' => 'required|string',
+            'komentar_1' => 'required|string',
+            'komentar_2' => 'required|string',
+            'komentar_3' => 'required|string',
+            'status_konfirmasi_auditee' => 'nullable|string',
+            'status_konfirmasi_auditor' => 'nullable|string',
+        ]);
+
+        $user = Auth::user();
+        $peta = Peta::with('kegiatan')->findOrFail($id);
+
+        // Calculate score
+        $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
+
+        // Determine level
+        if ($skorTotal >= 15) {
+            $levelText = 'HIGH';
+        } elseif ($skorTotal >= 10) {
+            $levelText = 'MODERATE';
+        } else {
+            $levelText = 'LOW';
+        }
+
+        // Calculate residual risk
+        if ($skorTotal >= 20) {
+            $residualText = 'Extreme';
+        } elseif ($skorTotal >= 15) {
+            $residualText = 'High';
+        } elseif ($skorTotal >= 10) {
+            $residualText = 'Moderate';
+        } else {
+            $residualText = 'Low';
+        }
+
+        // Create or update hasil audit
+        $hasilAudit = HasilAudit::updateOrCreate(
+            [
+                'peta_id' => $peta->id,
+                'auditor_id' => $user->id,
+                'tahun_anggaran' => date('Y'),
+            ],
+            [
+                'komentar_1' => $request->komentar_1,
+                'komentar_2' => $request->komentar_2,
+                'komentar_3' => $request->komentar_3,
+                'pengendalian' => $request->pengendalian,
+                'mitigasi' => $request->mitigasi,
+                'status_konfirmasi_auditee' => $request->status_konfirmasi_auditee ?? null,
+                'status_konfirmasi_auditor' => $request->status_konfirmasi_auditor ?? null,
+                'unit_kerja' => $peta->jenis,
+                'kode_risiko' => $peta->kode_regist,
+                'kegiatan' => $peta->kegiatan->judul ?? $peta->judul,
+                'level_risiko' => $levelText,
+                'risiko_residual' => $residualText,
+                'skor_total' => $skorTotal,
+                'nama_pemonev' => $user->name,
+                'nip_pemonev' => $user->nip,
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Data audit berhasil disimpan!');
+    }
+
+    /**
+     * Export audit template to PDF
+     */
+    public function exportAuditorPdf($id)
+    {
+        $user = Auth::user();
+        $peta = Peta::with(['comment_prs.user', 'kegiatan', 'auditor'])->findOrFail($id);
+        
+        // Get hasil audit if exists
+        $hasilAudit = HasilAudit::where('peta_id', $peta->id)
+            ->where('auditor_id', $user->id)
+            ->where('tahun_anggaran', date('Y'))
+            ->first();
+
+        $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
+
+        // LEVEL
+        if ($skorTotal >= 20) {
+            $levelText = 'HIGH';
+            $badgeClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 15) {
+            $levelText = 'HIGH';
+            $badgeClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 10) {
+            $levelText = 'MODERATE';
+            $badgeClass = 'bg-warning text-dark';
+        } else {
+            $levelText = 'LOW';
+            $badgeClass = 'bg-success text-white';
+        }
+
+        // RESIDUAL
+        if ($skorTotal >= 20) {
+            $residualText = 'Extreme';
+            $residualClass = 'bg-danger text-white';
+        } elseif ($skorTotal >= 15) {
+            $residualText = 'High';
+            $residualClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 10) {
+            $residualText = 'Moderate';
+            $residualClass = 'bg-info text-dark';
+        } else {
+            $residualText = 'Low';
+            $residualClass = 'bg-success text-white';
+        }
+
+        $pdf = Pdf::loadView('manajemen_risiko.export_audit_pdf', compact(
+            'peta',
+            'hasilAudit',
+            'user',
+            'skorTotal',
+            'levelText',
+            'badgeClass',
+            'residualText',
+            'residualClass'
+        ));
+
+        $filename = 'Audit_' . $peta->kode_regist . '_' . date('Y-m-d') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Upload lampiran audit
+     */
+    public function uploadAuditorLampiran(Request $request, $id)
+    {
+        $request->validate([
+            'file_pendukung' => 'required|file|mimes:pdf,xls,xlsx|max:10240',
+        ]);
+
+        $peta = Peta::findOrFail($id);
+        $user = Auth::user();
+
+        if ($request->hasFile('file_pendukung')) {
+            $file = $request->file('file_pendukung');
+            $filename = 'audit_' . $peta->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('public/audit_lampiran', $filename);
+
+            // Update hasil audit with file path
+            HasilAudit::where('peta_id', $peta->id)
+                ->where('auditor_id', $user->id)
+                ->where('tahun_anggaran', date('Y'))
+                ->update([
+                    'file_lampiran' => $filename,
+                ]);
+
+            return redirect()->back()->with('success', 'File berhasil dikirim ke Auditee!');
+        }
+
+        return redirect()->back()->with('error', 'File gagal diupload!');
+    }
+
+    /**
+     * Display hasil audit index (for Admin)
+     */
+    public function hasilAuditIndex(Request $request)
+    {
+        $active = 23; // Menu ID untuk Hasil Audit
+        $tahun = $request->input('tahun', date('Y'));
+        $unitKerja = $request->input('unit_kerja', 'all');
+        $auditorFilter = $request->input('auditor', 'all');
+
+        // Get available years
+        $years = HasilAudit::selectRaw('DISTINCT tahun_anggaran')
+            ->orderBy('tahun_anggaran', 'desc')
+            ->pluck('tahun_anggaran');
+
+        // Get unit kerjas
+        $unitKerjas = DB::table('unit_kerjas')
+            ->select('nama_unit_kerja')
+            ->distinct()
+            ->orderBy('nama_unit_kerja')
+            ->get();
+
+        // Get auditors
+        $auditors = User::whereHas('Level', function ($q) {
+            $q->whereIn('name', ['Ketua', 'Anggota', 'Sekretaris']);
+        })->get();
+
+        // Build query
+        $query = HasilAudit::with(['peta', 'auditor'])
+            ->where('tahun_anggaran', $tahun);
+
+        if ($unitKerja != 'all') {
+            $query->where('unit_kerja', $unitKerja);
+        }
+
+        if ($auditorFilter != 'all') {
+            $query->where('auditor_id', $auditorFilter);
+        }
+
+        $hasilAudits = $query->orderBy('created_at', 'desc')->paginate(15);
+
+        return view('manajemen_risiko.hasil_audit.index', compact(
+            'active',
+            'hasilAudits',
+            'tahun',
+            'unitKerja',
+            'auditorFilter',
+            'years',
+            'unitKerjas',
+            'auditors'
+        ));
+    }
+
+    /**
+     * Show hasil audit detail (for Admin to print)
+     */
+    public function hasilAuditShow($id)
+    {
+        $active = 23;
+        $hasilAudit = HasilAudit::with(['peta.kegiatan', 'auditor'])->findOrFail($id);
+        $peta = $hasilAudit->peta;
+
+        // Calculate score
+        $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
+
+        // LEVEL
+        if ($skorTotal >= 20) {
+            $levelText = 'HIGH';
+            $badgeClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 15) {
+            $levelText = 'HIGH';
+            $badgeClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 10) {
+            $levelText = 'MODERATE';
+            $badgeClass = 'bg-warning text-dark';
+        } else {
+            $levelText = 'LOW';
+            $badgeClass = 'bg-success text-white';
+        }
+
+        // RESIDUAL
+        if ($skorTotal >= 20) {
+            $residualText = 'Extreme';
+            $residualClass = 'bg-danger text-white';
+        } elseif ($skorTotal >= 15) {
+            $residualText = 'High';
+            $residualClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 10) {
+            $residualText = 'Moderate';
+            $residualClass = 'bg-info text-dark';
+        } else {
+            $residualText = 'Low';
+            $residualClass = 'bg-success text-white';
+        }
+
+        return view('manajemen_risiko.hasil_audit.show', compact(
+            'active',
+            'hasilAudit',
+            'peta',
+            'skorTotal',
+            'levelText',
+            'badgeClass',
+            'residualText',
+            'residualClass'
+        ));
+    }
+
+    /**
+     * Print hasil audit (PDF)
+     */
+    public function hasilAuditPrint($id)
+    {
+        $hasilAudit = HasilAudit::with(['peta.kegiatan', 'auditor'])->findOrFail($id);
+        $peta = $hasilAudit->peta;
+        $user = $hasilAudit->auditor;
+
+        $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
+
+        // LEVEL
+        if ($skorTotal >= 20) {
+            $levelText = 'HIGH';
+            $badgeClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 15) {
+            $levelText = 'HIGH';
+            $badgeClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 10) {
+            $levelText = 'MODERATE';
+            $badgeClass = 'bg-warning text-dark';
+        } else {
+            $levelText = 'LOW';
+            $badgeClass = 'bg-success text-white';
+        }
+
+        // RESIDUAL
+        if ($skorTotal >= 20) {
+            $residualText = 'Extreme';
+            $residualClass = 'bg-danger text-white';
+        } elseif ($skorTotal >= 15) {
+            $residualText = 'High';
+            $residualClass = 'bg-warning text-dark';
+        } elseif ($skorTotal >= 10) {
+            $residualText = 'Moderate';
+            $residualClass = 'bg-info text-dark';
+        } else {
+            $residualText = 'Low';
+            $residualClass = 'bg-success text-white';
+        }
+
+        $pdf = Pdf::loadView('manajemen_risiko.export_audit_pdf', compact(
+            'peta',
+            'hasilAudit',
+            'user',
+            'skorTotal',
+            'levelText',
+            'badgeClass',
+            'residualText',
+            'residualClass'
+        ));
+
+        $filename = 'Hasil_Audit_' . $peta->kode_regist . '_' . date('Y-m-d') . '.pdf';
+        return $pdf->download($filename);
     }
 }

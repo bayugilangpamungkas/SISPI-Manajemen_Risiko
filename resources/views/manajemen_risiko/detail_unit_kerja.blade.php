@@ -205,7 +205,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-9 d-flex align-items-end justify-content-start">
+                <div class="col-md-12 d-flex justify-content-end">
                     <button type="button" class="btn btn-primary btn-sm" id="btn-update-kegiatan">
                         <i class="fas fa-sync-alt"></i> Submit kegiatan
                         <span id="selected-count" class="badge badge-info ml-1" style="display:none">0</span>

@@ -19,6 +19,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Illuminate\Support\Facades\Mail;
 
 
 class ManajemenRisikoController extends Controller
@@ -532,7 +533,7 @@ class ManajemenRisikoController extends Controller
 
         // ✅ UBAH: Expand setiap risiko menjadi baris terpisah
         $expandedRows = [];
-        
+
         foreach ($allKegiatans as $kegiatan) {
             // Get SEMUA peta risiko untuk kegiatan ini di tahun tertentu
             $petas = Peta::where('id_kegiatan', $kegiatan->id)
@@ -542,7 +543,7 @@ class ManajemenRisikoController extends Controller
 
             $jumlahRisiko = $petas->count();
             $sudahTampil = $petas->where('tampil_manajemen_risiko', 1)->count();
-            
+
             // Hitung total skor risiko untuk kegiatan ini
             $totalSkorRisiko = 0;
             foreach ($petas as $peta) {
@@ -997,7 +998,7 @@ class ManajemenRisikoController extends Controller
     {
         $user = Auth::user();
         $peta = Peta::with(['comment_prs.user', 'kegiatan', 'auditor'])->findOrFail($id);
-        
+
         // Get hasil audit if exists
         $hasilAudit = HasilAudit::where('peta_id', $peta->id)
             ->where('auditor_id', $user->id)
@@ -1243,5 +1244,83 @@ class ManajemenRisikoController extends Controller
 
         $filename = 'Hasil_Audit_' . $peta->kode_regist . '_' . date('Y-m-d') . '.pdf';
         return $pdf->download($filename);
+    }
+
+    /**
+     * Upload scan hasil audit (untuk admin)
+     */
+    public function uploadScanHasilAudit(Request $request, $id)
+    {
+        $request->validate([
+            'file_scan' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'keterangan_scan' => 'nullable|string|max:500',
+        ], [
+            'file_scan.required' => 'File scan wajib diupload',
+            'file_scan.mimes' => 'Format file harus JPG, PNG, atau PDF',
+            'file_scan.max' => 'Ukuran file maksimal 5MB',
+        ]);
+
+        try {
+            $hasilAudit = HasilAudit::with(['auditor', 'peta'])->findOrFail($id);
+
+            // Hapus file scan lama jika ada
+            if ($hasilAudit->file_scan) {
+                Storage::delete('public/scan_hasil_audit/' . $hasilAudit->file_scan);
+            }
+
+            // Upload file scan baru
+            if ($request->hasFile('file_scan')) {
+                $file = $request->file('file_scan');
+                $extension = $file->getClientOriginalExtension();
+                $filename = 'scan_' . str_replace(['/', '\\'], '_', $hasilAudit->kode_risiko) . '_' . time() . '.' . $extension;
+
+                // Simpan file ke storage
+                $file->storeAs('public/scan_hasil_audit', $filename);
+
+                // Update database
+                $hasilAudit->update([
+                    'file_scan' => $filename,
+                    'keterangan_scan' => $request->keterangan_scan,
+                    'tanggal_upload_scan' => now(),
+                ]);
+
+                Log::info('File scan berhasil diupload', [
+                    'hasil_audit_id' => $hasilAudit->id,
+                    'kode_risiko' => $hasilAudit->kode_risiko,
+                    'filename' => $filename,
+                    'uploaded_by' => Auth::user()->name,
+                ]);
+
+                // ✅ KIRIM EMAIL NOTIFIKASI
+                $uploader = Auth::user();
+                $filePath = 'public/scan_hasil_audit/' . $filename;
+
+                Log::info('🚀 Memulai pengiriman email...', [
+                    'file_path' => $filePath,
+                    'file_exists' => Storage::exists($filePath)
+                ]);
+
+                // ✅ HANYA KIRIM KE gilangb256@gmail.com
+                try {
+                    Mail::to('gilangb256@gmail.com')
+                        ->send(new \App\Mail\ScanHasilAuditUploaded($hasilAudit, $uploader, $filePath));
+
+                    Log::info('✅ Email berhasil dikirim ke gilangb256@gmail.com');
+                } catch (\Exception $e) {
+                    Log::error('❌ Error kirim email: ' . $e->getMessage());
+                    Log::error('Stack trace: ' . $e->getTraceAsString());
+                }
+
+                return redirect()
+                    ->route('manajemen-risiko.hasil-audit.index')
+                    ->with('success', '✅ File scan berhasil diupload untuk ' . $hasilAudit->kode_risiko . '! Email notifikasi telah dikirim ke gilangb256@gmail.com');
+            }
+
+            return redirect()->back()->with('error', 'File scan tidak ditemukan!');
+        } catch (\Exception $e) {
+            Log::error('❌ Error upload scan hasil audit: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat upload file: ' . $e->getMessage());
+        }
     }
 }

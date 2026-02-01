@@ -523,11 +523,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/manajemen-risiko/{id}/update-status', [App\Http\Controllers\ManajemenRisikoController::class, 'updateStatus'])->name('manajemen-risiko.update-status')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/assign-auditor', [App\Http\Controllers\ManajemenRisikoController::class, 'assignAuditor'])->name('manajemen-risiko.assign-auditor')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/upload-report', [App\Http\Controllers\ManajemenRisikoController::class, 'uploadReport'])->name('manajemen-risiko.upload-report')->middleware('auth');
-    
+
     // Hasil Audit Routes (Admin)
     Route::get('/manajemen-risiko/hasil-audit', [App\Http\Controllers\ManajemenRisikoController::class, 'hasilAuditIndex'])->name('manajemen-risiko.hasil-audit.index')->middleware('auth');
     Route::get('/manajemen-risiko/hasil-audit/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'hasilAuditShow'])->name('manajemen-risiko.hasil-audit.show')->middleware('auth');
     Route::get('/manajemen-risiko/hasil-audit/{id}/print', [App\Http\Controllers\ManajemenRisikoController::class, 'hasilAuditPrint'])->name('manajemen-risiko.hasil-audit.print')->middleware('auth');
-    
+    Route::post('/manajemen-risiko/hasil-audit/{id}/upload-scan', [App\Http\Controllers\ManajemenRisikoController::class, 'uploadScanHasilAudit'])->name('manajemen-risiko.hasil-audit.upload-scan')->middleware('auth');
+
     Route::get('/manajemen-risiko/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'show'])->name('manajemen-risiko.show')->middleware('auth');
 });

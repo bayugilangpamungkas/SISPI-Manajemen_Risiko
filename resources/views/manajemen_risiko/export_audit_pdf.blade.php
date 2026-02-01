@@ -6,93 +6,202 @@
     <title>Audit Report - {{ $peta->kode_regist }}</title>
     <style>
         @page {
-            margin: 20px;
+            margin: 10mm;
+            size: A4;
         }
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
-            line-height: 1.3;
+            font-size: 8px;
+            line-height: 1.2;
+            margin: 0;
+            padding: 0;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 6px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 3px;
         }
 
         .header h1 {
-            font-size: 16px;
+            font-size: 10px;
             font-weight: bold;
-            margin: 5px 0;
+            margin: 1px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .header p {
-            font-size: 13px;
-            margin: 3px 0;
+            font-size: 9px;
+            margin: 0;
+            font-weight: bold;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             border: 2px solid #000;
+            margin-bottom: 5px;
         }
 
         table td {
-            padding: 8px;
-            border: 2px solid #000;
+            padding: 3px 5px;
+            border: 1px solid #000;
             vertical-align: top;
+            font-size: 7px;
+            line-height: 1.3;
         }
 
-        .font-weight-bold {
+        .label {
             font-weight: bold;
+            font-size: 7px;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 3px;
+        .value {
+            font-size: 7px;
+        }
+
+        .header-row td {
+            background-color: #d9d9d9;
             font-weight: bold;
-            font-size: 11px;
+            text-align: center;
+            padding: 4px;
+            font-size: 7px;
         }
 
-        .bg-warning {
-            background-color: #ffc107;
+        .level-high {
+            background-color: #FFA500;
             color: #000;
+            font-weight: bold;
+            padding: 1px 12px;
+            display: inline-block;
+            font-size: 8px;
         }
 
-        .bg-danger {
-            background-color: #dc3545;
+        .level-extreme {
+            background-color: #FF0000;
             color: #fff;
+            font-weight: bold;
+            padding: 1px 12px;
+            display: inline-block;
+            font-size: 8px;
         }
 
-        .bg-success {
-            background-color: #28a745;
-            color: #fff;
+        .level-moderate {
+            background-color: #FFFF00;
+            color: #000;
+            font-weight: bold;
+            padding: 1px 12px;
+            display: inline-block;
+            font-size: 8px;
         }
 
-        .bg-info {
-            background-color: #17a2b8;
+        .level-low {
+            background-color: #90EE90;
+            color: #000;
+            font-weight: bold;
+            padding: 1px 12px;
+            display: inline-block;
+            font-size: 8px;
+        }
+
+        .residual-extreme {
+            background-color: #FF0000;
             color: #fff;
+            font-weight: bold;
+            padding: 1px 12px;
+            display: inline-block;
+            font-size: 8px;
+        }
+
+        .residual-high {
+            background-color: #FFA500;
+            color: #000;
+            font-weight: bold;
+            padding: 1px 12px;
+            display: inline-block;
+            font-size: 8px;
+        }
+
+        .residual-moderate {
+            background-color: #FFFF00;
+            color: #000;
+            font-weight: bold;
+            padding: 1px 12px;
+            display: inline-block;
+            font-size: 8px;
+        }
+
+        .residual-low {
+            background-color: #90EE90;
+            color: #000;
+            font-weight: bold;
+            padding: 1px 12px;
+            display: inline-block;
+            font-size: 8px;
+        }
+
+        .table-content {
+            font-size: 6.5px;
+            line-height: 1.5;
+            text-align: justify;
+        }
+
+        .table-content strong {
+            font-weight: bold;
         }
 
         .signature-section {
-            margin-top: 30px;
-            font-size: 11px;
+            margin-top: 8px;
+            font-size: 7px;
+            width: 100%;
+        }
+
+        .signature-container {
+            width: 100%;
+            display: table;
         }
 
         .signature-left {
-            float: left;
-            width: 60%;
+            display: table-cell;
+            width: 35%;
+            vertical-align: bottom;
+            padding-bottom: 0;
+            text-align: left;
+            padding-left: 10px;
         }
 
         .signature-right {
-            float: right;
-            width: 38%;
+            display: table-cell;
+            width: 65%;
             text-align: right;
+            vertical-align: top;
+            padding-right: 40px;
         }
 
-        .clear {
-            clear: both;
+        .signature-space {
+            height: 35px;
+        }
+
+        .no-border-middle {
+            border-left: 0;
+            border-right: 0;
+            width: 0.5%;
+            padding: 0;
+        }
+
+        .text-bold {
+            font-weight: bold;
+        }
+
+        .text-underline {
+            text-decoration: underline;
+        }
+
+        .red-text {
+            color: #FF0000;
         }
     </style>
 </head>
@@ -105,96 +214,141 @@
     </div>
 
     <table>
+        <!-- Baris 1: UNIT & PEMONEV -->
         <tr>
-            <td width="49%">
-                <span class="font-weight-bold">UNIT</span><br>
-                <span>{{ $peta->jenis }}</span>
-            </td>
-            <td width="2%" style="border-left:0; border-right:0; border-top:0; border-bottom:0;"></td>
-            <td width="49%">
-                <span class="font-weight-bold">PEMONEV</span><br>
-                <span>{{ $user->name }}</span>
-            </td>
+            <td width="10%" class="label">UNIT</td>
+            <td width="39.5%"><span class="value">: {{ $peta->jenis }}</span></td>
+            <td class="no-border-middle"></td>
+            <td width="10%" class="label">PEMONEV</td>
+            <td width="39.5%"><span class="value">: {{ $hasilAudit->nama_pemonev ?? ($user->name ?? '-') }}</span></td>
         </tr>
+
+        <!-- Baris 2: KODE RISIKO & TAHUN ANGGARAN -->
         <tr>
+            <td class="label">KODE RISIKO</td>
+            <td><span class="value">: {{ $peta->kode_regist ?? '-' }}</span></td>
+            <td class="no-border-middle"></td>
+            <td colspan="2"><span class="label">Tahun Anggaran KEGIATAN</span> <span class="value">:
+                    {{ $hasilAudit->tahun_anggaran ?? date('Y') }}</span></td>
+        </tr>
+
+        <!-- Baris 3: KEGIATAN -->
+        <tr>
+            <td class="label">KEGIATAN</td>
+            <td colspan="4"><span class="value">:
+                    {{ $hasilAudit->kegiatan ?? ($peta->kegiatan->judul ?? $peta->judul) }}</span></td>
+        </tr>
+
+        <!-- Baris 4: PERNYATAAN RISIKO -->
+        <tr>
+            <td class="label" style="line-height: 1.1;">PERNYATAAN<br>RISIKO</td>
+            <td colspan="4"><span class="value">: {{ $peta->pernyataan ?? '-' }}</span></td>
+        </tr>
+
+        <!-- Baris 5: LEVEL RISIKO & RISIKO RESIDUAL -->
+        <tr>
+            <td class="label">LEVEL RISIKO</td>
             <td>
-                <span class="font-weight-bold">KODE RISIKO</span> :
-                <span>{{ $peta->kode_regist ?? '-' }}</span>
+                @php
+                    $levelValue = $hasilAudit->level_risiko ?? $levelText;
+                    $levelClass = 'level-low';
+                    if ($levelValue == 'EXTREME') {
+                        $levelClass = 'level-extreme';
+                    } elseif ($levelValue == 'HIGH') {
+                        $levelClass = 'level-high';
+                    } elseif ($levelValue == 'MODERATE') {
+                        $levelClass = 'level-moderate';
+                    }
+                @endphp
+                <span class="{{ $levelClass }}">{{ $levelValue }}</span>
             </td>
-            <td style="border-left:0; border-right:0; border-top:0; border-bottom:0;"></td>
+            <td class="no-border-middle"></td>
+            <td class="label">RISIKO RESIDUAL</td>
             <td>
-                <span class="font-weight-bold">Tahun Anggaran KEGIATAN</span> :
-                <span>{{ date('Y') }}</span>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" style="border-right:0;">
-                <span class="font-weight-bold">KEGIATAN</span><br>
-                <span>{{ $peta->kegiatan->judul ?? $peta->judul }}</span>
-            </td>
-            <td rowspan="2" style="border-left:0;">
-                <span class="font-weight-bold">PERNYATAAN RISIKO</span><br>
-                <span>{{ $peta->pernyataan ?? '-' }}</span>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" style="border-right:0;">
-                <span class="font-weight-bold">LEVEL RISIKO </span>
-                <span class="badge {{ $badgeClass }}">{{ $hasilAudit->level_risiko ?? $levelText }}</span>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="3">
-                <span class="font-weight-bold">RISIKO RESIDUAL</span>
-                <span class="badge {{ $residualClass }}">{{ $hasilAudit->risiko_residual ?? $residualText }}</span>
-                @if($hasilAudit && $hasilAudit->skor_total)
-                    <span style="font-size: 10px; color: #666;"> (Skor Total: {{ $hasilAudit->skor_total }})</span>
-                @endif
+                @php
+                    $residualValue = $hasilAudit->risiko_residual ?? $residualText;
+                    $residualClass = 'residual-low';
+                    if ($residualValue == 'Extreme') {
+                        $residualClass = 'residual-extreme';
+                    } elseif ($residualValue == 'High') {
+                        $residualClass = 'residual-high';
+                    } elseif ($residualValue == 'Moderate') {
+                        $residualClass = 'residual-moderate';
+                    }
+                @endphp
+                <span class="{{ $residualClass }}">{{ $residualValue }}</span>
             </td>
         </tr>
 
-        @if($hasilAudit)
-        <tr>
-            <td width="33%">
-                <span class="font-weight-bold">PENGENDALIAN</span><br>
-                {{ $hasilAudit->pengendalian }}
-            </td>
-            <td width="33%">
-                <span class="font-weight-bold">MITIGASI RISIKO</span><br>
-                {{ $hasilAudit->mitigasi }}
-            </td>
-            <td width="33%">
-                <span class="font-weight-bold">KOMENTAR</span><br>
-                1. {{ $hasilAudit->komentar_1 }}<br><br>
-                2. {{ $hasilAudit->komentar_2 }}<br><br>
-                3. {{ $hasilAudit->komentar_3 }}<br><br>
-                
-                <span class="font-weight-bold">Status Konfirmasi</span><br>
-                Auditee: {{ $hasilAudit->status_konfirmasi_auditee ?? '-' }}<br>
-                Auditor: {{ $hasilAudit->status_konfirmasi_auditor ?? '-' }}
-            </td>
-        </tr>
+        <!-- Baris 6: TABLE 3 KOLOM - PENGENDALIAN, MITIGASI, KOMENTAR -->
+        @if ($hasilAudit)
+            <tr class="header-row">
+                <td colspan="2">PENGENDALIAN</td>
+                <td colspan="2">MITIGASI RISIKO</td>
+                <td>KOMENTAR</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="table-content" style="height: 180px; vertical-align: top;">
+                    {{ $hasilAudit->pengendalian ?? '-' }}
+                </td>
+                <td colspan="2" class="table-content" style="height: 180px; vertical-align: top;">
+                    <strong class="red-text">Menerima Risiko</strong><br><br>
+                    {{ $hasilAudit->mitigasi ?? '-' }}
+
+                    @if ($hasilAudit->status_konfirmasi_auditee || $hasilAudit->status_konfirmasi_auditor)
+                        <br><br>
+                        <strong>Status Konfirmasi</strong><br>
+                        @if ($hasilAudit->status_konfirmasi_auditee)
+                            <strong>Auditee:</strong> {{ $hasilAudit->status_konfirmasi_auditee }}<br>
+                        @endif
+                        @if ($hasilAudit->status_konfirmasi_auditor)
+                            <strong>Auditor:</strong> {{ $hasilAudit->status_konfirmasi_auditor }}
+                        @endif
+                    @endif
+                </td>
+                <td class="table-content" style="height: 180px; vertical-align: top;">
+                    @if ($hasilAudit->komentar_1)
+                        <strong>1. Sentralisasi Repositori Bukti:</strong><br>
+                        {{ $hasilAudit->komentar_1 }}<br><br>
+                    @endif
+
+                    @if ($hasilAudit->komentar_2)
+                        <strong>2. Finalisasi LKPS & Cross-Check:</strong><br>
+                        {{ $hasilAudit->komentar_2 }}<br><br>
+                    @endif
+
+                    @if ($hasilAudit->komentar_3)
+                        <strong>3. Koordinasi Khusus Keuangan:</strong><br>
+                        {{ $hasilAudit->komentar_3 }}
+                    @endif
+                </td>
+            </tr>
         @else
-        <tr>
-            <td colspan="3" style="text-align: center; padding: 20px; color: #999;">
-                <em>Data audit belum diisi</em>
-            </td>
-        </tr>
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 15px; color: #999; height: 180px;">
+                    <em>Data audit belum diisi</em>
+                </td>
+            </tr>
         @endif
     </table>
 
     <div class="signature-section">
-        <div class="signature-left">
-            <span>Unit.</span><br>
-            <span class="font-weight-bold">{{ $peta->jenis }}</span>
+        <div class="signature-container">
+            <div class="signature-left">
+                <span class="text-underline">Unit.</span>
+                <div class="signature-space"></div>
+                <span class="text-bold text-underline">{{ $peta->jenis }}</span><br>
+                <span>NIP. {{ $hasilAudit->auditor->nip ?? '197412082005011001' }}</span>
+            </div>
+            <div class="signature-right">
+                <span>Malang, {{ date('d/m/Y') }}</span><br>
+                <span class="text-bold">Pemonev</span>
+                <div class="signature-space"></div>
+                <span
+                    class="text-bold text-underline">{{ $hasilAudit->nama_pemonev ?? ($user->name ?? 'Usman Nurhasan, S.Kom., M.T.') }}</span><br>
+                <span>NIP. {{ $hasilAudit->nip_pemonev ?? ($user->nip ?? '198909162014042001') }}</span>
+            </div>
         </div>
-        <div class="signature-right">
-            <span>Malang, {{ date('d/m/Y') }}</span><br>
-            <span class="font-weight-bold">Pemonev</span><br><br><br>
-            <span class="font-weight-bold">{{ $user->name }}</span><br>
-            <span>NIP. {{ $user->nip ?? '-' }}</span>
-        </div>
-        <div class="clear"></div>
     </div>
 </body>
 

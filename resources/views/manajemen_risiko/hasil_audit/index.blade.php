@@ -152,7 +152,8 @@
                                                 <tr>
                                                     <td class="text-center">{{ $no++ }}</td>
                                                     <td class="text-center">
-                                                        <span class="badge badge-secondary">{{ $hasil->kode_risiko }}</span>
+                                                        <span
+                                                            class="badge badge-secondary">{{ $hasil->kode_risiko }}</span>
                                                     </td>
                                                     <td class="text-left">{{ $hasil->unit_kerja }}</td>
                                                     <td class="text-left">
@@ -164,7 +165,8 @@
                                                     </td>
                                                     <td class="text-center">
                                                         <strong>{{ $hasil->nama_pemonev }}</strong><br>
-                                                        <small class="text-muted">NIP: {{ $hasil->nip_pemonev ?? '-' }}</small>
+                                                        <small class="text-muted">NIP:
+                                                            {{ $hasil->nip_pemonev ?? '-' }}</small>
                                                     </td>
                                                     <td class="text-center">
                                                         @php
@@ -175,7 +177,8 @@
                                                                 default => 'badge-secondary',
                                                             };
                                                         @endphp
-                                                        <span class="badge {{ $levelBadge }}">{{ $hasil->level_risiko }}</span>
+                                                        <span
+                                                            class="badge {{ $levelBadge }}">{{ $hasil->level_risiko }}</span>
                                                     </td>
                                                     <td class="text-center">
                                                         <div class="mb-1">
@@ -203,7 +206,8 @@
                                                     </td>
                                                     <td class="text-center">
                                                         <small>{{ $hasil->created_at->format('d/m/Y') }}</small><br>
-                                                        <small class="text-muted">{{ $hasil->created_at->format('H:i') }}</small>
+                                                        <small
+                                                            class="text-muted">{{ $hasil->created_at->format('H:i') }}</small>
                                                     </td>
                                                     <td class="text-center">
                                                         <a href="{{ route('manajemen-risiko.hasil-audit.show', $hasil->id) }}"
@@ -215,6 +219,20 @@
                                                             target="_blank">
                                                             <i class="fas fa-file-pdf"></i> Cetak
                                                         </a>
+
+                                                        @if ($hasil->file_scan)
+                                                            <a href="{{ asset('storage/scan_hasil_audit/' . $hasil->file_scan) }}"
+                                                                class="btn btn-sm btn-success mb-1" title="Lihat Scan"
+                                                                target="_blank">
+                                                                <i class="fas fa-file-image"></i> Scan
+                                                            </a>
+                                                        @else
+                                                            <button type="button" class="btn btn-sm btn-warning mb-1"
+                                                                title="Upload Scan" data-toggle="modal"
+                                                                data-target="#uploadScanModal{{ $hasil->id }}">
+                                                                <i class="fas fa-upload"></i> Upload
+                                                            </button>
+                                                        @endif
                                                     </td>
                                                 </tr>
                                             @empty
@@ -241,6 +259,73 @@
             </div>
         </section>
     </div>
+
+    {{-- MODAL UPLOAD SCAN --}}
+    @foreach ($hasilAudits as $hasil)
+        <div class="modal fade" id="uploadScanModal{{ $hasil->id }}" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title">
+                            <i class="fas fa-upload"></i> Upload Scan Hasil Audit
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ route('manajemen-risiko.hasil-audit.upload-scan', $hasil->id) }}" method="POST"
+                        enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Info:</strong> Upload hasil scan dokumen yang sudah dicetak dan ditandatangani.
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold">Kode Risiko:</label>
+                                <p class="text-muted">{{ $hasil->kode_risiko }}</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold">Unit Kerja:</label>
+                                <p class="text-muted">{{ $hasil->unit_kerja }}</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold">File Scan <span class="text-danger">*</span></label>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" name="file_scan"
+                                        id="fileScan{{ $hasil->id }}" required
+                                        accept="image/jpeg,image/jpg,image/png,application/pdf">
+                                    <label class="custom-file-label" for="fileScan{{ $hasil->id }}">
+                                        Pilih file...
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Format: JPG, PNG, atau PDF. Maksimal 5MB.
+                                </small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold">Keterangan (Opsional)</label>
+                                <textarea class="form-control" name="keterangan_scan" rows="3"
+                                    placeholder="Tambahkan keterangan jika diperlukan..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <i class="fas fa-times"></i> Batal
+                            </button>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-upload"></i> Upload Scan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
 @endsection
 
 @push('scripts')
@@ -253,6 +338,12 @@
             setTimeout(function() {
                 $('.alert-success, .alert-danger').fadeOut('slow');
             }, 5000);
+
+            // Custom file input label update
+            $('.custom-file-input').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
         });
     </script>
 @endpush

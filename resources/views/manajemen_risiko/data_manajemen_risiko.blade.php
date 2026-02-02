@@ -280,7 +280,7 @@
                                                     </div>
 
                                                     {{-- Download Template Column --}}
-                                                    <div class="col-lg-3">
+                                                    <div class="col-lg-3 d-md-flex justify-content-md-end">
                                                         <div class="form-group mb-0">
                                                             <label class="form-label font-weight-bold small">DOWNLOAD
                                                                 TEMPLATE</label>
@@ -327,7 +327,7 @@
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div class="col-lg-7">
+                                                <div class="col-lg-7 d-md-flex justify-content-md-end">
                                                     <div class="form-group mb-0">
                                                         <label class="form-label font-weight-bold small">AKSI MANAJEMEN
                                                             RISIKO</label>
@@ -585,7 +585,7 @@
                                                                     @elseif($jumlahRisikoTerpilih == 1)
                                                                         1 kegiatan dipilih
                                                                     @else
-                                                                        {{ $jumlahRisikoTerpilih }} risiko dipilih
+                                                                        {{ $jumlahRisikoTerpilih }} kegiatan dipilih
                                                                     @endif
                                                                 </small>
                                                             </div>

@@ -374,8 +374,8 @@
                                                     <th width="60" class="text-center">No</th>
                                                     <th>Unit Kerja</th>
                                                     <th width="100" class="text-center">Kode</th>
-                                                    {{-- <th width="120" class="text-center">Kegiatan</th> --}} <th width="130" class="text-center">Risiko
-                                                        Kegiatan</th>
+                                                    {{-- <th width="120" class="text-center">Kegiatan</th> --}} <th width="130" class="text-center">Kegiatan
+                                                    </th>
 
                                                     <th width="120" class="text-center">Kategori</th>
                                                     <th class="text-center"> Judul Risiko</th>
@@ -580,10 +580,10 @@
                                                                 </div>
                                                                 <small class="text-muted">
                                                                     @if ($jumlahRisikoTerpilih == 0)
-                                                                        <span class="text-danger">Belum ada risiko
+                                                                        <span class="text-danger">Belum ada kegiatan
                                                                             dipilih</span>
                                                                     @elseif($jumlahRisikoTerpilih == 1)
-                                                                        1 risiko dipilih
+                                                                        1 kegiatan dipilih
                                                                     @else
                                                                         {{ $jumlahRisikoTerpilih }} risiko dipilih
                                                                     @endif

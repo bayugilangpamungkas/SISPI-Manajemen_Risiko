@@ -277,7 +277,7 @@
                                                 @endif
                                                 <th scope="col" width="{{ $isAuditee ? '10%' : '8%' }}"
                                                     class="text-center">
-                                                    Risiko Kegiatan
+                                                    Kegiatan
                                                 </th>
                                                 <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}"
                                                     class="text-center">
@@ -299,10 +299,6 @@
                                                 <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}"
                                                     class="text-center">
                                                     Status
-                                                </th>
-                                                <th scope="col" width="{{ $isAuditee ? '9%' : '8%' }}"
-                                                    class="text-center">
-                                                    Komentar
                                                 </th>
                                                 <th scope="col" width="{{ $isAuditee ? '10%' : '11%' }}"
                                                     class="text-center">
@@ -387,7 +383,7 @@
                                                                 @if ($jumlahRisikoTerpilih == 0)
                                                                     <span class="text-danger">Belum ada</span>
                                                                 @else
-                                                                    {{ $jumlahRisikoTerpilih }} risiko
+                                                                    {{ $jumlahRisikoTerpilih }} Kegiatan
                                                                 @endif
                                                             </small>
                                                         </div>
@@ -460,28 +456,8 @@
                                                         @endif
                                                     </td>
                                                     <td class="text-center">
-                                                        @if ($jumlahKomentar > 0)
-                                                            <button type="button"
-                                                                class="badge badge-primary badge-pill border-0"
-                                                                data-toggle="modal"
-                                                                data-target="#modalKomentar{{ $peta->id }}">
-                                                                <i class="fas fa-comments"></i> {{ $jumlahKomentar }}
-                                                            </button>
-                                                        @else
-                                                            <span class="badge badge-secondary badge-pill"
-                                                                style="font-size: 12px;">
-                                                                <i class="fas fa-comment-slash"></i> Tidak ada
-                                                            </span>
-                                                        @endif
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <a href="{{ $isAuditee ? route('manajemen-risiko.auditee.show-detail', $peta->id) : ($isAuditor ? route('manajemen-risiko.auditor.show-detail', $peta->id) : route('manajemen-risiko.show', $peta->id)) }}"
-                                                            class="btn btn-sm btn-primary mb-1" title="Detail">
-                                                            <i class="fas fa-eye"></i> Detail
-                                                        </a>
-
                                                         @if ($isAdmin)
-                                                            {{-- Admin actions --}}
+                                                            {{-- Admin: Hanya tombol Ubah Auditor --}}
                                                             @if ($peta->auditor)
                                                                 <button class="btn btn-sm btn-info mb-1"
                                                                     data-toggle="modal"
@@ -489,71 +465,87 @@
                                                                     title="Ubah Auditor">
                                                                     <i class="fas fa-user-edit"></i> Ubah
                                                                 </button>
-                                                            @endif
-                                                        @elseif ($isAuditor)
-                                                            {{-- Auditor actions --}}
-                                                            @if ($peta->koreksiPr == 'submitted' && !$peta->status_telaah)
-                                                                <button class="btn btn-sm btn-success mb-1"
-                                                                    data-toggle="modal"
-                                                                    data-target="#approveModal{{ $peta->id }}"
-                                                                    title="Setujui">
-                                                                    <i class="fas fa-check-circle"></i> ACC
-                                                                </button>
-                                                                <button class="btn btn-sm btn-danger mb-1"
-                                                                    data-toggle="modal"
-                                                                    data-target="#rejectModal{{ $peta->id }}"
-                                                                    title="Tolak">
-                                                                    <i class="fas fa-times-circle"></i> Tolak
-                                                                </button>
-                                                            @elseif (!$peta->template_sent_at)
-                                                                <span class="badge badge-secondary"
-                                                                    title="Isi template terlebih dahulu">
-                                                                    <i class="fas fa-info-circle"></i> Belum Kirim Template
-                                                                </span>
-                                                            @elseif (!$peta->koreksiPr || $peta->koreksiPr == 'rejected')
-                                                                <span class="badge badge-warning"
-                                                                    title="Menunggu Auditee mengerjakan">
-                                                                    <i class="fas fa-clock"></i> Menunggu Auditee
-                                                                </span>
-                                                            @elseif ($peta->status_telaah)
-                                                                <span class="badge badge-success" title="Sudah disetujui">
-                                                                    <i class="fas fa-check"></i> Sudah ACC
-                                                                </span>
-                                                            @endif
-                                                        @elseif ($isAuditee)
-                                                            {{-- Auditee actions --}}
-                                                            @if (!$peta->auditor_id)
-                                                                <span class="badge badge-secondary"
-                                                                    title="Belum ada auditor">
-                                                                    <i class="fas fa-user-slash"></i> Belum Ditugaskan
-                                                                </span>
-                                                            @elseif (!$peta->template_sent_at)
-                                                                <span class="badge badge-warning"
-                                                                    title="Menunggu template dari Auditor">
-                                                                    <i class="fas fa-hourglass-half"></i> Menunggu Template
-                                                                </span>
-                                                            @elseif ($peta->status_telaah)
-                                                                <span class="badge badge-success"
-                                                                    title="Sudah disetujui Auditor">
-                                                                    <i class="fas fa-check-double"></i> Selesai
-                                                                </span>
-                                                            @elseif ($peta->koreksiPr == 'submitted')
-                                                                <span class="badge badge-info"
-                                                                    title="Menunggu review Auditor">
-                                                                    <i class="fas fa-paper-plane"></i> Dikirim
-                                                                </span>
-                                                            @elseif ($peta->koreksiPr == 'rejected')
-                                                                <button class="btn btn-sm btn-danger mb-1"
-                                                                    onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'"
-                                                                    title="Perlu revisi">
-                                                                    <i class="fas fa-exclamation-triangle"></i> Perbaiki
-                                                                </button>
                                                             @else
-                                                                <button class="btn btn-sm btn-success mb-1"
-                                                                    onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'"
-                                                                    title="Kerjakan tugas">
-                                                                    <i class="fas fa-edit"></i> Kerjakan
-                                                                </button>
+                                                                <span class="badge badge-secondary">
+                                                                    <i class="fas fa-user-slash"></i> Belum ada auditor
+                                                                </span>
+                                                            @endif
+                                                        @else
+                                                            {{-- Auditor & Auditee: Tombol Detail tetap ada --}}
+                                                            <a href="{{ $isAuditee ? route('manajemen-risiko.auditee.show-detail', $peta->id) : ($isAuditor ? route('manajemen-risiko.auditor.show-detail', $peta->id) : route('manajemen-risiko.show', $peta->id)) }}"
+                                                                class="btn btn-sm btn-primary mb-1" title="Detail">
+                                                                <i class="fas fa-eye"></i> Detail
+                                                            </a>
+
+                                                            @if ($isAuditor)
+                                                                {{-- Auditor actions --}}
+                                                                @if ($peta->koreksiPr == 'submitted' && !$peta->status_telaah)
+                                                                    <button class="btn btn-sm btn-success mb-1"
+                                                                        data-toggle="modal"
+                                                                        data-target="#approveModal{{ $peta->id }}"
+                                                                        title="Setujui">
+                                                                        <i class="fas fa-check-circle"></i> ACC
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-danger mb-1"
+                                                                        data-toggle="modal"
+                                                                        data-target="#rejectModal{{ $peta->id }}"
+                                                                        title="Tolak">
+                                                                        <i class="fas fa-times-circle"></i> Tolak
+                                                                    </button>
+                                                                @elseif (!$peta->template_sent_at)
+                                                                    <span class="badge badge-secondary"
+                                                                        title="Isi template terlebih dahulu">
+                                                                        <i class="fas fa-info-circle"></i> Belum Kirim
+                                                                        Template
+                                                                    </span>
+                                                                @elseif (!$peta->koreksiPr || $peta->koreksiPr == 'rejected')
+                                                                    <span class="badge badge-warning"
+                                                                        title="Menunggu Auditee mengerjakan">
+                                                                        <i class="fas fa-clock"></i> Menunggu Auditee
+                                                                    </span>
+                                                                @elseif ($peta->status_telaah)
+                                                                    <span class="badge badge-success"
+                                                                        title="Sudah disetujui">
+                                                                        <i class="fas fa-check"></i> Sudah ACC
+                                                                    </span>
+                                                                @endif
+                                                            @elseif ($isAuditee)
+                                                                {{-- Auditee actions --}}
+                                                                @if (!$peta->auditor_id)
+                                                                    <span class="badge badge-secondary"
+                                                                        title="Belum ada auditor">
+                                                                        <i class="fas fa-user-slash"></i> Belum Ditugaskan
+                                                                    </span>
+                                                                @elseif (!$peta->template_sent_at)
+                                                                    <span class="badge badge-warning"
+                                                                        title="Menunggu template dari Auditor">
+                                                                        <i class="fas fa-hourglass-half"></i> Menunggu
+                                                                        Template
+                                                                    </span>
+                                                                @elseif ($peta->status_telaah)
+                                                                    <span class="badge badge-success"
+                                                                        title="Sudah disetujui Auditor">
+                                                                        <i class="fas fa-check-double"></i> Selesai
+                                                                    </span>
+                                                                @elseif ($peta->koreksiPr == 'submitted')
+                                                                    <span class="badge badge-info"
+                                                                        title="Menunggu review Auditor">
+                                                                        <i class="fas fa-paper-plane"></i> Dikirim
+                                                                    </span>
+                                                                @elseif ($peta->koreksiPr == 'rejected')
+                                                                    <button class="btn btn-sm btn-danger mb-1"
+                                                                        onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'"
+                                                                        title="Perlu revisi">
+                                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                                        Perbaiki
+                                                                    </button>
+                                                                @else
+                                                                    <button class="btn btn-sm btn-success mb-1"
+                                                                        onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'"
+                                                                        title="Kerjakan tugas">
+                                                                        <i class="fas fa-edit"></i> Kerjakan
+                                                                    </button>
+                                                                @endif
                                                             @endif
                                                         @endif
                                                     </td>

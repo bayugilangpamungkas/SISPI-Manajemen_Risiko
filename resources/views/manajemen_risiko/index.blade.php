@@ -144,12 +144,16 @@
                                                             {{ ($kegiatanId ?? 'all') == 'all' ? 'selected' : '' }}>
                                                             Semua Kegiatan
                                                         </option>
-                                                        @foreach ($kegiatans ?? [] as $kegiatan)
-                                                            <option value="{{ $kegiatan->id }}"
-                                                                {{ ($kegiatanId ?? '') == $kegiatan->id ? 'selected' : '' }}>
-                                                                {{ $kegiatan->judul }}
-                                                            </option>
-                                                        @endforeach
+                                                        @isset($kegiatans)
+                                                            @foreach ($kegiatans as $kegiatan)
+                                                                @if (is_object($kegiatan) || is_array($kegiatan))
+                                                                    <option value="{{ $kegiatan->id ?? $kegiatan['id'] }}"
+                                                                        {{ ($kegiatanId ?? '') == ($kegiatan->id ?? $kegiatan['id']) ? 'selected' : '' }}>
+                                                                        {{ $kegiatan->judul ?? ($kegiatan['judul'] ?? 'Tanpa Judul') }}
+                                                                    </option>
+                                                                @endif
+                                                            @endforeach
+                                                        @endisset
                                                     </select>
                                                 </div>
                                             </div>
@@ -272,36 +276,27 @@
                                         <thead class="thead-light">
                                             <tr>
                                                 <th scope="col" width="3%" class="text-center">No</th>
-                                                @if (!$isAuditee)
-                                                    <th scope="col" width="10%" class="text-left">Unit Kerja</th>
-                                                @endif
-                                                <th scope="col" width="{{ $isAuditee ? '10%' : '8%' }}"
-                                                    class="text-center">
+                                                <th scope="col" width="10%" class="text-left">Unit Kerja</th>
+                                                <th scope="col" width="{{ $isAuditee ? '10%' : '8%' }}" class="text-center">
                                                     Kegiatan
                                                 </th>
-                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}"
-                                                    class="text-center">
+                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}" class="text-center">
                                                     Kategori
                                                 </th>
-                                                <th scope="col"
-                                                    width="{{ $isAdmin ? '13%' : ($isAuditee ? '18%' : '15%') }}"
-                                                    class="text-left">
+                                                <th scope="col" width="{{ $isAdmin ? '13%' : ($isAuditee ? '18%' : '15%') }}" class="text-left">
                                                     Judul Risiko
                                                 </th>
                                                 @if ($isAdmin)
                                                     <th scope="col" width="10%" class="text-center">Auditor</th>
                                                 @endif
-                                                <th scope="col" width="{{ $isAuditee ? '6%' : '5%' }}"
-                                                    class="text-center">
+                                                <th scope="col" width="{{ $isAuditee ? '6%' : '5%' }}" class="text-center">
                                                     Skor
                                                 </th>
                                                 <th scope="col" width="7%" class="text-center">Tingkat</th>
-                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}"
-                                                    class="text-center">
+                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}" class="text-center">
                                                     Status
                                                 </th>
-                                                <th scope="col" width="{{ $isAuditee ? '10%' : '11%' }}"
-                                                    class="text-center">
+                                                <th scope="col" width="{{ $isAuditee ? '10%' : '11%' }}" class="text-center">
                                                     Aksi
                                                 </th>
                                             </tr>
@@ -331,12 +326,10 @@
 
                                                 <tr>
                                                     <td class="text-center">{{ $no++ }}</td>
-                                                    @if (!$isAuditee)
-                                                        <td class="text-left">
-                                                            <strong>{{ $peta->jenis }}</strong><br>
-                                                            <small class="text-muted">{{ $peta->kode_regist }}</small>
-                                                        </td>
-                                                    @endif
+                                                    <td class="text-left">
+                                                        <strong>{{ $peta->jenis }}</strong><br>
+                                                        <small class="text-muted">{{ $peta->kode_regist }}</small>
+                                                    </td>
                                                     <td class="text-center align-middle">
                                                         @php
                                                             static $risikoCountCache = [];
@@ -552,7 +545,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="{{ $isAdmin ? '12' : ($isAuditee ? '10' : '11') }}"
+                                                    <td colspan="{{ $isAdmin ? '10' : '9' }}"
                                                         class="text-center">
                                                         <div
                                                             class="alert {{ $isAuditee || $isAuditor ? 'alert-info' : 'alert-warning' }} mb-0">

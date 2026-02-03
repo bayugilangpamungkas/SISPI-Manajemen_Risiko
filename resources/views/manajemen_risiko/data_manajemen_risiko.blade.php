@@ -374,9 +374,7 @@
                                                     <th width="60" class="text-center">No</th>
                                                     <th>Unit Kerja</th>
                                                     <th width="100" class="text-center">Kode</th>
-                                                    {{-- <th width="120" class="text-center">Kegiatan</th> --}} <th width="130" class="text-center">Kegiatan
-                                                    </th>
-
+                                                    <th width="100" class="text-center">Kegiatan</th>
                                                     <th width="120" class="text-center">Kategori</th>
                                                     <th class="text-center"> Judul Risiko</th>
                                                     <th width="90" class="text-center">Skor</th>
@@ -516,9 +514,6 @@
                                                         <td class="text-center align-middle">{{ $no++ }}</td>
                                                         <td class="align-middle">
                                                             <div class="font-weight-medium">{{ $peta->jenis }}</div>
-                                                            <small class="text-muted">
-                                                                {{ $jumlahRisikoUnit }} risiko
-                                                            </small>
                                                             {{-- ✅ DEBUG: Tampilkan info debugging --}}
                                                             @if (config('app.debug'))
                                                                 <br>
@@ -530,41 +525,6 @@
                                                         <td class="text-center align-middle">
                                                             <span class="badge badge-secondary">{{ $kodeUnit }}</span>
                                                         </td>
-                                                        {{-- <td class="text-center align-middle">
-                                                            <div class="d-flex flex-column align-items-center">
-                                                                <div class="d-flex align-items-center mb-1">
-                                                                    <i class="fas fa-tasks text-primary mr-2"></i>
-                                                                    {{-- ✅ INI YANG AKAN BERUBAH SETELAH UPDATE --}}
-                                                        {{-- <span class="font-weight-bold"
-                                                            style="font-size: 1.1rem; color: #1976d2;">
-                                                            {{ $jumlahKegiatanTampil }}
-                                                        </span>
-                                                        @if ($totalKegiatanUnit > 0)
-                                                            <small
-                                                                class="text-muted ml-1">/{{ $totalKegiatanUnit }}</small>
-                                                        @endif
-                                    </div> --}}
-                                                        {{-- <small class="text-muted">
-                                        @if ($jumlahKegiatanTampil == 0)
-                                            <span class="text-danger">Tidak ada kegiatan
-                                                ditampilkan</span>
-                                        @elseif($jumlahKegiatanTampil == 1)
-                                            1 kegiatan ditampilkan
-                                        @else
-                                            {{ $jumlahKegiatanTampil }} kegiatan ditampilkan
-                                        @endif
-                                    </small>
-
-                                    {{-- ✅ DEBUG: Tampilkan info perhitungan --}}
-                                                        {{-- @if (config('app.debug'))
-                                        <br>
-                                        <small class="text-info" style="font-size: 10px;">
-                                            (Dihitung:
-                                            {{ \App\Models\Kegiatan::hitungKegiatanTampil($unitKerjaModel->id ?? 0, $tahun) }})
-                                        </small>
-                                    @endif --}}
-                                                        {{-- </div> 
-                            </td>  --}}
                                                         <td class="text-center align-middle">
                                                             <div class="d-flex flex-column align-items-center">
                                                                 <div class="d-flex align-items-center mb-1">

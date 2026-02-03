@@ -277,26 +277,33 @@
                                             <tr>
                                                 <th scope="col" width="3%" class="text-center">No</th>
                                                 <th scope="col" width="10%" class="text-left">Unit Kerja</th>
-                                                <th scope="col" width="{{ $isAuditee ? '10%' : '8%' }}" class="text-center">
+                                                <th scope="col" width="{{ $isAuditee ? '10%' : '8%' }}"
+                                                    class="text-center">
                                                     Kegiatan
                                                 </th>
-                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}" class="text-center">
+                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}"
+                                                    class="text-center">
                                                     Kategori
                                                 </th>
-                                                <th scope="col" width="{{ $isAdmin ? '13%' : ($isAuditee ? '18%' : '15%') }}" class="text-left">
+                                                <th scope="col"
+                                                    width="{{ $isAdmin ? '13%' : ($isAuditee ? '18%' : '15%') }}"
+                                                    class="text-left">
                                                     Judul Risiko
                                                 </th>
                                                 @if ($isAdmin)
                                                     <th scope="col" width="10%" class="text-center">Auditor</th>
                                                 @endif
-                                                <th scope="col" width="{{ $isAuditee ? '6%' : '5%' }}" class="text-center">
+                                                <th scope="col" width="{{ $isAuditee ? '6%' : '5%' }}"
+                                                    class="text-center">
                                                     Skor
                                                 </th>
-                                                <th scope="col" width="7%" class="text-center">Tingkat</th>
-                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}" class="text-center">
+                                                <th scope="col" width="7%" class="text-center">Tingkat Risiko</th>
+                                                <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}"
+                                                    class="text-center">
                                                     Status
                                                 </th>
-                                                <th scope="col" width="{{ $isAuditee ? '10%' : '11%' }}" class="text-center">
+                                                <th scope="col" width="{{ $isAuditee ? '10%' : '11%' }}"
+                                                    class="text-center">
                                                     Aksi
                                                 </th>
                                             </tr>
@@ -328,7 +335,19 @@
                                                     <td class="text-center">{{ $no++ }}</td>
                                                     <td class="text-left">
                                                         <strong>{{ $peta->jenis }}</strong><br>
-                                                        <small class="text-muted">{{ $peta->kode_regist }}</small>
+                                                        @if (config('app.debug'))
+                                                            @php
+                                                                $unitKerjaModel = \App\Models\UnitKerja::where(
+                                                                    'nama_unit_kerja',
+                                                                    $peta->jenis,
+                                                                )->first();
+                                                            @endphp
+                                                            <br>
+                                                            <small class="text-danger">
+                                                                Unit ID: {{ $unitKerjaModel->id ?? 'null' }}
+                                                            </small>
+                                                        @endif
+                                                        {{-- <small class="text-muted">{{ $peta->kode_regist }}</small> --}}
                                                     </td>
                                                     <td class="text-center align-middle">
                                                         @php
@@ -545,8 +564,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="{{ $isAdmin ? '10' : '9' }}"
-                                                        class="text-center">
+                                                    <td colspan="{{ $isAdmin ? '10' : '9' }}" class="text-center">
                                                         <div
                                                             class="alert {{ $isAuditee || $isAuditor ? 'alert-info' : 'alert-warning' }} mb-0">
                                                             <i

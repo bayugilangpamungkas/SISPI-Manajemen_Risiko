@@ -650,10 +650,10 @@ class ManajemenRisikoController extends Controller
                 ->first()
                 ->tahun ?? date('Y');
 
-            // Redirect ke halaman Data Manajemen Risiko dengan pesan sukses
+            // ✅ REDIRECT KE HALAMAN MANAJEMEN RISIKO (bukan ke data manajemen risiko)
             return redirect()
-                ->route('manajemen-risiko.data', ['tahun' => $tahun])
-                ->with('success', count($request->selected_ids) . ' risiko berhasil ditampilkan!');
+                ->route('manajemen-risiko.index', ['tahun' => $tahun])
+                ->with('success', '✅ Berhasil! ' . count($request->selected_ids) . ' risiko telah ditampilkan di Manajemen Risiko!');
         } catch (\Exception $e) {
             // Kembali ke halaman sebelumnya dengan pesan error
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -777,7 +777,6 @@ class ManajemenRisikoController extends Controller
 
                 $jumlahKegiatanTampil = count($validKegiatanIds);
 
-
                 // Hitung total risiko yang tampil
                 $jumlahRisikoTampil = Peta::whereIn('id_kegiatan', function ($query) use ($unitKerjaModel) {
                     $query->select('id_kegiatan')
@@ -802,29 +801,14 @@ class ManajemenRisikoController extends Controller
                 DB::commit();
 
                 // 6. Pesan sukses
-                $successMessage = "✅ **Update Berhasil!**\n\n";
-                $successMessage .= "**Detail Update:**\n";
-                $successMessage .= "• Unit Kerja: **{$unitKerja}**\n";
-                $successMessage .= "• Tahun: **{$tahun}**\n";
-                $successMessage .= "• Kegiatan Dipilih: **" . count($validKegiatanIds) . "** dari {$totalKegiatanUnit}\n";
-                $successMessage .= "• Kegiatan Ditampilkan: **{$jumlahKegiatanTampil}**\n";
-                $successMessage .= "• Risiko Ditampilkan: **{$jumlahRisikoTampil}**\n\n";
-                $successMessage .= "**Sekarang di halaman Data Manajemen Risiko akan menampilkan: {$jumlahKegiatanTampil} kegiatan**";
+                $successMessage = "✅ Berhasil memilih kegiatan untuk {$unitKerja}! ";
+                $successMessage .= "{$jumlahKegiatanTampil} kegiatan dari {$totalKegiatanUnit} kegiatan telah dipilih. ";
+                $successMessage .= "Total {$jumlahRisikoTampil} risiko siap ditampilkan.";
 
-
-
+                // ✅ REDIRECT KE DATA MANAJEMEN RISIKO (bukan ke detail-unit lagi)
                 return redirect()
-                    ->route('manajemen-risiko.detail-unit', [
-                        'unitKerja' => $unitKerja,
-                        'tahun' => $tahun
-                    ])
-                    ->with([
-                        'success' => $successMessage,
-                        'auto_refresh' => true,
-                        'updated_unit' => $unitKerja,
-                        'updated_tahun' => $tahun,
-                        'kegiatan_tampil_count' => $jumlahKegiatanTampil // Data untuk debugging
-                    ]);
+                    ->route('manajemen-risiko.data', ['tahun' => $tahun])
+                    ->with('success', $successMessage);
             } catch (\Exception $e) {
                 DB::rollBack();
                 throw $e;

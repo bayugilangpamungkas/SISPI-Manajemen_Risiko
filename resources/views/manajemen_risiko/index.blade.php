@@ -297,7 +297,7 @@
                                                     class="text-center">
                                                     Skor
                                                 </th>
-                                                <th scope="col" width="7%" class="text-center">Tingkat Risiko</th>
+                                                <th scope="col" width="7%" class="text-center">Tingkat</th>
                                                 <th scope="col" width="{{ $isAuditee ? '8%' : '7%' }}"
                                                     class="text-center">
                                                     Status
@@ -335,19 +335,6 @@
                                                     <td class="text-center">{{ $no++ }}</td>
                                                     <td class="text-left">
                                                         <strong>{{ $peta->jenis }}</strong><br>
-                                                        @if (config('app.debug'))
-                                                            @php
-                                                                $unitKerjaModel = \App\Models\UnitKerja::where(
-                                                                    'nama_unit_kerja',
-                                                                    $peta->jenis,
-                                                                )->first();
-                                                            @endphp
-                                                            <br>
-                                                            <small class="text-danger">
-                                                                Unit ID: {{ $unitKerjaModel->id ?? 'null' }}
-                                                            </small>
-                                                        @endif
-                                                        {{-- <small class="text-muted">{{ $peta->kode_regist }}</small> --}}
                                                     </td>
                                                     <td class="text-center align-middle">
                                                         @php

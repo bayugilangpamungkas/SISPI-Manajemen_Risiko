@@ -71,8 +71,10 @@ class AuditeeController extends Controller
             ->get();
 
         // Build query - hanya tampilkan risiko dari unit kerja user
+        // ✅ FILTER UTAMA: Hanya tampilkan data yang sudah di-clustering (tampil_manajemen_risiko = 1)
         $query = Peta::with(['comment_prs.user', 'auditor', 'kegiatan'])
             ->where('jenis', $unitKerjaUser)
+            ->where('tampil_manajemen_risiko', 1)  // ✅ FILTER INI WAJIB ADA!
             ->whereYear('created_at', $tahun);
 
         // Filter by kegiatan

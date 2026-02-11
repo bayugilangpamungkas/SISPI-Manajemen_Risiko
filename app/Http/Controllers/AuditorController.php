@@ -153,7 +153,10 @@ class AuditorController extends Controller
 
 
     /**
-     * Detail risiko untuk Auditor - Review data
+     * Detail risiko untuk Auditor - Input Pertanyaan & Review Jawaban
+     * WORKFLOW: 
+     * - Jika status = menunggu_wawancara: Auditor input pertanyaan
+     * - Jika status = menunggu_review: Auditor review jawaban auditee
      */
     public function auditorShowDetail($id)
     {
@@ -165,107 +168,229 @@ class AuditorController extends Controller
             ->where('auditor_id', $user->id)
             ->findOrFail($id);
 
+        // ✅ CEK STATUS AUDIT
+        $statusAudit = $peta->status_audit;
+
         // Get hasil audit if exists
         $hasilAudit = HasilAudit::where('peta_id', $peta->id)
             ->where('auditor_id', $user->id)
             ->where('tahun_anggaran', date('Y'))
             ->first();
 
-        return view('manajemen_risiko.show', compact('active', 'peta', 'hasilAudit'));
+        // Decode template_data (daftar pertanyaan) dan auditee_response (jawaban)
+        $questions = $peta->questions; // Menggunakan accessor dari Model
+        $responses = $peta->responses; // Menggunakan accessor dari Model
+
+        // ✅ Tentukan mode view berdasarkan status
+        $viewMode = 'read_only'; // Default
+
+        if ($peta->auditorCanInputQuestions()) {
+            $viewMode = 'input_questions'; // Auditor bisa input/edit pertanyaan
+        } elseif ($peta->auditorCanReview()) {
+            $viewMode = 'review_answers'; // Auditor bisa review jawaban
+        } elseif ($peta->isAuditFinal()) {
+            $viewMode = 'final'; // Semua read-only
+        }
+
+        // ✅ GUNAKAN VIEW YANG SUDAH ADA: manajemen_risiko.show
+        return view('manajemen_risiko.show', compact(
+            'active',
+            'peta',
+            'hasilAudit',
+            'questions',
+            'responses',
+            'statusAudit',
+            'viewMode'
+        ));
     }
 
-
-
     /**
-     * Update template review oleh Auditor
+     * Update template audit oleh Auditor
+     * WORKFLOW:
+     * - Input Pertanyaan: Simpan ke template_data (JSON)
+     * - Review Jawaban: Simpan penilaian ke status_konfirmasi_auditor & hasil_audit
      */
     public function auditorUpdateTemplate(Request $request, $id)
     {
         $user = Auth::user();
 
         // Pastikan auditor hanya update data miliknya
-        // Saya hapus baris findOrFail kedua agar lebih efisien
         $peta = Peta::where('auditor_id', $user->id)->with('kegiatan')->findOrFail($id);
 
-        // Validasi
+        // ✅ CEK: Tentukan mode action (input pertanyaan atau review jawaban)
+        $action = $request->input('action'); // 'input_questions' atau 'review_answers'
+
+        if ($action === 'input_questions') {
+            // ✅ MODE 1: AUDITOR INPUT PERTANYAAN
+
+            // Validasi: Hanya bisa input jika status memungkinkan
+            if (!$peta->auditorCanInputQuestions()) {
+                return redirect()->back()->with('error', 'Anda tidak dapat menginput pertanyaan pada status ini!');
+            }
+
+            $request->validate([
+                'questions' => 'required|array|min:1',
+                'questions.*.question' => 'required|string',
+            ]);
+
+            // Format pertanyaan ke JSON
+            $questionsData = [];
+            foreach ($request->questions as $index => $item) {
+                $questionsData[] = [
+                    'no' => $index + 1,
+                    'question' => $item['question'],
+                    'created_at' => now()->toDateTimeString(),
+                ];
+            }
+
+            // Simpan ke template_data
+            $peta->update([
+                'template_data' => json_encode($questionsData),
+                'template_sent_at' => now(),
+            ]);
+
+            // Log activity
+            CommentPr::create([
+                'peta_id' => $peta->id,
+                'user_id' => $user->id,
+                'jenis' => 'analisis',
+                'comment' => 'Auditor telah menginput ' . count($questionsData) . ' pertanyaan audit wawancara.',
+            ]);
+
+            return redirect()
+                ->route('manajemen-risiko.auditor.show-detail', $peta->id)
+                ->with('success', 'Daftar pertanyaan audit berhasil disimpan! Auditee dapat menjawab pertanyaan.');
+        } elseif ($action === 'review_answers') {
+            // ✅ MODE 2: AUDITOR REVIEW JAWABAN AUDITEE
+
+            // Validasi: Hanya bisa review jika auditee sudah jawab
+            if (!$peta->auditorCanReview()) {
+                return redirect()->back()->with('error', 'Belum ada jawaban dari Auditee untuk direview!');
+            }
+
+            $request->validate([
+                'penilaian' => 'required|array',
+                'penilaian.*.status' => 'required|in:memadai,kurang_memadai,tidak_memadai',
+                'penilaian.*.komentar' => 'nullable|string',
+                'penilaian.*.rekomendasi' => 'nullable|string',
+                'penilaian.*.skor' => 'nullable|integer|min:0|max:100',
+            ]);
+
+            // Calculate score and level
+            $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
+
+            if ($skorTotal >= 15) {
+                $levelText = 'HIGH';
+            } elseif ($skorTotal >= 10) {
+                $levelText = 'MODERATE';
+            } else {
+                $levelText = 'LOW';
+            }
+
+            // Calculate residual risk
+            if ($skorTotal >= 20) {
+                $residualText = 'Extreme';
+            } elseif ($skorTotal >= 15) {
+                $residualText = 'High';
+            } elseif ($skorTotal >= 10) {
+                $residualText = 'Moderate';
+            } else {
+                $residualText = 'Low';
+            }
+
+            // Simpan hasil review ke tabel hasil_audit
+            $hasilAudit = HasilAudit::updateOrCreate(
+                [
+                    'peta_id' => $peta->id,
+                    'auditor_id' => $user->id,
+                    'tahun_anggaran' => date('Y'),
+                ],
+                [
+                    'penilaian_data' => json_encode($request->penilaian), // Simpan penilaian per pertanyaan
+                    'pengendalian' => $request->input('pengendalian', '-'),
+                    'mitigasi' => $request->input('mitigasi', '-'),
+                    'komentar_1' => $request->input('komentar_1', '-'), // ✅ Tambahkan nilai default
+                    'komentar_2' => $request->input('komentar_2', '-'), // ✅ Tambahkan nilai default
+                    'komentar_3' => $request->input('komentar_3', '-'), // ✅ Tambahkan nilai default
+                    'unit_kerja' => $peta->jenis,
+                    'kode_risiko' => $peta->kode_regist,
+                    'kegiatan' => $peta->kegiatan->judul ?? $peta->judul,
+                    'level_risiko' => $levelText,
+                    'risiko_residual' => $residualText,
+                    'skor_total' => $skorTotal,
+                    'nama_pemonev' => $user->name,
+                    'nip_pemonev' => $user->nip,
+                ]
+            );
+
+            // Update status konfirmasi auditor
+            $peta->update([
+                'status_konfirmasi_auditor' => 'reviewed',
+            ]);
+
+            // Log activity
+            $totalPertanyaan = count($request->penilaian);
+            CommentPr::create([
+                'peta_id' => $peta->id,
+                'user_id' => $user->id,
+                'jenis' => 'analisis',
+                'comment' => "Auditor telah menyelesaikan review terhadap {$totalPertanyaan} jawaban audit wawancara.",
+            ]);
+
+            return redirect()
+                ->route('manajemen-risiko.auditor.show-detail', $peta->id)
+                ->with('success', 'Review audit berhasil disimpan! Menunggu konfirmasi dari Auditee.');
+        } else {
+            return redirect()->back()->with('error', 'Action tidak valid!');
+        }
+    }
+
+    /**
+     * Kirim Revisi ke Auditee
+     */
+    public function auditorSendRevision(Request $request, $id)
+    {
         $request->validate([
-            'pengendalian' => 'required|string',
-            'mitigasi' => 'required|string',
-            'komentar_1' => 'required|string',
-            'komentar_2' => 'required|string',
-            'komentar_3' => 'required|string',
-            'status_konfirmasi_auditee' => 'nullable|string',
-            'status_konfirmasi_auditor' => 'nullable|string',
+            'catatan_revisi' => 'required|string|max:2000',
+            'items_revisi' => 'required|array|min:1',
+            'items_revisi.*.pertanyaan_no' => 'required|integer',
+            'items_revisi.*.catatan' => 'required|string',
         ]);
 
-        // Calculate score and level
-        $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
+        $user = Auth::user();
+        $peta = Peta::where('auditor_id', $user->id)->findOrFail($id);
 
-        if ($skorTotal >= 15) {
-            $levelText = 'HIGH';
-        } elseif ($skorTotal >= 10) {
-            $levelText = 'MODERATE';
-        } else {
-            $levelText = 'LOW';
+        // Validasi: Hanya bisa kirim revisi jika auditee sudah jawab
+        if (!$peta->auditorCanSendRevision()) {
+            return redirect()->back()->with('error', 'Tidak dapat mengirim revisi pada status ini!');
         }
 
-        // Calculate residual risk
-        if ($skorTotal >= 20) {
-            $residualText = 'Extreme';
-        } elseif ($skorTotal >= 15) {
-            $residualText = 'High';
-        } elseif ($skorTotal >= 10) {
-            $residualText = 'Moderate';
-        } else {
-            $residualText = 'Low';
-        }
+        // Format data revisi ke JSON
+        $revisiData = [
+            'catatan_umum' => $request->catatan_revisi,
+            'items' => $request->items_revisi,
+            'sent_at' => now()->toDateTimeString(),
+            'sent_by' => $user->name,
+        ];
 
-        // Simpan hasil review ke tabel hasil_audit
-        $hasilAudit = HasilAudit::updateOrCreate(
-            [
-                'peta_id' => $peta->id,
-                'auditor_id' => $user->id,
-                'tahun_anggaran' => date('Y'),
-            ],
-            [
-                'komentar_1' => $request->komentar_1,
-                'komentar_2' => $request->komentar_2,
-                'komentar_3' => $request->komentar_3,
-                'pengendalian' => $request->pengendalian,
-                'mitigasi' => $request->mitigasi,
-                'status_konfirmasi_auditee' => $request->status_konfirmasi_auditee ?? null,
-                'status_konfirmasi_auditor' => $request->status_konfirmasi_auditor ?? null,
-                'unit_kerja' => $peta->jenis,
-                'kode_risiko' => $peta->kode_regist,
-                'kegiatan' => $peta->kegiatan->judul ?? $peta->judul,
-                'level_risiko' => $levelText,
-                'risiko_residual' => $residualText,
-                'skor_total' => $skorTotal,
-                'nama_pemonev' => $user->name,
-                'nip_pemonev' => $user->nip,
-            ]
-        );
+        // Update status menjadi need_revision
+        $peta->update([
+            'status_konfirmasi_auditor' => 'need_revision',
+            'catatan_revisi' => json_encode($revisiData),
+        ]);
 
-        // Simpan komentar auditor (gabung jadi satu log) - Keep existing CommentPr for backward compatibility
+        // Log activity
         CommentPr::create([
             'peta_id' => $peta->id,
             'user_id' => $user->id,
             'jenis' => 'analisis',
-            'comment' =>
-            "1. {$request->komentar_1}\n" .
-                "2. {$request->komentar_2}\n" .
-                "3. {$request->komentar_3}",
+            'comment' => 'Auditor meminta revisi kepada Auditee. Total ' . count($request->items_revisi) . ' item perlu diperbaiki.',
         ]);
-
-        // dd($request->all());
 
         return redirect()
             ->route('manajemen-risiko.auditor.show-detail', $peta->id)
-            ->with('success', 'Data audit berhasil disimpan ke database.');
+            ->with('success', 'Permintaan revisi berhasil dikirim ke Auditee!');
     }
-
-
-
 
     /**
      * Approve risiko - Jika data sesuai

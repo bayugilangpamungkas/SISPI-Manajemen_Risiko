@@ -505,6 +505,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/auditor/manajemen-risiko/{id}/detail', [App\Http\Controllers\AuditorController::class, 'auditorShowDetail'])->name('manajemen-risiko.auditor.show-detail')->middleware('auth');
     // Update audit form dan simpan ke database
     Route::put('/auditor/manajemen-risiko/{id}/update-template', [App\Http\Controllers\AuditorController::class, 'auditorUpdateTemplate'])->name('manajemen-risiko.auditor.update-template')->middleware('auth');
+    // Kirim Revisi ke Auditee
+    Route::post('/auditor/manajemen-risiko/{id}/send-revision', [App\Http\Controllers\AuditorController::class, 'auditorSendRevision'])->name('manajemen-risiko.auditor.send-revision')->middleware('auth');
     // Route Pendukung Lainnya
     Route::post('/auditor/manajemen-risiko/{id}/send-template', [App\Http\Controllers\AuditorController::class, 'auditorSendTemplate'])->name('manajemen-risiko.auditor.send-template')->middleware('auth');
     Route::post('/auditor/manajemen-risiko/{id}/approve', [App\Http\Controllers\AuditorController::class, 'auditorApprove'])->name('manajemen-risiko.auditor.approve')->middleware('auth');

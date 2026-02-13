@@ -285,8 +285,8 @@ class ManajemenRisikoController extends Controller
                 'peta_id' => $peta->id,
                 'user_id' => $user->id,
                 'jenis' => 'analisis',
-                'comment' => 'Audit telah difinalisasi oleh Auditor ' . $user->name . '. ' . 
-                             ($request->catatan_finalisasi ? 'Catatan: ' . $request->catatan_finalisasi : ''),
+                'comment' => 'Audit telah difinalisasi oleh Auditor ' . $user->name . '. ' .
+                    ($request->catatan_finalisasi ? 'Catatan: ' . $request->catatan_finalisasi : ''),
             ]);
 
             DB::commit();

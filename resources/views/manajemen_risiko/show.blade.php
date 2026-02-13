@@ -916,24 +916,28 @@
                             <div class="alert alert-success">
                                 <i class="fas fa-check-circle"></i>
                                 <strong>Audit siap difinalisasi!</strong>
-                                <p class="mb-2 mt-2">Auditee telah mengkonfirmasi hasil audit. Anda dapat memfinalisasi audit ini untuk mengunci semua data dan menyelesaikan proses audit secara resmi.</p>
+                                <p class="mb-2 mt-2">Auditee telah mengkonfirmasi hasil audit. Anda dapat memfinalisasi
+                                    audit ini untuk mengunci semua data dan menyelesaikan proses audit secara resmi.</p>
                                 <ul class="mb-0">
-                                    <li>Status saat ini: <span class="badge badge-info p-2">{{ $statusLabel }}</span></li>
+                                    <li>Status saat ini: <span class="badge badge-info p-2">{{ $statusLabel }}</span>
+                                    </li>
                                     <li>Auditee: <strong>{{ $peta->jenis }}</strong></li>
                                     <li>Auditor: <strong>{{ $peta->auditor->name ?? '-' }}</strong></li>
                                     <li>Kode Risiko: <strong>{{ $peta->kode_regist }}</strong></li>
                                 </ul>
                             </div>
 
-                            <form action="{{ route('manajemen-risiko.finalisasi', $peta->id) }}" method="POST" id="formFinalisasi">
+                            <form action="{{ route('manajemen-risiko.finalisasi', $peta->id) }}" method="POST"
+                                id="formFinalisasi">
                                 @csrf
-                                
+
                                 <div class="form-group">
                                     <label class="font-weight-bold">Catatan Finalisasi (Opsional)</label>
-                                    <textarea name="catatan_finalisasi" class="form-control" rows="3" 
+                                    <textarea name="catatan_finalisasi" class="form-control" rows="3"
                                         placeholder="Catatan atau keterangan tambahan untuk finalisasi audit ini..."></textarea>
                                     <small class="form-text text-muted">
-                                        <i class="fas fa-info-circle"></i> Catatan ini akan tersimpan sebagai riwayat aktivitas.
+                                        <i class="fas fa-info-circle"></i> Catatan ini akan tersimpan sebagai riwayat
+                                        aktivitas.
                                     </small>
                                 </div>
 
@@ -949,7 +953,8 @@
                                 </div>
 
                                 <div class="text-center">
-                                    <button type="button" class="btn btn-success btn-lg px-5" data-toggle="modal" data-target="#modalKonfirmasiFinalisasi">
+                                    <button type="button" class="btn btn-success btn-lg px-5" data-toggle="modal"
+                                        data-target="#modalKonfirmasiFinalisasi">
                                         <i class="fas fa-lock"></i> Finalisasi Audit Sekarang
                                     </button>
                                 </div>
@@ -963,10 +968,10 @@
                     <div class="alert alert-info mt-4">
                         <i class="fas fa-info-circle"></i>
                         @if ($isAuditor)
-                            <strong>Status Audit:</strong> Auditee telah mengkonfirmasi hasil audit. 
+                            <strong>Status Audit:</strong> Auditee telah mengkonfirmasi hasil audit.
                             Silakan <strong>finalisasi audit</strong> untuk menyelesaikan proses secara resmi.
                         @else
-                            <strong>Status Audit:</strong> Auditee telah mengkonfirmasi hasil audit. 
+                            <strong>Status Audit:</strong> Auditee telah mengkonfirmasi hasil audit.
                             Menunggu Auditor untuk <strong>finalisasi audit</strong>.
                         @endif
                     </div>

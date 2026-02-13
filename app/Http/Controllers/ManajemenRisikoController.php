@@ -249,7 +249,7 @@ class ManajemenRisikoController extends Controller
     }
 
     /**
-     * ✅ FINALISASI AUDIT - Hanya bisa dilakukan jika Auditee sudah konfirmasi
+     * ✅ FINALISASI AUDIT - Hanya bisa dilakukan oleh AUDITOR (bukan Admin)
      * Route: POST /manajemen-risiko/{id}/finalisasi
      */
     public function finalizeAudit(Request $request, $id)
@@ -257,9 +257,9 @@ class ManajemenRisikoController extends Controller
         $user = Auth::user();
         $peta = Peta::with(['auditor', 'kegiatan'])->findOrFail($id);
 
-        // ✅ VALIDASI: Hanya Admin atau Auditor yang bisa finalisasi
-        if (!$user->Level || !in_array($user->Level->name, ['Super Admin', 'Admin', 'Ketua', 'Anggota', 'Sekretaris'])) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk finalisasi audit!');
+        // ✅ VALIDASI: Hanya AUDITOR (Ketua, Anggota, Sekretaris) yang bisa finalisasi
+        if (!$user->Level || !in_array($user->Level->name, ['Ketua', 'Anggota', 'Sekretaris'])) {
+            return redirect()->back()->with('error', 'Hanya Auditor yang memiliki akses untuk finalisasi audit!');
         }
 
         // ✅ VALIDASI: Hanya bisa finalisasi jika status = disetujui_auditee
@@ -285,8 +285,8 @@ class ManajemenRisikoController extends Controller
                 'peta_id' => $peta->id,
                 'user_id' => $user->id,
                 'jenis' => 'analisis',
-                'comment' => 'Audit telah difinalisasi oleh ' . $user->name . '. ' .
-                    ($request->catatan_finalisasi ? 'Catatan: ' . $request->catatan_finalisasi : ''),
+                'comment' => 'Audit telah difinalisasi oleh Auditor ' . $user->name . '. ' . 
+                             ($request->catatan_finalisasi ? 'Catatan: ' . $request->catatan_finalisasi : ''),
             ]);
 
             DB::commit();

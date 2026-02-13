@@ -149,9 +149,49 @@ class ManajemenRisikoController extends Controller
     public function show($id)
     {
         $active = 21;
+        $user = Auth::user();
+
+        // Load peta dengan relasi
         $peta = Peta::with(['comment_prs.user', 'kegiatan', 'auditor'])->findOrFail($id);
 
-        return view('manajemen_risiko.show', compact('active', 'peta'));
+        // ✅ Decode pertanyaan dari auditor dan jawaban auditee
+        $questions = $peta->questions; // Menggunakan accessor dari Model
+        $responses = $peta->responses; // Menggunakan accessor dari Model
+
+        // ✅ Get hasil audit if exists (untuk melihat penilaian auditor)
+        $hasilAudit = \App\Models\HasilAudit::where('peta_id', $peta->id)
+            ->where('tahun_anggaran', date('Y'))
+            ->first();
+
+        // ✅ Decode penilaian auditor (jika sudah review)
+        $penilaianAuditor = [];
+        if ($hasilAudit && $hasilAudit->penilaian_data) {
+            $penilaianAuditor = json_decode($hasilAudit->penilaian_data, true) ?? [];
+        }
+
+        // ✅ Tentukan viewMode berdasarkan status audit
+        $statusAudit = $peta->status_audit;
+        $viewMode = 'read_only'; // Default untuk Admin
+
+        // Untuk Admin, selalu read-only
+        // Tidak perlu logic viewMode yang kompleks karena Admin hanya lihat saja
+
+        // ✅ Hitung Skor Risiko
+        $skorTotal = ($peta->skor_kemungkinan ?? 0) * ($peta->skor_dampak ?? 0);
+
+        // ✅ Kirim semua data ke view
+        return view('manajemen_risiko.show', compact(
+            'active',
+            'peta',
+            'user',
+            'skorTotal',
+            'questions',
+            'responses',
+            'statusAudit',
+            'viewMode',
+            'hasilAudit',
+            'penilaianAuditor'
+        ));
     }
 
     /**
@@ -206,6 +246,59 @@ class ManajemenRisikoController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Status risiko berhasil diperbarui!');
+    }
+
+    /**
+     * ✅ FINALISASI AUDIT - Hanya bisa dilakukan jika Auditee sudah konfirmasi
+     * Route: POST /manajemen-risiko/{id}/finalisasi
+     */
+    public function finalizeAudit(Request $request, $id)
+    {
+        $user = Auth::user();
+        $peta = Peta::with(['auditor', 'kegiatan'])->findOrFail($id);
+
+        // ✅ VALIDASI: Hanya Admin atau Auditor yang bisa finalisasi
+        if (!$user->Level || !in_array($user->Level->name, ['Super Admin', 'Admin', 'Ketua', 'Anggota', 'Sekretaris'])) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk finalisasi audit!');
+        }
+
+        // ✅ VALIDASI: Hanya bisa finalisasi jika status = disetujui_auditee
+        if (!$peta->canBeFinalized()) {
+            return redirect()->back()->with('error', 'Audit belum dapat difinalisasi! Pastikan Auditee sudah mengkonfirmasi hasil audit.');
+        }
+
+        $request->validate([
+            'catatan_finalisasi' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Update status_telaah menjadi 1 (FINAL)
+            $peta->update([
+                'status_telaah' => 1,
+                'waktu_telaah_spi' => now(),
+            ]);
+
+            // Log activity
+            CommentPr::create([
+                'peta_id' => $peta->id,
+                'user_id' => $user->id,
+                'jenis' => 'analisis',
+                'comment' => 'Audit telah difinalisasi oleh ' . $user->name . '. ' .
+                    ($request->catatan_finalisasi ? 'Catatan: ' . $request->catatan_finalisasi : ''),
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->back()
+                ->with('success', '✅ Audit berhasil difinalisasi! Status audit sekarang FINAL dan tidak dapat diubah lagi.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error finalisasi audit: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat finalisasi: ' . $e->getMessage());
+        }
     }
 
     /**

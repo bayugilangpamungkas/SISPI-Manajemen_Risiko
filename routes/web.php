@@ -525,6 +525,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/manajemen-risiko/{id}/update-status', [App\Http\Controllers\ManajemenRisikoController::class, 'updateStatus'])->name('manajemen-risiko.update-status')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/assign-auditor', [App\Http\Controllers\ManajemenRisikoController::class, 'assignAuditor'])->name('manajemen-risiko.assign-auditor')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/upload-report', [App\Http\Controllers\ManajemenRisikoController::class, 'uploadReport'])->name('manajemen-risiko.upload-report')->middleware('auth');
+    // ✅ Route Finalisasi Audit
+    Route::post('/manajemen-risiko/{id}/finalisasi', [App\Http\Controllers\ManajemenRisikoController::class, 'finalizeAudit'])->name('manajemen-risiko.finalisasi')->middleware('auth');
 
     // Hasil Audit Routes (Admin)
     Route::get('/manajemen-risiko/hasil-audit', [App\Http\Controllers\ManajemenRisikoController::class, 'hasilAuditIndex'])->name('manajemen-risiko.hasil-audit.index')->middleware('auth');

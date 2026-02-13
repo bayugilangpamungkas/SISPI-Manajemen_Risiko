@@ -797,10 +797,11 @@ class AuditeeController extends Controller
                 ];
             }
 
-            // Update auditee_response dengan jawaban yang sudah direvisi
+            // ✅ Update auditee_response dengan jawaban yang sudah direvisi
+            // ✅ Set status_konfirmasi_auditor = 'revision_submitted'
             $peta->update([
                 'auditee_response' => json_encode($revisedAnswersData),
-                'status_konfirmasi_auditor' => null, // Reset status auditor agar bisa review lagi
+                'status_konfirmasi_auditor' => 'revision_submitted', // Menunggu konfirmasi auditor
                 'catatan_revisi' => null, // Clear catatan revisi setelah disubmit
             ]);
 
@@ -814,7 +815,7 @@ class AuditeeController extends Controller
 
             return redirect()
                 ->route('manajemen-risiko.auditee.show-detail', $peta->id)
-                ->with('success', 'Revisi berhasil dikirim! Menunggu review ulang dari Auditor.');
+                ->with('success', 'Revisi berhasil dikirim! Menunggu konfirmasi dari Auditor.');
         } else {
             return redirect()->back()->with('error', 'Action tidak valid!');
         }

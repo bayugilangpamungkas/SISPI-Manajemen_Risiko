@@ -218,7 +218,7 @@ class AuditorController extends Controller
         $peta = Peta::where('auditor_id', $user->id)->with('kegiatan')->findOrFail($id);
 
         // ✅ CEK: Tentukan mode action (input pertanyaan atau review jawaban)
-        $action = $request->input('action'); // 'input_questions' atau 'review_answers'
+        $action = $request->input('action'); // 'input_questions', 'review_answers', atau 'confirm_revision'
 
         if ($action === 'input_questions') {
             // ✅ MODE 1: AUDITOR INPUT PERTANYAAN
@@ -274,6 +274,8 @@ class AuditorController extends Controller
                 'penilaian.*.komentar' => 'nullable|string',
                 'penilaian.*.rekomendasi' => 'nullable|string',
                 'penilaian.*.skor' => 'nullable|integer|min:0|max:100',
+                'pengendalian' => 'nullable|string',
+                'mitigasi' => 'nullable|string',
             ]);
 
             // Calculate score and level
@@ -309,9 +311,9 @@ class AuditorController extends Controller
                     'penilaian_data' => json_encode($request->penilaian), // Simpan penilaian per pertanyaan
                     'pengendalian' => $request->input('pengendalian', '-'),
                     'mitigasi' => $request->input('mitigasi', '-'),
-                    'komentar_1' => $request->input('komentar_1', '-'), // ✅ Tambahkan nilai default
-                    'komentar_2' => $request->input('komentar_2', '-'), // ✅ Tambahkan nilai default
-                    'komentar_3' => $request->input('komentar_3', '-'), // ✅ Tambahkan nilai default
+                    'komentar_1' => $request->input('komentar_1', '-'),
+                    'komentar_2' => $request->input('komentar_2', '-'),
+                    'komentar_3' => $request->input('komentar_3', '-'),
                     'unit_kerja' => $peta->jenis,
                     'kode_risiko' => $peta->kode_regist,
                     'kegiatan' => $peta->kegiatan->judul ?? $peta->judul,
@@ -323,7 +325,7 @@ class AuditorController extends Controller
                 ]
             );
 
-            // Update status konfirmasi auditor
+            // ✅ Update status konfirmasi auditor menjadi 'reviewed'
             $peta->update([
                 'status_konfirmasi_auditor' => 'reviewed',
             ]);
@@ -340,6 +342,34 @@ class AuditorController extends Controller
             return redirect()
                 ->route('manajemen-risiko.auditor.show-detail', $peta->id)
                 ->with('success', 'Review audit berhasil disimpan! Menunggu konfirmasi dari Auditee.');
+        } elseif ($action === 'confirm_revision') {
+            // ✅ MODE 3: AUDITOR KONFIRMASI REVISI AUDITEE
+
+            // Validasi: Hanya bisa konfirmasi jika status = menunggu_konfirmasi_auditor
+            if (!$peta->auditorCanConfirmRevision()) {
+                return redirect()->back()->with('error', 'Tidak dapat mengkonfirmasi revisi pada status ini!');
+            }
+
+            $request->validate([
+                'catatan_konfirmasi' => 'nullable|string|max:1000',
+            ]);
+
+            // Update status konfirmasi auditor menjadi 'reviewed'
+            $peta->update([
+                'status_konfirmasi_auditor' => 'reviewed',
+            ]);
+
+            // Log activity
+            CommentPr::create([
+                'peta_id' => $peta->id,
+                'user_id' => $user->id,
+                'jenis' => 'analisis',
+                'comment' => 'Auditor telah mengkonfirmasi hasil revisi Auditee. ' . ($request->catatan_konfirmasi ? 'Catatan: ' . $request->catatan_konfirmasi : ''),
+            ]);
+
+            return redirect()
+                ->route('manajemen-risiko.auditor.show-detail', $peta->id)
+                ->with('success', 'Revisi telah dikonfirmasi! Menunggu konfirmasi dari Auditee.');
         } else {
             return redirect()->back()->with('error', 'Action tidak valid!');
         }

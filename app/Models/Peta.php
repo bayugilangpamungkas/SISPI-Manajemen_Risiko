@@ -113,36 +113,61 @@ class Peta extends Model
     /**
      * Get status audit wawancara berdasarkan field yang ada
      * 
-     * Status workflow:
+     * Status workflow LENGKAP:
+     * - belum_ditugaskan: Belum ada auditor
      * - menunggu_wawancara: Admin sudah assign auditor, auditor belum input pertanyaan
      * - menunggu_jawaban: Auditor sudah input pertanyaan, auditee belum jawab
      * - menunggu_review: Auditee sudah jawab, auditor belum review
-     * - selesai_review: Auditor sudah review, menunggu konfirmasi auditee
-     * - final: Sudah dikonfirmasi auditee dan difinalisasi admin
+     * - perlu_revisi: Auditor minta revisi ke auditee
+     * - menunggu_konfirmasi_auditor: Auditee sudah revisi, auditor belum konfirmasi
+     * - menunggu_konfirmasi_auditee: Auditor sudah review, auditee belum konfirmasi
+     * - disetujui_auditee: Auditee sudah konfirmasi, menunggu finalisasi admin
+     * - final: Sudah difinalisasi admin (LOCKED)
      */
     public function getStatusAuditAttribute()
     {
-        // Final: status_telaah = 1 dan ada konfirmasi auditee
-        if ($this->status_telaah == 1 && $this->status_konfirmasi_auditee) {
+        // ✅ FINAL: status_telaah = 1 (Admin sudah finalisasi)
+        if ($this->status_telaah == 1) {
             return 'final';
         }
 
-        // Selesai Review: Auditor sudah review (ada status_konfirmasi_auditor)
-        if ($this->status_konfirmasi_auditor && !$this->status_konfirmasi_auditee) {
-            return 'selesai_review';
+        // ✅ DISETUJUI AUDITEE: Auditee sudah konfirmasi, menunggu finalisasi
+        if ($this->status_konfirmasi_auditee === 'confirmed') {
+            return 'disetujui_auditee';
         }
 
-        // Menunggu Review: Auditee sudah submit response
-        if ($this->auditee_response && !$this->status_konfirmasi_auditor) {
+        // ✅ MENUNGGU KONFIRMASI AUDITEE: Auditor sudah review (status = 'reviewed')
+        if (
+            $this->status_konfirmasi_auditor === 'reviewed' &&
+            $this->status_konfirmasi_auditee !== 'confirmed'
+        ) {
+            return 'menunggu_konfirmasi_auditee';
+        }
+
+        // ✅ MENUNGGU KONFIRMASI AUDITOR: Auditee sudah revisi (status = 'revision_submitted')
+        if ($this->status_konfirmasi_auditor === 'revision_submitted') {
+            return 'menunggu_konfirmasi_auditor';
+        }
+
+        // ✅ PERLU REVISI: Auditor minta revisi
+        if ($this->status_konfirmasi_auditor === 'need_revision') {
+            return 'perlu_revisi';
+        }
+
+        // ✅ MENUNGGU REVIEW: Auditee sudah jawab, auditor belum review
+        if (
+            $this->auditee_response &&
+            !in_array($this->status_konfirmasi_auditor, ['need_revision', 'revision_submitted', 'reviewed'])
+        ) {
             return 'menunggu_review';
         }
 
-        // Menunggu Jawaban: Auditor sudah input pertanyaan (template_data ada)
+        // ✅ MENUNGGU JAWABAN: Auditor sudah input pertanyaan, auditee belum jawab
         if ($this->template_data && !$this->auditee_response) {
             return 'menunggu_jawaban';
         }
 
-        // Menunggu Wawancara: Auditor sudah ditugaskan tapi belum input pertanyaan
+        // ✅ MENUNGGU WAWANCARA: Auditor sudah ditugaskan tapi belum input pertanyaan
         if ($this->auditor_id && !$this->template_data) {
             return 'menunggu_wawancara';
         }
@@ -192,6 +217,16 @@ class Peta extends Model
     }
 
     /**
+     * ✅ Cek apakah Auditor bisa konfirmasi revisi Auditee
+     */
+    public function auditorCanConfirmRevision()
+    {
+        $status = $this->status_audit;
+        // Auditor bisa konfirmasi saat status = menunggu_konfirmasi_auditor
+        return $status === 'menunggu_konfirmasi_auditor';
+    }
+
+    /**
      * Cek apakah Auditee perlu melakukan revisi
      */
     public function auditeeNeedRevision()
@@ -201,13 +236,33 @@ class Peta extends Model
     }
 
     /**
+     * ✅ Cek apakah Auditee bisa melakukan revisi
+     */
+    public function auditeeCanRevise()
+    {
+        $status = $this->status_audit;
+        // Auditee bisa revisi saat status = perlu_revisi
+        return $status === 'perlu_revisi';
+    }
+
+    /**
      * Cek apakah Auditee bisa konfirmasi hasil audit
      */
     public function auditeeCanConfirm()
     {
         $status = $this->status_audit;
-        // Hanya bisa konfirmasi saat selesai_review
-        return $status === 'selesai_review';
+        // Hanya bisa konfirmasi saat menunggu_konfirmasi_auditee
+        return $status === 'menunggu_konfirmasi_auditee';
+    }
+
+    /**
+     * ✅ Cek apakah Admin/Auditor bisa finalisasi
+     */
+    public function canBeFinalized()
+    {
+        $status = $this->status_audit;
+        // Hanya bisa difinalisasi saat status = disetujui_auditee
+        return $status === 'disetujui_auditee';
     }
 
     /**
@@ -216,6 +271,14 @@ class Peta extends Model
     public function isAuditFinal()
     {
         return $this->status_audit === 'final';
+    }
+
+    /**
+     * ✅ Get catatan revisi (decode JSON)
+     */
+    public function getRevisionNotesAttribute()
+    {
+        return $this->catatan_revisi ? json_decode($this->catatan_revisi, true) : null;
     }
 
     /**
@@ -228,7 +291,10 @@ class Peta extends Model
             'menunggu_wawancara' => 'Menunggu Wawancara',
             'menunggu_jawaban' => 'Menunggu Jawaban Auditee',
             'menunggu_review' => 'Menunggu Review Auditor',
-            'selesai_review' => 'Selesai Review - Menunggu Konfirmasi',
+            'perlu_revisi' => 'Perlu Revisi',
+            'menunggu_konfirmasi_auditor' => 'Menunggu Konfirmasi Auditor',
+            'menunggu_konfirmasi_auditee' => 'Menunggu Konfirmasi Auditee',
+            'disetujui_auditee' => 'Disetujui Auditee',
             'final' => 'Final',
         ];
 
@@ -245,7 +311,10 @@ class Peta extends Model
             'menunggu_wawancara' => 'badge-info',
             'menunggu_jawaban' => 'badge-warning',
             'menunggu_review' => 'badge-primary',
-            'selesai_review' => 'badge-success',
+            'perlu_revisi' => 'badge-danger',
+            'menunggu_konfirmasi_auditor' => 'badge-warning',
+            'menunggu_konfirmasi_auditee' => 'badge-success',
+            'disetujui_auditee' => 'badge-info',
             'final' => 'badge-dark',
         ];
 

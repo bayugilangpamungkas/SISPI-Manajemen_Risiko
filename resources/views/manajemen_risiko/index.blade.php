@@ -491,22 +491,6 @@
                                                                         title="Tolak">
                                                                         <i class="fas fa-times-circle"></i> Tolak
                                                                     </button>
-                                                                @elseif (!$peta->template_sent_at)
-                                                                    <span class="badge badge-secondary"
-                                                                        title="Isi template terlebih dahulu">
-                                                                        <i class="fas fa-info-circle"></i> Belum Kirim
-                                                                        Template
-                                                                    </span>
-                                                                @elseif (!$peta->koreksiPr || $peta->koreksiPr == 'rejected')
-                                                                    <span class="badge badge-warning"
-                                                                        title="Menunggu Auditee mengerjakan">
-                                                                        <i class="fas fa-clock"></i> Menunggu Auditee
-                                                                    </span>
-                                                                @elseif ($peta->status_telaah)
-                                                                    <span class="badge badge-success"
-                                                                        title="Sudah disetujui">
-                                                                        <i class="fas fa-check"></i> Sudah ACC
-                                                                    </span>
                                                                 @endif
                                                             @elseif ($isAuditee)
                                                                 {{-- Auditee actions --}}
@@ -515,22 +499,6 @@
                                                                         title="Belum ada auditor">
                                                                         <i class="fas fa-user-slash"></i> Belum Ditugaskan
                                                                     </span>
-                                                                @elseif (!$peta->template_sent_at)
-                                                                    <span class="badge badge-warning"
-                                                                        title="Menunggu template dari Auditor">
-                                                                        <i class="fas fa-hourglass-half"></i> Menunggu
-                                                                        Template
-                                                                    </span>
-                                                                @elseif ($peta->status_telaah)
-                                                                    <span class="badge badge-success"
-                                                                        title="Sudah disetujui Auditor">
-                                                                        <i class="fas fa-check-double"></i> Selesai
-                                                                    </span>
-                                                                @elseif ($peta->koreksiPr == 'submitted')
-                                                                    <span class="badge badge-info"
-                                                                        title="Menunggu review Auditor">
-                                                                        <i class="fas fa-paper-plane"></i> Dikirim
-                                                                    </span>
                                                                 @elseif ($peta->koreksiPr == 'rejected')
                                                                     <button class="btn btn-sm btn-danger mb-1"
                                                                         onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'"
@@ -538,7 +506,7 @@
                                                                         <i class="fas fa-exclamation-triangle"></i>
                                                                         Perbaiki
                                                                     </button>
-                                                                @else
+                                                                @elseif (!$peta->status_telaah && !$peta->koreksiPr)
                                                                     <button class="btn btn-sm btn-success mb-1"
                                                                         onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'"
                                                                         title="Kerjakan tugas">

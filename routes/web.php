@@ -529,10 +529,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/manajemen-risiko/{id}/finalisasi', [App\Http\Controllers\ManajemenRisikoController::class, 'finalizeAudit'])->name('manajemen-risiko.finalisasi')->middleware('auth');
 
     // Hasil Audit Routes (Admin)
-    Route::get('/manajemen-risiko/hasil-audit', [App\Http\Controllers\ManajemenRisikoController::class, 'hasilAuditIndex'])->name('manajemen-risiko.hasil-audit.index')->middleware('auth');
-    Route::get('/manajemen-risiko/hasil-audit/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'hasilAuditShow'])->name('manajemen-risiko.hasil-audit.show')->middleware('auth');
-    Route::get('/manajemen-risiko/hasil-audit/{id}/print', [App\Http\Controllers\ManajemenRisikoController::class, 'hasilAuditPrint'])->name('manajemen-risiko.hasil-audit.print')->middleware('auth');
-    Route::post('/manajemen-risiko/hasil-audit/{id}/upload-scan', [App\Http\Controllers\ManajemenRisikoController::class, 'uploadScanHasilAudit'])->name('manajemen-risiko.hasil-audit.upload-scan')->middleware('auth');
+    // Route CRUD Standar (Pengganti Resource)
+    Route::get('/surat', [App\Http\Controllers\SuratController::class, 'index'])->name('surat.index')->middleware(['auth']);
+    Route::get('/surat/create', [App\Http\Controllers\SuratController::class, 'create'])->name('surat.create')->middleware(['auth']);
+    Route::post('/surat', [App\Http\Controllers\SuratController::class, 'store'])->name('surat.store')->middleware(['auth']);
+    Route::get('/surat/{id}', [App\Http\Controllers\SuratController::class, 'show'])->name('surat.show')->middleware(['auth']);
+    Route::get('/surat/{id}/edit', [App\Http\Controllers\SuratController::class, 'edit'])->name('surat.edit')->middleware(['auth']);
+    Route::put('/surat/{id}', [App\Http\Controllers\SuratController::class, 'update'])->name('surat.update')->middleware(['auth']);
+    Route::delete('/surat/{id}', [App\Http\Controllers\SuratController::class, 'destroy'])->name('surat.destroy')->middleware(['auth']);
 
-    Route::get('/manajemen-risiko/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'show'])->name('manajemen-risiko.show')->middleware('auth');
+    // Route Tambahan (Custom)
+    Route::post('/surat/{id}/finalize', [App\Http\Controllers\SuratController::class, 'finalize'])->name('surat.finalize')->middleware(['auth']);
+    Route::get('/surat/{id}/download-pdf', [App\Http\Controllers\SuratController::class, 'downloadPDF'])->name('surat.download-pdf')->middleware(['auth']);
 });

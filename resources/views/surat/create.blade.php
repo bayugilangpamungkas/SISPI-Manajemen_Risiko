@@ -7,15 +7,15 @@
             {{-- HEADER --}}
             <div class="section-header">
                 <div class="d-flex align-items-center">
-                    <a href="{{ route('surat.index') }}" class="btn btn-icon btn-light mr-3">
-                        <i class="fas fa-arrow-left"></i>
+                    <a href="{{ route('surat.index') }}" class="mr-3">
+                        <i class="fas fa-arrow-left" style="font-size: 1.3rem"></i>
                     </a>
                     <div>
                         <h1>Buat Surat Baru</h1>
-                        <div class="section-header-breadcrumb d-none d-sm-block">
+                        {{-- <div class="section-header-breadcrumb d-none d-sm-block">
                             <div class="breadcrumb-item active"><a href="#">Surat</a></div>
                             <div class="breadcrumb-item">Tambah Baru</div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>

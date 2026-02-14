@@ -110,7 +110,7 @@
                                     </div>
 
                                     {{-- REFERENSI (OPSIONAL) --}}
-                                    {{-- <div class="bg-light p-4 rounded mt-4">
+                                    <div class="bg-light p-4 rounded mt-4">
                                         <h6 class="text-primary mb-3"><i class="fas fa-link mr-2"></i>Referensi Surat
                                             (Opsional)</h6>
                                         <div class="row">
@@ -155,7 +155,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div> --}}
+                                    </div>
                                 </div>
                                 <div class="card-footer bg-whitesmoke text-right">
                                     <a href="{{ route('surat.index') }}" class="btn btn-secondary mr-2">Batal</a>

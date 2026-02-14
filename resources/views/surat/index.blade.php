@@ -37,54 +37,6 @@
                     </div>
                 @endif
 
-                {{-- STATISTICS --}}
-                <div class="row">
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card card-statistic-1">
-                            <div class="card-icon bg-primary">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <div class="card-wrap">
-                                <div class="card-header">
-                                    <h4>Total Surat</h4>
-                                </div>
-                                <div class="card-body">
-                                    {{ $statistics['total'] }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card card-statistic-1">
-                            <div class="card-icon bg-warning">
-                                <i class="fas fa-edit"></i>
-                            </div>
-                            <div class="card-wrap">
-                                <div class="card-header">
-                                    <h4>Draft</h4>
-                                </div>
-                                <div class="card-body">
-                                    {{ $statistics['draft'] }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card card-statistic-1">
-                            <div class="card-icon bg-success">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div class="card-wrap">
-                                <div class="card-header">
-                                    <h4>Final</h4>
-                                </div>
-                                <div class="card-body">
-                                    {{ $statistics['final'] }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 {{-- FILTER & CREATE BUTTON --}}
                 <div class="row">

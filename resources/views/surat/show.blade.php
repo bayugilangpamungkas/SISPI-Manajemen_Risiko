@@ -20,7 +20,7 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="card border-0 shadow rounded">
-                            <div class="card-header">
+                            {{-- <div class="card-header">
                                 <h5 class="mb-0">Informasi Surat</h5>
                                 <div class="card-header-action">
                                     @if ($surat->file_pdf)
@@ -35,7 +35,7 @@
                                         </a>
                                     @endif
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-6">

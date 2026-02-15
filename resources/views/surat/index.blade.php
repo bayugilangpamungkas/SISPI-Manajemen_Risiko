@@ -201,18 +201,17 @@
                                                                     <i class="fas fa-check-circle"></i>
                                                                 </button>
                                                             </form>
-
-                                                            <form action="{{ route('surat.destroy', $surat->id) }}"
-                                                                method="POST" class="d-inline"
-                                                                onsubmit="return confirm('Yakin ingin menghapus surat ini?')">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="btn btn-sm btn-danger mb-1"
-                                                                    title="Hapus">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
-                                                            </form>
                                                         @endif
+                                                        <form action="{{ route('surat.destroy', $surat->id) }}"
+                                                            method="POST" class="d-inline"
+                                                            onsubmit="return confirm('Yakin ingin menghapus surat ini?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-danger mb-1"
+                                                                title="Hapus">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
                                                     </td>
                                                 </tr>
                                             @empty

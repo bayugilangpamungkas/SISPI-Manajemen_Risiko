@@ -11,7 +11,6 @@
                     </a>
                     <div>
                         <h1>Detail Surat</h1>
-                        <small class="text-muted">Informasi lengkap surat</small>
                     </div>
                 </div>
             </div>

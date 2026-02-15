@@ -68,16 +68,25 @@
                                 class="badge {{ $statusBadge }} p-2">{{ $statusLabel }}</span>
                             <br>
                             <small class="text-muted">
-                                @if ($statusAudit === 'menunggu_wawancara')
-                                    Menunggu Auditor menginput daftar pertanyaan audit.
+                                @if ($statusAudit === 'belum_ditugaskan')
+                                    Belum ada auditor yang ditugaskan untuk risiko ini.
+                                @elseif($statusAudit === 'menunggu_wawancara')
+                                    <strong>→ AUDITOR:</strong> Silakan input daftar pertanyaan audit untuk Auditee.
                                 @elseif($statusAudit === 'menunggu_jawaban')
-                                    Menunggu Auditee menjawab pertanyaan audit.
+                                    <strong>→ AUDITEE:</strong> Silakan jawab pertanyaan audit dari Auditor.
                                 @elseif($statusAudit === 'menunggu_review')
-                                    Menunggu Auditor melakukan review terhadap jawaban.
-                                @elseif($statusAudit === 'selesai_review')
-                                    Menunggu konfirmasi dari Auditee terhadap hasil review.
+                                    <strong>→ AUDITOR:</strong> Silakan review jawaban dari Auditee dan berikan penilaian.
+                                @elseif($statusAudit === 'perlu_revisi')
+                                    <strong>→ AUDITEE:</strong> Auditor meminta Anda melakukan revisi terhadap jawaban.
+                                @elseif($statusAudit === 'menunggu_konfirmasi_auditor')
+                                    <strong>→ AUDITOR:</strong> Silakan konfirmasi hasil revisi dari Auditee.
+                                @elseif($statusAudit === 'menunggu_konfirmasi_auditee')
+                                    <strong>→ AUDITEE:</strong> Silakan konfirmasi hasil review dari Auditor.
+                                @elseif($statusAudit === 'disetujui_auditee')
+                                    <strong>→ AUDITOR:</strong> Auditee sudah konfirmasi. Silakan finalisasi audit untuk
+                                    menyelesaikan proses.
                                 @elseif($statusAudit === 'final')
-                                    Audit telah selesai dan data telah difinalisasi.
+                                    ✅ Audit telah selesai dan data telah difinalisasi secara resmi.
                                 @endif
                             </small>
                         </div>
@@ -98,12 +107,44 @@
                                         <td>: {{ $peta->jenis }}</td>
                                     </tr>
                                     <tr>
-                                        <th>Kode Risiko</th>
-                                        <td>: {{ $peta->kode_regist ?? '-' }}</td>
-                                    </tr>
-                                    <tr>
                                         <th>Kegiatan</th>
                                         <td>: {{ $peta->kegiatan->judul ?? $peta->judul }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Kode Kegiatan</th>
+                                        <td>:
+                                            @php
+                                                // ✅ PERBAIKAN: Ambil kode kegiatan dengan format KEG-TAHUN-XXX
+                                                $kodeKegiatan = '-';
+                                                if ($peta->kegiatan) {
+                                                    if (!empty($peta->kegiatan->kode_regist)) {
+                                                        $kodeKegiatan = $peta->kegiatan->kode_regist;
+                                                    } elseif (!empty($peta->kegiatan->id_kegiatan)) {
+                                                        $kodeKegiatan = $peta->kegiatan->id_kegiatan;
+                                                    } elseif (!empty($peta->kegiatan->kode)) {
+                                                        $kodeKegiatan = $peta->kegiatan->kode;
+                                                    } else {
+                                                        // Fallback: buat format KEG-TAHUN-ID
+                                                        $kodeKegiatan =
+                                                            'KEG-' .
+                                                            date('Y') .
+                                                            '-' .
+                                                            str_pad($peta->kegiatan->id, 3, '0', STR_PAD_LEFT);
+                                                    }
+                                                } elseif ($peta->id_kegiatan) {
+                                                    $kegiatan = \App\Models\Kegiatan::find($peta->id_kegiatan);
+                                                    if ($kegiatan) {
+                                                        $kodeKegiatan =
+                                                            $kegiatan->kode_regist ??
+                                                            'KEG-' .
+                                                                date('Y') .
+                                                                '-' .
+                                                                str_pad($kegiatan->id, 3, '0', STR_PAD_LEFT);
+                                                    }
+                                                }
+                                            @endphp
+                                            {{ $kodeKegiatan }}
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th>Pernyataan Risiko</th>

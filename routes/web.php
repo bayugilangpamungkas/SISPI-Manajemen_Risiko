@@ -519,6 +519,8 @@ Route::middleware('auth')->group(function () {
      ====================== */
     // Route Manajemen Risiko - Admin (Super Admin, Admin)
     Route::get('/manajemen-risiko', [App\Http\Controllers\ManajemenRisikoController::class, 'index'])->name('manajemen-risiko.index')->middleware('auth');
+    // ✅ Detail Risiko (Admin View) - Route yang hilang
+    Route::get('/manajemen-risiko/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'show'])->name('manajemen-risiko.show')->middleware('auth');
     Route::get('/manajemen-risiko/generate/report', [App\Http\Controllers\ManajemenRisikoController::class, 'generateReport'])->name('manajemen-risiko.generate-report')->middleware('auth');
     Route::get('/manajemen-risiko/export/excel', [App\Http\Controllers\ManajemenRisikoController::class, 'export'])->name('manajemen-risiko.export')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/comment', [App\Http\Controllers\ManajemenRisikoController::class, 'comment'])->name('manajemen-risiko.comment')->middleware('auth');

@@ -106,7 +106,44 @@
                                     <hr>
                                     <h5 class="mb-3"><i class="fas fa-link"></i> Informasi Referensi</h5>
                                     <div class="alert alert-info">
-                                        <strong>{{ $surat->tipe_referensi }}:</strong> {{ $surat->referensi_nama }}
+                                        <strong>
+                                            {{ $surat->tipe_referensi }}:
+                                        </strong>
+                                        @php
+                                            $kodeKegiatan = '-';
+                                            // Mengambil data melalui relasi petaRisiko yang ada di model
+                                            $peta = $surat->petaRisiko;
+
+                                            if ($peta && $peta->kegiatan) {
+                                                $keg = $peta->kegiatan;
+                                                if (!empty($keg->kode_regist)) {
+                                                    $kodeKegiatan = $keg->kode_regist;
+                                                } elseif (!empty($keg->id_kegiatan)) {
+                                                    $kodeKegiatan = $keg->id_kegiatan;
+                                                } elseif (!empty($keg->kode)) {
+                                                    $kodeKegiatan = $keg->kode;
+                                                } else {
+                                                    // Fallback: buat format KEG-TAHUN-ID
+                                                    $kodeKegiatan =
+                                                        'KEG-' .
+                                                        date('Y') .
+                                                        '-' .
+                                                        str_pad($keg->id, 3, '0', STR_PAD_LEFT);
+                                                }
+                                            } elseif ($peta && $peta->id_kegiatan) {
+                                                // Fallback jika relasi kegiatan tidak terload tapi ID ada
+                                                $kegiatanManual = \App\Models\Kegiatan::find($peta->id_kegiatan);
+                                                if ($kegiatanManual) {
+                                                    $kodeKegiatan =
+                                                        $kegiatanManual->kode_regist ??
+                                                        'KEG-' .
+                                                            date('Y') .
+                                                            '-' .
+                                                            str_pad($kegiatanManual->id, 3, '0', STR_PAD_LEFT);
+                                                }
+                                            }
+                                        @endphp
+                                        {{ $kodeKegiatan }}
                                     </div>
                                 @endif
                             </div>

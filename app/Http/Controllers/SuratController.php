@@ -37,7 +37,7 @@ class SuratController extends Controller
             $query->where('status', $status);
         }
 
-        $surats = $query->orderBy('tanggal_surat', 'desc')
+        $surats = $query->orderBy('tanggal_surat', 'asc')
             ->paginate(15);
 
         // Get available years

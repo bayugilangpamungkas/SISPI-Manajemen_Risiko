@@ -1,5 +1,5 @@
 @extends('layout.app')
-@section('title', 'Detail Penugasan Risiko - Auditee')
+@section('title', 'Detail Penugasan Risiko - Unit Kerja')
 
 @section('main')
     @php
@@ -50,7 +50,7 @@
                         <i class="fas fa-arrow-left" style="font-size: 1.3rem"></i>
                     </a>
                     <div>
-                        <h1>Detail Penugasan Risiko</h1>
+                        <h1>Detail Penugasan Manajemen Risiko</h1>
                         <small class="text-muted">Unit Kerja: {{ $peta->jenis }} ({{ $kodeUnit ?? '-' }})</small>
                     </div>
                 </div>
@@ -103,7 +103,7 @@
                                     <div class="col-md-8">
                                         <h5 class="mb-2 {{ $isApproved || $isRevisi ? 'text-white' : '' }}">
                                             <i class="fas fa-info-circle"></i>
-                                            <strong>Status Pengerjaan</strong>
+                                            <strong>Status Penugasan</strong>
                                         </h5>
                                         <div class="d-flex align-items-center flex-wrap">
                                             @if ($isApproved)
@@ -117,22 +117,23 @@
                                                 </small>
                                             @elseif($isSubmitted)
                                                 <span class="badge badge-info badge-lg" style="font-size: 14px;">
-                                                    <i class="fas fa-paper-plane"></i> Menunggu Persetujuan Auditor
+                                                    <i class="fas fa-paper-plane"></i> Menunggu Verifikasi Auditor
                                                 </span>
                                             @elseif($isRevisi)
                                                 <span class="badge badge-danger badge-lg mr-2" style="font-size: 14px;">
-                                                    <i class="fas fa-exclamation-triangle"></i> <strong>Diminta
-                                                        Revisi</strong>
+                                                    <i class="fas fa-exclamation-triangle"></i> <strong>Memerlukan
+                                                        Perbaikan</strong>
                                                 </span>
-                                                <small class="text-white">Segera perbaiki sesuai catatan Auditor!</small>
+                                                <small class="text-white">Harap lakukan perbaikan sesuai catatan
+                                                    Auditor</small>
                                             @elseif($peta->template_sent_at)
                                                 <span class="badge badge-primary badge-lg" style="font-size: 14px;">
-                                                    <i class="fas fa-envelope-open-text"></i> Dikirim Auditor - Silakan
-                                                    Dikerjakan
+                                                    <i class="fas fa-envelope-open-text"></i> Lembar Kerja Diterima - Harap
+                                                    Segera Diproses
                                                 </span>
                                             @else
                                                 <span class="badge badge-secondary badge-lg" style="font-size: 14px;">
-                                                    <i class="fas fa-clock"></i> Menunggu Template dari Auditor
+                                                    <i class="fas fa-clock"></i> Menunggu Lembar Kerja dari Auditor
                                                 </span>
                                             @endif
                                         </div>
@@ -140,7 +141,7 @@
                                     <div class="col-md-4 text-right">
                                         @if ($peta->auditor)
                                             <div class="{{ $isApproved || $isRevisi ? 'text-white' : 'text-muted' }}">
-                                                <small><strong>Auditor Penugasan:</strong></small><br>
+                                                <small><strong>Auditor Penanggung Jawab:</strong></small><br>
                                                 <strong class="d-block mt-1">
                                                     <i class="fas fa-user-tie"></i> {{ $peta->auditor->name }}
                                                 </strong>
@@ -166,7 +167,7 @@
                     @if ($lastRevision)
                         <div class="alert alert-danger border-danger shadow-sm">
                             <h5 class="alert-heading">
-                                <i class="fas fa-exclamation-circle"></i> Catatan Revisi dari Auditor
+                                <i class="fas fa-exclamation-circle"></i> Catatan Perbaikan dari Auditor
                             </h5>
                             <hr>
                             <p class="mb-2"><strong>{{ $lastRevision->user->name }}</strong> -
@@ -177,8 +178,8 @@
                             </div>
                             <hr>
                             <p class="mb-0">
-                                <i class="fas fa-info-circle"></i> Mohon perbaiki data sesuai catatan di atas, kemudian
-                                kirim ulang ke Auditor.
+                                <i class="fas fa-info-circle"></i> Mohon lakukan perbaikan sesuai catatan di atas, kemudian
+                                submit ulang kepada Auditor.
                             </p>
                         </div>
                     @endif
@@ -239,15 +240,15 @@
                             <div class="card border-0 shadow-sm mb-4">
                                 <div class="card-header bg-info text-white">
                                     <h4 class="text-white mb-0">
-                                        <i class="fas fa-file-alt"></i> Template Penilaian dari Auditor (Read-Only)
+                                        <i class="fas fa-file-alt"></i> Lembar Kerja Audit dari Auditor (Hanya Baca)
                                     </h4>
                                 </div>
                                 <div class="card-body">
                                     <div class="alert alert-info">
                                         <i class="fas fa-info-circle"></i>
-                                        <strong>Informasi:</strong> Data di bawah ini telah diisi oleh
+                                        <strong>Informasi:</strong> Data di bawah ini telah disusun oleh
                                         <strong>Auditor</strong>.
-                                        Anda dapat melihatnya sebagai referensi untuk mengisi bagian Anda.
+                                        Anda dapat menggunakannya sebagai acuan untuk mengisi Rencana Tindak Lanjut.
                                     </div>
 
                                     <div class="table-responsive">
@@ -369,8 +370,8 @@
                                     {{-- Kesimpulan Auditor --}}
                                     @if (!empty($templateData['kesimpulan']) || !empty($templateData['rekomendasi_tindak_lanjut']))
                                         <hr>
-                                        <h6 class="font-weight-bold"><i class="fas fa-clipboard-check"></i> Kesimpulan
-                                            Auditor</h6>
+                                        <h6 class="font-weight-bold"><i class="fas fa-clipboard-check"></i> Kesimpulan dan
+                                            Rekomendasi Auditor</h6>
                                         @if (!empty($templateData['kesimpulan']))
                                             <div class="mb-2">
                                                 <strong>Kesimpulan Umum:</strong>
@@ -386,7 +387,8 @@
                                         @endif
                                         @if (!empty($templateData['catatan_tambahan']))
                                             <div class="alert alert-warning">
-                                                <strong><i class="fas fa-sticky-note"></i> Catatan untuk Anda:</strong>
+                                                <strong><i class="fas fa-sticky-note"></i> Catatan Khusus untuk Unit
+                                                    Kerja:</strong>
                                                 <p class="mb-0">{{ $templateData['catatan_tambahan'] }}</p>
                                             </div>
                                         @endif
@@ -400,11 +402,11 @@
                             <div class="card border-0 shadow-sm mb-4">
                                 <div class="card-header {{ $isReadOnly ? 'bg-secondary' : 'bg-success' }} text-white">
                                     <h4 class="text-white mb-0">
-                                        <i class="fas fa-edit"></i> Form Tindak Lanjut Auditee
+                                        <i class="fas fa-edit"></i> Formulir Rencana Tindak Lanjut
                                         @if ($isReadOnly)
                                             <span class="badge badge-light text-dark float-right">
                                                 <i class="fas fa-lock"></i> Sudah
-                                                {{ $isApproved ? 'Disetujui' : 'Dikirim' }}
+                                                {{ $isApproved ? 'Diverifikasi' : 'Tersubmit' }}
                                             </span>
                                         @endif
                                     </h4>
@@ -413,16 +415,17 @@
                                     @if (!$isReadOnly)
                                         <div class="alert alert-success">
                                             <i class="fas fa-info-circle"></i>
-                                            <strong>Petunjuk:</strong> Lengkapi form di bawah ini berdasarkan template yang
-                                            telah diisi oleh Auditor.
-                                            Setelah selesai, klik tombol <strong>"Kirim ke Auditor"</strong>.
+                                            <strong>Petunjuk Pengisian:</strong> Lengkapi formulir di bawah ini berdasarkan
+                                            lembar kerja yang telah disusun oleh Auditor.
+                                            Setelah selesai, klik tombol <strong>"Submit ke Auditor"</strong> untuk
+                                            verifikasi.
                                         </div>
                                     @else
                                         <div class="alert alert-secondary">
                                             <i class="fas fa-lock"></i>
-                                            <strong>Status:</strong> Form ini sudah
-                                            {{ $isApproved ? 'disetujui dan' : '' }} tidak dapat diubah.
-                                            Data Anda telah dikirim ke Auditor.
+                                            <strong>Status:</strong> Formulir ini sudah
+                                            {{ $isApproved ? 'diverifikasi dan' : '' }} tidak dapat diubah kembali.
+                                            Data Anda telah tersubmit kepada Auditor.
                                         </div>
                                     @endif
 
@@ -436,9 +439,9 @@
                                                     class="text-danger">*</span></label>
                                             <textarea name="rencana_tindak_lanjut" class="form-control @error('rencana_tindak_lanjut') is-invalid @enderror"
                                                 rows="4" required {{ $isReadOnly ? 'readonly' : '' }}
-                                                placeholder="Jelaskan rencana tindak lanjut untuk mengelola risiko ini...">{{ old('rencana_tindak_lanjut', $auditeeResponse['rencana_tindak_lanjut'] ?? '') }}</textarea>
+                                                placeholder="Jelaskan rencana tindak lanjut untuk mitigasi risiko ini...">{{ old('rencana_tindak_lanjut', $auditeeResponse['rencana_tindak_lanjut'] ?? '') }}</textarea>
                                             <small class="text-muted">Contoh: Melakukan sosialisasi, pelatihan, perbaikan
-                                                SOP, dll.</small>
+                                                SOP, audit internal, dll.</small>
                                             @error('rencana_tindak_lanjut')
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
@@ -558,7 +561,7 @@
                                         @if (!$isReadOnly)
                                             <div class="d-flex justify-content-between">
                                                 <button type="submit" class="btn btn-success btn-lg">
-                                                    <i class="fas fa-paper-plane"></i> Kirim ke Auditor
+                                                    <i class="fas fa-paper-plane"></i> Submit ke Auditor untuk Verifikasi
                                                 </button>
                                                 <button type="button" class="btn btn-outline-secondary"
                                                     onclick="window.location.href='{{ route('manajemen-risiko.auditee.index') }}'">
@@ -567,7 +570,7 @@
                                             </div>
                                         @else
                                             <div class="alert alert-success text-center">
-                                                <i class="fas fa-check-circle"></i> <strong>Data telah dikirim ke
+                                                <i class="fas fa-check-circle"></i> <strong>Data telah tersubmit kepada
                                                     Auditor</strong>
                                                 <br><small>{{ $peta->koreksiPr_at ? \Carbon\Carbon::parse($peta->koreksiPr_at)->format('d M Y, H:i') : '-' }}</small>
                                             </div>
@@ -579,9 +582,9 @@
                             {{-- Jika belum ada template dari Auditor --}}
                             <div class="alert alert-warning text-center">
                                 <i class="fas fa-hourglass-half fa-3x mb-3"></i>
-                                <h5>Menunggu Template dari Auditor</h5>
-                                <p class="mb-0">Template penugasan belum dikirimkan oleh Auditor. Silakan cek kembali
-                                    nanti.</p>
+                                <h5>Menunggu Lembar Kerja dari Auditor</h5>
+                                <p class="mb-0">Lembar kerja audit belum dikirimkan oleh Auditor. Mohon ditunggu atau
+                                    hubungi Auditor terkait.</p>
                             </div>
                         @endif
 
@@ -589,7 +592,7 @@
                         <div class="card border-0 shadow-sm">
                             <div class="card-header bg-dark text-white">
                                 <h4 class="text-white mb-0">
-                                    <i class="fas fa-comments"></i> Riwayat Komunikasi
+                                    <i class="fas fa-comments"></i> Riwayat Komunikasi dengan Auditor
                                 </h4>
                             </div>
                             <div class="card-body">
@@ -602,7 +605,7 @@
                                                         <strong
                                                             class="{{ $comment->user->id == $user->id ? 'text-success' : 'text-primary' }}">
                                                             <i class="fas fa-user-circle"></i>
-                                                            {{ $comment->user->id == $user->id ? 'Anda' : $comment->user->name }}
+                                                            {{ $comment->user->id == $user->id ? 'Unit Kerja Anda' : $comment->user->name }}
                                                         </strong>
                                                         <span
                                                             class="badge badge-{{ $comment->jenis == 'analisis' ? 'primary' : 'info' }} ml-2">
@@ -620,7 +623,8 @@
                                     </div>
                                 @else
                                     <div class="alert alert-secondary text-center">
-                                        <i class="fas fa-info-circle"></i> Belum ada komunikasi untuk risiko ini.
+                                        <i class="fas fa-info-circle"></i> Belum ada riwayat komunikasi untuk penugasan
+                                        ini.
                                     </div>
                                 @endif
                             </div>
@@ -632,7 +636,7 @@
                         {{-- CARD: Skor Risiko --}}
                         <div class="card border-0 shadow-sm mb-4">
                             <div class="card-header bg-danger text-white">
-                                <h4 class="text-white mb-0"><i class="fas fa-chart-bar"></i> Skor Risiko</h4>
+                                <h4 class="text-white mb-0"><i class="fas fa-chart-bar"></i> Tingkat Risiko</h4>
                             </div>
                             <div class="card-body text-center">
                                 <h1
@@ -651,12 +655,12 @@
                         {{-- CARD: Progress Status --}}
                         <div class="card border-0 shadow-sm mb-4">
                             <div class="card-header bg-primary text-white">
-                                <h4 class="text-white mb-0"><i class="fas fa-tasks"></i> Status Progress</h4>
+                                <h4 class="text-white mb-0"><i class="fas fa-tasks"></i> Status Progres</h4>
                             </div>
                             <div class="card-body">
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Template Dikirim Auditor
+                                        Lembar Kerja Diterima
                                         @if ($peta->template_sent_at)
                                             <span class="badge badge-success"><i class="fas fa-check"></i></span>
                                         @else
@@ -664,7 +668,7 @@
                                         @endif
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Anda Sudah Mengisi
+                                        Formulir Sudah Diisi
                                         @if (!empty($auditeeResponse))
                                             <span class="badge badge-success"><i class="fas fa-check"></i></span>
                                         @else
@@ -672,7 +676,7 @@
                                         @endif
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Dikirim ke Auditor
+                                        Tersubmit ke Auditor
                                         @if ($isSubmitted || $isApproved)
                                             <span class="badge badge-success"><i class="fas fa-check"></i></span>
                                         @else
@@ -680,7 +684,7 @@
                                         @endif
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Disetujui Auditor
+                                        Diverifikasi Auditor
                                         @if ($isApproved)
                                             <span class="badge badge-success"><i class="fas fa-check"></i></span>
                                         @else
@@ -695,7 +699,7 @@
                         @if ($peta->auditor)
                             <div class="card border-0 shadow-sm">
                                 <div class="card-header bg-info text-white">
-                                    <h4 class="text-white mb-0"><i class="fas fa-user-tie"></i> Info Auditor</h4>
+                                    <h4 class="text-white mb-0"><i class="fas fa-user-tie"></i> Informasi Auditor</h4>
                                 </div>
                                 <div class="card-body">
                                     <div class="text-center mb-3">

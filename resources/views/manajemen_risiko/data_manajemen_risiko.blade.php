@@ -4,7 +4,7 @@
 @section('main')
     <div class="main-content">
         <section class="section">
-            {{-- HEADER SECTION --}}
+            {{-- 🎨 UI REFINED: Enhanced Header --}}
             <div class="section-header">
                 <div class="d-flex align-items-center">
                     <a href="{{ url('/dashboard') }}" class="mr-3">
@@ -19,12 +19,13 @@
             </div>
 
             <div class="section-body">
-                {{-- ALERTS --}}
+                {{-- 🎨 UI REFINED: Enhanced Alerts --}}
                 @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert"
+                        style="border-left: 5px solid #28a745 !important; border-radius: 10px;">
                         <div class="d-flex align-items-center">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            <div>{{ session('success') }}</div>
+                            <i class="fas fa-check-circle mr-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">{{ session('success') }}</div>
                         </div>
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -33,10 +34,11 @@
                 @endif
 
                 @if (session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert"
+                        style="border-left: 5px solid #dc3545 !important; border-radius: 10px;">
                         <div class="d-flex align-items-center">
-                            <i class="fas fa-exclamation-triangle mr-2"></i>
-                            <div>{{ session('error') }}</div>
+                            <i class="fas fa-exclamation-triangle mr-3" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">{{ session('error') }}</div>
                         </div>
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -44,91 +46,95 @@
                     </div>
                 @endif
 
-                {{-- STATISTICS CARDS --}}
+                {{-- 🎨 UI REFINED: Enhanced Statistics Cards --}}
                 <div class="row mb-4">
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card card-statistic-1 shadow-sm">
-                            <div class="card-icon bg-primary">
+                        <div class="card card-statistic-1 border-0 shadow-sm"
+                            style="border-radius: 12px; overflow: hidden;">
+                            <div class="card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                 <i class="fas fa-database"></i>
                             </div>
                             <div class="card-wrap">
-                                <div class="card-header">
-                                    <h4>Total Data</h4>
+                                <div class="card-header" style="padding-top: 20px;">
+                                    <h4 class="text-muted" style="font-size: 14px; font-weight: 600;">Total Data</h4>
                                 </div>
                                 <div class="card-body">
-                                    {{ $statistics['total'] }}
+                                    <span style="font-size: 28px; font-weight: 700;">{{ $statistics['total'] }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card card-statistic-1 shadow-sm">
-                            <div class="card-icon bg-danger">
+                        <div class="card card-statistic-1 border-0 shadow-sm"
+                            style="border-radius: 12px; overflow: hidden;">
+                            <div class="card-icon" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);">
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
                             <div class="card-wrap">
-                                <div class="card-header">
-                                    <h4>Risiko Tinggi</h4>
+                                <div class="card-header" style="padding-top: 20px;">
+                                    <h4 class="text-muted" style="font-size: 14px; font-weight: 600;">Risiko Tinggi</h4>
                                 </div>
                                 <div class="card-body">
-                                    {{ $statistics['high_risk'] }}
+                                    <span style="font-size: 28px; font-weight: 700;">{{ $statistics['high_risk'] }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card card-statistic-1 shadow-sm">
-                            <div class="card-icon bg-warning">
+                        <div class="card card-statistic-1 border-0 shadow-sm"
+                            style="border-radius: 12px; overflow: hidden;">
+                            <div class="card-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                                 <i class="fas fa-exclamation-circle"></i>
                             </div>
                             <div class="card-wrap">
-                                <div class="card-header">
-                                    <h4>Risiko Sedang</h4>
+                                <div class="card-header" style="padding-top: 20px;">
+                                    <h4 class="text-muted" style="font-size: 14px; font-weight: 600;">Risiko Sedang</h4>
                                 </div>
                                 <div class="card-body">
-                                    {{ $statistics['middle_risk'] }}
+                                    <span style="font-size: 28px; font-weight: 700;">{{ $statistics['middle_risk'] }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="card card-statistic-1 shadow-sm">
-                            <div class="card-icon bg-success">
+                        <div class="card card-statistic-1 border-0 shadow-sm"
+                            style="border-radius: 12px; overflow: hidden;">
+                            <div class="card-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                                 <i class="fas fa-check-circle"></i>
                             </div>
                             <div class="card-wrap">
-                                <div class="card-header">
-                                    <h4>Risiko Rendah</h4>
+                                <div class="card-header" style="padding-top: 20px;">
+                                    <h4 class="text-muted" style="font-size: 14px; font-weight: 600;">Risiko Rendah</h4>
                                 </div>
                                 <div class="card-body">
-                                    {{ $statistics['low_risk'] }}
+                                    <span style="font-size: 28px; font-weight: 700;">{{ $statistics['low_risk'] }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- UPLOAD & CLUSTERING SECTION --}}
+                {{-- 🎨 UI REFINED: Enhanced Upload Section --}}
                 <div class="row mb-4">
                     <div class="col-12">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-header bg-primary text-white py-3">
-                                <h5 class="mb-0 d-flex align-items-center">
+                        <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                            <div class="card-header bg-gradient-primary text-white border-0" style="padding: 16px 24px;">
+                                <h5 class="mb-0 d-flex align-items-center font-weight-bold" style="font-size: 16px;">
                                     <i class="fas fa-cloud-upload-alt mr-2"></i>
                                     Upload & Clustering Data Risiko
                                 </h5>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body" style="padding: 28px;">
                                 <div class="row">
                                     <div class="col-lg-8">
-                                        <h6 class="font-weight-bold text-dark mb-2">
-                                            <i class="fas fa-cloud-upload-alt text-primary mr-1"></i>
+                                        <h6 class="font-weight-bold text-dark mb-2" style="font-size: 15px;">
+                                            <i class="fas fa-file-excel text-success mr-2"></i>
                                             Upload File Excel
                                         </h6>
-                                        <p class="text-muted mb-3">
+                                        <p class="text-muted mb-3" style="font-size: 14px;">
                                             Upload file Excel yang berisi data risiko untuk di-import ke sistem.
                                         </p>
 
@@ -138,39 +144,42 @@
                                                 <div class="custom-file">
                                                     <input type="file" class="custom-file-input" id="fileUpload"
                                                         name="file" accept=".xlsx,.xls" required>
-                                                    <label class="custom-file-label" for="fileUpload">
+                                                    <label class="custom-file-label" for="fileUpload"
+                                                        style="border-radius: 8px;">
                                                         Pilih file Excel...
                                                     </label>
                                                 </div>
-                                                <small class="form-text text-muted mt-1">
+                                                <small class="form-text text-muted mt-2">
                                                     <i class="fas fa-info-circle mr-1"></i>
-                                                    Format: .xlsx, .xls (Maksimal: 5MB)
+                                                    Format yang didukung: .xlsx, .xls (Maksimal: 5MB)
                                                 </small>
                                             </div>
 
-                                            <div class="d-flex flex-wrap gap-2">
-                                                <button type="button" class="btn btn-primary" onclick="uploadFile()"
-                                                    disabled id="btnUpload">
+                                            <div class="d-flex flex-wrap" style="gap: 10px;">
+                                                <button type="button" class="btn btn-primary btn-lg"
+                                                    onclick="uploadFile()" disabled id="btnUpload">
                                                     <i class="fas fa-upload mr-2"></i> Upload File
                                                 </button>
-                                                <button type="button" class="btn btn-outline-secondary"
+                                                <button type="button" class="btn btn-outline-secondary btn-lg"
                                                     onclick="resetUpload()">
                                                     <i class="fas fa-redo mr-2"></i> Reset
                                                 </button>
-                                                <button type="button" class="btn btn-success" onclick="runClustering()">
+                                                <button type="button" class="btn btn-success btn-lg"
+                                                    onclick="runClustering()">
                                                     <i class="fas fa-play mr-2"></i> Jalankan Clustering
                                                 </button>
                                             </div>
                                         </form>
                                     </div>
                                     <div class="col-lg-4 mt-4 mt-lg-0">
-                                        <div class="alert alert-info border-0">
-                                            <h6 class="font-weight-bold mb-2">
-                                                <i class="fas fa-lightbulb mr-1"></i> Panduan
+                                        <div class="alert alert-info border-0 shadow-sm"
+                                            style="border-radius: 10px; background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%); color: white;">
+                                            <h6 class="font-weight-bold mb-3" style="font-size: 15px;">
+                                                <i class="fas fa-lightbulb mr-2"></i> Panduan Cepat
                                             </h6>
-                                            <ol class="mb-0 pl-3" style="font-size: 0.875rem;">
-                                                <li class="mb-1">Siapkan file Excel dengan data risiko</li>
-                                                <li class="mb-1">Pilih file dan klik "Upload File"</li>
+                                            <ol class="mb-0 pl-3" style="font-size: 13px; line-height: 1.8;">
+                                                <li class="mb-2">Siapkan file Excel dengan data risiko</li>
+                                                <li class="mb-2">Pilih file dan klik "Upload File"</li>
                                                 <li>Klik "Jalankan Clustering" untuk proses grouping otomatis</li>
                                             </ol>
                                         </div>

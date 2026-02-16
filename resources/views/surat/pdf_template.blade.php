@@ -1,31 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 
 <head>
     <meta charset="utf-8">
     <title>{{ $surat->nomor_surat }}</title>
     <style>
-        /* Mengatur margin halaman agar kop naik ke atas */
         @page {
-            margin: 1cm 2cm;
+            margin: 1.5cm 2cm 2cm 2cm;
         }
 
         body {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
-            line-height: 1.5;
+            line-height: 1.6;
             margin: 0;
             padding: 0;
+            color: #000;
         }
 
-        /* Kop Surat Standar Polinema dengan Logo */
+        /* Kop Surat */
         .kop-surat {
             width: 100%;
             border-bottom: 3px double #000;
-            margin-top: 0;
-            padding-top: 0;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
+            margin: 0 0 15px 0;
+            padding: 0 0 8px 0;
         }
 
         .kop-table {
@@ -34,61 +32,74 @@
         }
 
         .logo-cell {
-            width: 80px;
-            /* Lebar area logo */
+            width: 100px;
+            /* sebelumnya 85px */
             vertical-align: middle;
             text-align: left;
+            padding-right: 12px;
         }
 
         .logo-cell img {
-            width: 80px;
-            /* Sesuaikan ukuran logo */
+            width: 100px;
+            /* sebelumnya 85px */
             height: auto;
+            display: block;
         }
+
 
         .text-cell {
             text-align: center;
             vertical-align: middle;
+            padding-left: 5px;
         }
 
         .kop-surat h2 {
-            margin: 0;
-            font-size: 12pt;
+            margin: 2px 0;
+            font-size: 11pt;
             font-weight: bold;
             text-transform: uppercase;
+            letter-spacing: 0.3px;
+            line-height: 1.3;
         }
 
         .kop-surat h1 {
-            margin: 0;
+            margin: 3px 0;
             font-size: 14pt;
             font-weight: bold;
+            letter-spacing: 0.5px;
+            line-height: 1.3;
         }
 
         .kop-surat p {
-            margin: 0;
+            margin: 1px 0;
             font-size: 9pt;
+            line-height: 1.4;
         }
 
-        /* Nomor & Judul Surat */
+
+        /* Judul Surat */
         .judul-container {
             text-align: center;
-            margin: 20px 0;
+            margin: 25px 0 20px 0;
         }
 
         .judul-container strong {
             font-size: 13pt;
             text-decoration: underline;
             text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.5px;
         }
 
         .judul-container span {
             display: block;
-            margin-top: 5px;
+            margin-top: 8px;
+            font-size: 12pt;
         }
 
-        /* Meta Data Surat */
+        /* Meta Surat */
         .meta-surat {
-            margin-bottom: 25px;
+            margin: 0 0 30px 0;
         }
 
         .meta-surat table {
@@ -97,47 +108,90 @@
         }
 
         .meta-surat td {
-            padding: 3px 0;
+            padding: 4px 0;
             vertical-align: top;
+            line-height: 1.5;
         }
 
         .meta-surat td:first-child {
-            width: 100px;
+            width: 110px;
+            font-weight: normal;
+        }
+
+        .meta-surat td:nth-child(2) {
+            padding-left: 5px;
         }
 
         /* Isi Surat */
         .isi-surat {
             text-align: justify;
-            margin: 20px 0;
+            text-justify: inter-word;
+            margin: 25px 0 30px 0;
             white-space: pre-wrap;
-            min-height: 150px;
+            word-wrap: break-word;
+            min-height: 180px;
+            line-height: 1.7;
         }
 
         /* Tanda Tangan */
         .ttd {
-            margin-top: 40px;
+            margin-top: 50px;
             float: right;
-            width: 300px;
+            width: 320px;
             text-align: center;
         }
 
         .ttd p {
-            margin: 2px 0;
+            margin: 3px 0;
+            line-height: 1.4;
         }
 
         .ttd-space {
-            height: 75px;
+            height: 80px;
+            margin: 10px 0;
+        }
+
+        .ttd strong {
+            font-weight: bold;
+        }
+
+        .ttd-line {
+            display: inline-block;
+            min-width: 200px;
+            border-bottom: 1px solid #000;
+            margin: 5px 0;
         }
 
         /* Footer */
         .footer {
             clear: both;
-            margin-top: 50px;
-            font-size: 9pt;
-            color: #444;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
+            margin-top: 60px;
+            padding-top: 12px;
+            border-top: 1px solid #999;
+            font-size: 8.5pt;
+            color: #555;
             font-style: italic;
+            line-height: 1.4;
+        }
+
+        .footer p {
+            margin: 2px 0;
+        }
+
+        /* Print Optimization */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .kop-surat {
+                page-break-after: avoid;
+            }
+
+            .ttd {
+                page-break-inside: avoid;
+            }
         }
     </style>
 </head>
@@ -149,7 +203,7 @@
             <tr>
                 <td class="logo-cell">
                     {{-- Menggunakan public_path untuk memastikan logo terbaca saat generate PDF --}}
-                    <img src="{{ public_path('img/logo polinema.png') }}" alt="Logo">
+                    <img src="{{ public_path('img/logo kop polinema.png') }}" alt="Logo Polinema">
                 </td>
                 <td class="text-cell">
                     <h2>KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</h2>
@@ -186,16 +240,47 @@
             @if ($surat->tipe_referensi != 'Tanpa Referensi')
                 <tr>
                     <td>Referensi</td>
-                    <td>: {{ $surat->tipe_referensi }} - {{ $surat->referensi_nama }}</td>
+                    <td>:
+                        @php
+                            $kodeKegiatan = '-';
+                            // Mengambil data melalui relasi petaRisiko yang ada di model
+                            $peta = $surat->petaRisiko;
+
+                            if ($peta && $peta->kegiatan) {
+                                $keg = $peta->kegiatan;
+                                if (!empty($keg->kode_regist)) {
+                                    $kodeKegiatan = $keg->kode_regist;
+                                } elseif (!empty($keg->id_kegiatan)) {
+                                    $kodeKegiatan = $keg->id_kegiatan;
+                                } elseif (!empty($keg->kode)) {
+                                    $kodeKegiatan = $keg->kode;
+                                } else {
+                                    // Fallback: buat format KEG-TAHUN-ID
+                                    $kodeKegiatan = 'KEG-' . date('Y') . '-' . str_pad($keg->id, 3, '0', STR_PAD_LEFT);
+                                }
+                            } elseif ($peta && $peta->id_kegiatan) {
+                                // Fallback jika relasi kegiatan tidak terload tapi ID ada
+                                $kegiatanManual = \App\Models\Kegiatan::find($peta->id_kegiatan);
+                                if ($kegiatanManual) {
+                                    $kodeKegiatan =
+                                        $kegiatanManual->kode_regist ??
+                                        'KEG-' . date('Y') . '-' . str_pad($kegiatanManual->id, 3, '0', STR_PAD_LEFT);
+                                }
+                            }
+                        @endphp
+
+                        <span class="referensi-item">
+                            <span class="referensi-label">{{ $surat->tipe_referensi }}</span>:
+                            <span class="referensi-value">{{ $kodeKegiatan }}</span>
+                        </span>
+                    </td>
                 </tr>
             @endif
         </table>
     </div>
 
     {{-- ISI SURAT --}}
-    <div class="isi-surat">
-        {{ $surat->isi_surat }}
-    </div>
+    <div class="isi-surat">{{ $surat->isi_surat }}</div>
 
     {{-- TANDA TANGAN --}}
     <div class="ttd">
@@ -203,8 +288,8 @@
         <p><strong>Kepala Satuan Pengawas Internal</strong></p>
         <p><strong>Politeknik Negeri Malang</strong></p>
         <div class="ttd-space"></div>
-        <p><strong><u>____________________</u></strong></p>
-        <p>NIP. ____________________</p>
+        <p><strong><span class="ttd-line"></span></strong></p>
+        <p>NIP. __________________________</p>
     </div>
 
     <div style="clear: both;"></div>

@@ -148,7 +148,37 @@
                                                         style="width: 100%">
                                                         <option value="">-- Pilih --</option>
                                                         @foreach ($hasilAudits as $audit)
-                                                            <option value="{{ $audit->id }}">{{ $audit->kode_risiko }}
+                                                            <option value="{{ $audit->id }}">@php
+                                                                // ✅ PERBAIKAN: Ambil kode kegiatan dengan format KEG-TAHUN-XXX
+                                                                $kodeKegiatan = '-';
+                                                                if ($peta->kegiatan) {
+                                                                    if (!empty($peta->kegiatan->kode_regist)) {
+                                                                        $kodeKegiatan = $peta->kegiatan->kode_regist;
+                                                                    } elseif (!empty($peta->kegiatan->id_kegiatan)) {
+                                                                        $kodeKegiatan = $peta->kegiatan->id_kegiatan;
+                                                                    } elseif (!empty($peta->kegiatan->kode)) {
+                                                                        $kodeKegiatan = $peta->kegiatan->kode;
+                                                                    } else {
+                                                                        // Fallback: buat format KEG-TAHUN-ID
+                                                                        $kodeKegiatan =
+                                                                            'KEG-' .
+                                                                            date('Y') .
+                                                                            '-' .
+                                                                            str_pad($peta->kegiatan->id, 3, '0', STR_PAD_LEFT);
+                                                                    }
+                                                                } elseif ($peta->id_kegiatan) {
+                                                                    $kegiatan = \App\Models\Kegiatan::find($peta->id_kegiatan);
+                                                                    if ($kegiatan) {
+                                                                        $kodeKegiatan =
+                                                                            $kegiatan->kode_regist ??
+                                                                            'KEG-' .
+                                                                                date('Y') .
+                                                                                '-' .
+                                                                                str_pad($kegiatan->id, 3, '0', STR_PAD_LEFT);
+                                                                    }
+                                                                }
+                                                            @endphp
+                                                            {{ $kodeKegiatan }}
                                                                 - {{ $audit->kegiatan }}</option>
                                                         @endforeach
                                                     </select>

@@ -115,65 +115,109 @@ class Peta extends Model
      * 
      * Status workflow LENGKAP:
      * - belum_ditugaskan: Belum ada auditor
-     * - menunggu_wawancara: Admin sudah assign auditor, auditor belum input pertanyaan
-     * - menunggu_jawaban: Auditor sudah input pertanyaan, auditee belum jawab
-     * - menunggu_review: Auditee sudah jawab, auditor belum review
-     * - perlu_revisi: Auditor minta revisi ke auditee
+     * - menunggu_audit: Admin sudah assign auditor, auditor belum input hasil audit (NEW WORKFLOW)
+     * - menunggu_konfirmasi_auditee: Auditor sudah input hasil audit, auditee belum konfirmasi
+     * - disetujui_auditee: Auditee sudah konfirmasi, menunggu finalisasi auditor
+     * - final: Sudah difinalisasi auditor (LOCKED)
+     * 
+     * OLD WORKFLOW (tetap dipertahankan untuk backward compatibility):
+     * - menunggu_wawancara: Auditor belum input pertanyaan
+     * - menunggu_jawaban: Auditee belum jawab
+     * - menunggu_review: Auditor belum review
+     * - perlu_revisi: Auditor minta revisi
      * - menunggu_konfirmasi_auditor: Auditee sudah revisi, auditor belum konfirmasi
-     * - menunggu_konfirmasi_auditee: Auditor sudah review, auditee belum konfirmasi
-     * - disetujui_auditee: Auditee sudah konfirmasi, menunggu finalisasi admin
-     * - final: Sudah difinalisasi admin (LOCKED)
      */
     public function getStatusAuditAttribute()
     {
-        // ✅ FINAL: status_telaah = 1 (Admin sudah finalisasi)
+        // ✅ FINAL: status_telaah = 1 (Auditor sudah finalisasi)
         if ($this->status_telaah == 1) {
             return 'final';
         }
 
-        // ✅ DISETUJUI AUDITEE: Auditee sudah konfirmasi, menunggu finalisasi
-        if ($this->status_konfirmasi_auditee === 'confirmed') {
-            return 'disetujui_auditee';
-        }
+        // ✅ NEW WORKFLOW: Cek apakah menggunakan new workflow (ada pengendalian & mitigasi)
+        $isNewWorkflow = $this->pengendalian || $this->mitigasi ||
+            in_array($this->status_konfirmasi_auditor, ['Completed', 'Not Completed']);
 
-        // ✅ MENUNGGU KONFIRMASI AUDITEE: Auditor sudah review (status = 'reviewed')
-        if (
-            $this->status_konfirmasi_auditor === 'reviewed' &&
-            $this->status_konfirmasi_auditee !== 'confirmed'
-        ) {
-            return 'menunggu_konfirmasi_auditee';
-        }
+        if ($isNewWorkflow) {
+            // ✅ DISETUJUI AUDITEE: Kedua pihak sudah Completed
+            if (
+                $this->status_konfirmasi_auditee === 'Completed' &&
+                $this->status_konfirmasi_auditor === 'Completed'
+            ) {
+                return 'disetujui_auditee';
+            }
 
-        // ✅ MENUNGGU KONFIRMASI AUDITOR: Auditee sudah revisi (status = 'revision_submitted')
-        if ($this->status_konfirmasi_auditor === 'revision_submitted') {
-            return 'menunggu_konfirmasi_auditor';
-        }
+            // ✅ MENUNGGU KONFIRMASI AUDITEE: Auditor sudah submit (Completed/Not Completed)
+            if (
+                in_array($this->status_konfirmasi_auditor, ['Completed', 'Not Completed']) &&
+                !$this->status_konfirmasi_auditee
+            ) {
+                return 'menunggu_konfirmasi_auditee';
+            }
 
-        // ✅ PERLU REVISI: Auditor minta revisi
-        if ($this->status_konfirmasi_auditor === 'need_revision') {
-            return 'perlu_revisi';
-        }
+            // ✅ MENUNGGU AUDIT: Auditor belum submit hasil audit
+            if ($this->auditor_id && !$this->status_konfirmasi_auditor) {
+                return 'menunggu_audit';
+            }
+        } else {
+            // ✅ OLD WORKFLOW: Tetap dipertahankan
+            // DISETUJUI AUDITEE (old)
+            if ($this->status_konfirmasi_auditee === 'confirmed') {
+                return 'disetujui_auditee';
+            }
 
-        // ✅ MENUNGGU REVIEW: Auditee sudah jawab, auditor belum review
-        if (
-            $this->auditee_response &&
-            !in_array($this->status_konfirmasi_auditor, ['need_revision', 'revision_submitted', 'reviewed'])
-        ) {
-            return 'menunggu_review';
-        }
+            // MENUNGGU KONFIRMASI AUDITEE (old)
+            if (
+                $this->status_konfirmasi_auditor === 'reviewed' &&
+                $this->status_konfirmasi_auditee !== 'confirmed'
+            ) {
+                return 'menunggu_konfirmasi_auditee';
+            }
 
-        // ✅ MENUNGGU JAWABAN: Auditor sudah input pertanyaan, auditee belum jawab
-        if ($this->template_data && !$this->auditee_response) {
-            return 'menunggu_jawaban';
-        }
+            // MENUNGGU KONFIRMASI AUDITOR (old)
+            if ($this->status_konfirmasi_auditor === 'revision_submitted') {
+                return 'menunggu_konfirmasi_auditor';
+            }
 
-        // ✅ MENUNGGU WAWANCARA: Auditor sudah ditugaskan tapi belum input pertanyaan
-        if ($this->auditor_id && !$this->template_data) {
-            return 'menunggu_wawancara';
+            // PERLU REVISI (old)
+            if ($this->status_konfirmasi_auditor === 'need_revision') {
+                return 'perlu_revisi';
+            }
+
+            // MENUNGGU REVIEW (old)
+            if (
+                $this->auditee_response &&
+                !in_array($this->status_konfirmasi_auditor, ['need_revision', 'revision_submitted', 'reviewed'])
+            ) {
+                return 'menunggu_review';
+            }
+
+            // MENUNGGU JAWABAN (old)
+            if ($this->template_data && !$this->auditee_response) {
+                return 'menunggu_jawaban';
+            }
+
+            // MENUNGGU WAWANCARA (old)
+            if ($this->auditor_id && !$this->template_data) {
+                return 'menunggu_wawancara';
+            }
         }
 
         // Default: Belum ditugaskan
         return 'belum_ditugaskan';
+    }
+
+    /**
+     * ✅ NEW WORKFLOW: Cek apakah Auditor bisa input hasil audit
+     * (Sesuai requirement dosen: input pengendalian, mitigasi, komentar, status)
+     */
+    public function auditorCanInputAudit()
+    {
+        $status = $this->status_audit;
+        // Auditor bisa input jika status = menunggu_audit
+        // ATAU jika belum ada status_konfirmasi_auditor (edit pertama kali)
+        return $status === 'menunggu_audit' ||
+            ($this->auditor_id && !$this->status_konfirmasi_auditor);
     }
 
     /**

@@ -565,8 +565,7 @@ class AuditeeController extends Controller
     /**
      * Detail Audit Wawancara untuk Auditee
      * WORKFLOW:
-     * - Jika status = menunggu_jawaban: Auditee bisa menjawab pertanyaan
-     * - Jika status = selesai_review: Auditee bisa konfirmasi hasil review
+     * - Jika Auditor sudah submit hasil audit (Completed/Not Completed): Auditee bisa konfirmasi
      * - Jika status = final: Read-only
      */
     public function auditeeShowDetail($id)
@@ -617,41 +616,17 @@ class AuditeeController extends Controller
             $penilaianAuditor = json_decode($hasilAudit->penilaian_data, true) ?? [];
         }
 
-        // ✅ DEBUG: Log untuk debugging
-        Log::info('Auditee Show Detail', [
-            'peta_id' => $peta->id,
-            'status_audit' => $statusAudit,
-            'status_konfirmasi_auditor' => $peta->status_konfirmasi_auditor,
-            'status_konfirmasi_auditee' => $peta->status_konfirmasi_auditee,
-            'has_questions' => count($questions),
-            'has_responses' => count($responses),
-            'has_hasil_audit' => $hasilAudit ? 'yes' : 'no',
-            'has_penilaian' => count($penilaianAuditor),
-        ]);
-
-        // ✅ Tentukan mode view berdasarkan status
+        // ✅ PERBAIKAN: Tentukan mode view berdasarkan NEW WORKFLOW (sesuai revisi dosen)
         $viewMode = 'read_only'; // Default
 
-        if ($peta->auditeeNeedRevision()) {
-            // ✅ MODE REVISI: Auditee perlu melakukan revisi
-            $viewMode = 'do_revision';
-        } elseif ($peta->auditeeCanAnswer()) {
-            $viewMode = 'answer_questions'; // Auditee bisa jawab pertanyaan
-        } elseif ($peta->auditeeCanConfirm()) {
-            // ✅ PENTING: Untuk mode konfirmasi, ABAIKAN pengecekan penilaian kosong
-            // Biarkan auditee konfirmasi meskipun penilaian belum lengkap
-            $viewMode = 'confirm_review'; // Auditee bisa konfirmasi hasil review
-        } elseif ($peta->isAuditFinal()) {
-            $viewMode = 'final'; // Semua read-only
-        }
+        // ✅ Mode view untuk Auditee HANYA bergantung pada status audit & Auditor
+        // Auditee TIDAK PERNAH input hasil audit (pengendalian, mitigasi, komentar)
+        // Auditee HANYA bisa konfirmasi atau tindak lanjut
 
-        // ✅ DEBUG: Log viewMode yang dipilih
-        Log::info('ViewMode selected: ' . $viewMode, [
-            'peta_id' => $peta->id,
-            'status_audit' => $statusAudit,
-            'can_confirm' => $peta->auditeeCanConfirm(),
-            'has_penilaian' => !empty($penilaianAuditor),
-        ]);
+        if ($peta->isAuditFinal()) {
+            $viewMode = 'final'; // Audit sudah final, semua read-only
+        }
+        // Jika tidak final, view mode akan ditentukan di blade berdasarkan status_konfirmasi_auditor
 
         // Hitung Skor Risiko
         $skorTotal = ($peta->skor_kemungkinan ?? 0) * ($peta->skor_dampak ?? 0);

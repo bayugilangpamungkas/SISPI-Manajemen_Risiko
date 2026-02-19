@@ -188,6 +188,7 @@
 
                 {{-- ========================================
                      SECTION 1: AUDITOR INPUT AUDIT REPORT (NEW WORKFLOW)
+                     ✅ HANYA FORM INI YANG DIGUNAKAN UNTUK AUDITOR
                 ======================================== --}}
                 @if ($isAuditor && $viewMode === 'input_questions')
                     <div class="card mb-4">
@@ -294,457 +295,12 @@
                             </form>
                         </div>
                     </div>
-                @elseif($isAuditee && $viewMode === 'answer_questions')
+
                     {{-- ========================================
-                     SECTION 2: UNIT KERJA JAWAB PERTANYAAN
+                     SECTION 2: AUDITEE VIEW & CONFIRMATION (NEW WORKFLOW)
+                     ✅ TAMPILAN INI SESUAI REQUIREMENT DOSEN
                 ======================================== --}}
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0"><i class="fas fa-edit"></i> Jawab Pertanyaan Pemeriksaan</h5>
-                        </div>
-                        <div class="card-body">
-                            <form action="{{ route('manajemen-risiko.auditee.submit-response', $peta->id) }}"
-                                method="POST">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="action" value="answer_questions">
-
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle"></i> Jawab semua pertanyaan dengan lengkap dan
-                                    akurat.
-                                    Sertakan <strong>link dokumen pendukung</strong> jika diperlukan untuk verifikasi.
-                                </div>
-
-                                @if (!empty($questions))
-                                    @foreach ($questions as $index => $q)
-                                        <div class="question-answer-item mb-4 p-4 border rounded bg-light">
-                                            <h6 class="text-primary font-weight-bold">Pertanyaan {{ $index + 1 }}</h6>
-                                            <div class="p-3 bg-white mb-3 rounded border">
-                                                {{ $q['question'] ?? '-' }}
-                                            </div>
-
-                                            <label class="font-weight-bold">Jawaban <span
-                                                    class="text-danger">*</span></label>
-                                            <textarea name="answers[{{ $index }}][answer]" class="form-control mb-3" rows="4" required
-                                                placeholder="Tulis jawaban Anda..."></textarea>
-
-                                            <label class="font-weight-bold">Link Data Dukung (URL)</label>
-                                            <div class="links-container-{{ $index }}">
-                                                <div class="input-group mb-2">
-                                                    <input type="url" name="answers[{{ $index }}][links][]"
-                                                        class="form-control" placeholder="https://example.com/dokumen1">
-                                                    <div class="input-group-append">
-                                                        <button type="button" class="btn btn-danger remove-link">
-                                                            <i class="fas fa-times"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button type="button" class="btn btn-sm btn-info add-link"
-                                                data-index="{{ $index }}">
-                                                <i class="fas fa-plus"></i> Tambah Link
-                                            </button>
-
-                                            <label class="font-weight-bold mt-3">Catatan Tambahan (opsional)</label>
-                                            <textarea name="answers[{{ $index }}][notes]" class="form-control" rows="2"
-                                                placeholder="Catatan tambahan jika diperlukan..."></textarea>
-                                        </div>
-                                    @endforeach
-
-                                    <div class="text-center mt-4">
-                                        <button type="submit" class="btn btn-success btn-lg px-5">
-                                            <i class="fas fa-paper-plane"></i> Submit Jawaban ke Auditor
-                                        </button>
-                                    </div>
-                                @else
-                                    <div class="alert alert-info">
-                                        Belum ada pertanyaan dari Auditor.
-                                    </div>
-                                @endif
-                            </form>
-                        </div>
-                    </div>
-                @elseif($isAuditee && $viewMode === 'do_revision')
-                    {{-- ========================================
-                     SECTION 2B: UNIT KERJA MELAKUKAN PERBAIKAN
-                    ======================================== --}}
-                    @php
-                        $revisiData = $peta->catatan_revisi ? json_decode($peta->catatan_revisi, true) : null;
-                    @endphp
-                    <div class="card mb-4">
-                        <div class="card-header bg-warning text-dark">
-                            <h5 class="mb-0"><i class="fas fa-redo"></i> Perbaikan Jawaban Pemeriksaan</h5>
-                        </div>
-                        <div class="card-body">
-                            @if ($revisiData)
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <strong>Auditor meminta Anda untuk melakukan perbaikan!</strong>
-                                    <p class="mb-2 mt-2"><strong>Catatan Umum dari Auditor:</strong></p>
-                                    <div class="p-2 bg-white rounded">{{ $revisiData['catatan_umum'] ?? '-' }}</div>
-                                    <small class="d-block mt-2 text-muted">
-                                        <i class="fas fa-clock"></i> Dikirim oleh
-                                        {{ $revisiData['sent_by'] ?? 'Auditor' }} pada
-                                        {{ date('d M Y H:i', strtotime($revisiData['sent_at'] ?? now())) }}
-                                    </small>
-                                </div>
-
-                                <form action="{{ route('manajemen-risiko.auditee.submit-response', $peta->id) }}"
-                                    method="POST">
-                                    @csrf
-                                    @method('PUT')
-                                    <input type="hidden" name="action" value="submit_revision">
-
-                                    @if (!empty($questions))
-                                        @foreach ($questions as $index => $q)
-                                            @php
-                                                $response = $responses[$index] ?? null;
-                                                $needRevisi = false;
-                                                $catatanRevisi = '';
-
-                                                // Cek apakah pertanyaan ini perlu direvisi
-                                                if (isset($revisiData['items'])) {
-                                                    foreach ($revisiData['items'] as $item) {
-                                                        if (($item['pertanyaan_no'] ?? -1) == $index) {
-                                                            $needRevisi = true;
-                                                            $catatanRevisi = $item['catatan'] ?? '';
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                            @endphp
-
-                                            <div
-                                                class="question-answer-item mb-4 p-4 border rounded {{ $needRevisi ? 'bg-warning-light border-warning' : 'bg-light' }}">
-                                                @if ($needRevisi)
-                                                    <div class="badge badge-warning mb-2">
-                                                        <i class="fas fa-exclamation-circle"></i> PERLU PERBAIKAN
-                                                    </div>
-                                                @endif
-
-                                                <h6 class="text-primary font-weight-bold">Pertanyaan {{ $index + 1 }}
-                                                </h6>
-                                                <div class="p-3 bg-white mb-3 rounded border">
-                                                    {{ $q['question'] ?? '-' }}
-                                                </div>
-
-                                                @if ($needRevisi && $catatanRevisi)
-                                                    <div class="alert alert-danger">
-                                                        <strong><i class="fas fa-info-circle"></i> Catatan Perbaikan dari
-                                                            Auditor:</strong>
-                                                        <p class="mb-0 mt-1">{{ $catatanRevisi }}</p>
-                                                    </div>
-                                                @endif
-
-                                                <div class="mb-3">
-                                                    <strong>Jawaban Sebelumnya:</strong>
-                                                    <div class="p-2 bg-light rounded border text-muted">
-                                                        {{ $response['answer'] ?? 'Belum ada jawaban' }}
-                                                    </div>
-                                                </div>
-
-                                                <label class="font-weight-bold">Jawaban Perbaikan <span
-                                                        class="text-danger">*</span></label>
-                                                <textarea name="answers[{{ $index }}][answer]" class="form-control mb-3" rows="4" required
-                                                    placeholder="Tulis jawaban perbaikan Anda...">{{ $response['answer'] ?? '' }}</textarea>
-
-                                                <label class="font-weight-bold">Link Data Dukung (URL)</label>
-                                                <div class="links-container-{{ $index }}">
-                                                    @if (!empty($response['links']))
-                                                        @foreach ($response['links'] as $linkIndex => $link)
-                                                            @if ($link)
-                                                                <div class="input-group mb-2">
-                                                                    <input type="url"
-                                                                        name="answers[{{ $index }}][links][]"
-                                                                        class="form-control" value="{{ $link }}"
-                                                                        placeholder="https://example.com/dokumen">
-                                                                    <div class="input-group-append">
-                                                                        <button type="button"
-                                                                            class="btn btn-danger remove-link">
-                                                                            <i class="fas fa-times"></i>
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-                                                        @endforeach
-                                                    @else
-                                                        <div class="input-group mb-2">
-                                                            <input type="url"
-                                                                name="answers[{{ $index }}][links][]"
-                                                                class="form-control"
-                                                                placeholder="https://example.com/dokumen">
-                                                            <div class="input-group-append">
-                                                                <button type="button" class="btn btn-danger remove-link">
-                                                                    <i class="fas fa-times"></i>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                                <button type="button" class="btn btn-sm btn-info add-link"
-                                                    data-index="{{ $index }}">
-                                                    <i class="fas fa-plus"></i> Tambah Link
-                                                </button>
-
-                                                <label class="font-weight-bold mt-3">Catatan Tambahan (opsional)</label>
-                                                <textarea name="answers[{{ $index }}][notes]" class="form-control" rows="2"
-                                                    placeholder="Catatan tambahan...">{{ $response['notes'] ?? '' }}</textarea>
-                                            </div>
-                                        @endforeach
-
-                                        <div class="text-center mt-4">
-                                            <button type="submit" class="btn btn-success btn-lg px-5">
-                                                <i class="fas fa-paper-plane"></i> Submit Perbaikan ke Auditor
-                                            </button>
-                                        </div>
-                                    @else
-                                        <div class="alert alert-info">
-                                            Belum ada pertanyaan dari Auditor.
-                                        </div>
-                                    @endif
-                                </form>
-                            @else
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    Data catatan perbaikan tidak ditemukan. Silakan hubungi Auditor.
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @elseif($isAuditor && $viewMode === 'review_answers')
-                    {{-- ========================================
-                     SECTION 3: AUDITOR VERIFIKASI JAWABAN
-                ======================================== --}}
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0"><i class="fas fa-clipboard-check"></i> Verifikasi Jawaban Unit Kerja</h5>
-                        </div>
-                        <div class="card-body">
-                            <form action="{{ route('manajemen-risiko.auditor.update-template', $peta->id) }}"
-                                method="POST">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="action" value="review_answers">
-
-                                @if (!empty($questions) && !empty($responses))
-                                    @foreach ($questions as $index => $q)
-                                        @php
-                                            $response = $responses[$index] ?? null;
-                                        @endphp
-                                        <div class="review-item mb-4 p-4 border rounded">
-                                            <h6 class="text-primary font-weight-bold">{{ $index + 1 }}.
-                                                {{ $q['question'] }}</h6>
-
-                                            <div class="mt-3">
-                                                <strong>Jawaban Unit Kerja:</strong>
-                                                <div class="p-3 bg-light rounded">
-                                                    {{ $response['answer'] ?? 'Belum dijawab' }}
-                                                </div>
-                                            </div>
-
-                                            @if (!empty($response['links']))
-                                                <div class="mt-2">
-                                                    <strong>Data Dukung:</strong>
-                                                    <ul class="list-unstyled ml-3">
-                                                        @foreach ($response['links'] as $link)
-                                                            @if ($link)
-                                                                <li><a href="{{ $link }}" target="_blank"
-                                                                        class="text-primary"><i class="fas fa-link"></i>
-                                                                        {{ $link }}</a></li>
-                                                            @endif
-                                                        @endforeach
-                                                    </ul>
-                                                </div>
-                                            @endif
-
-                                            @if (!empty($response['notes']))
-                                                <div class="mt-2">
-                                                    <strong>Catatan:</strong>
-                                                    <div class="p-2 bg-white rounded border">{{ $response['notes'] }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            <hr class="my-3">
-
-                                            <div class="row">
-                                                <div class="col-md-3">
-                                                    <label class="font-weight-bold">Status Penilaian <span
-                                                            class="text-danger">*</span></label>
-                                                    <select name="penilaian[{{ $index }}][status]"
-                                                        class="form-control" required>
-                                                        <option value="">-- Pilih --</option>
-                                                        <option value="memadai">✅ Memadai</option>
-                                                        <option value="kurang_memadai">⚠️ Kurang Memadai</option>
-                                                        <option value="tidak_memadai">❌ Tidak Memadai</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="font-weight-bold">Skor (0-100)</label>
-                                                    <input type="number" name="penilaian[{{ $index }}][skor]"
-                                                        class="form-control" min="0" max="100"
-                                                        placeholder="Opsional">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="font-weight-bold">Komentar Auditor</label>
-                                                    <textarea name="penilaian[{{ $index }}][komentar]" class="form-control" rows="2"
-                                                        placeholder="Komentar untuk Unit Kerja..."></textarea>
-                                                </div>
-                                            </div>
-
-                                            <div class="mt-2">
-                                                <label class="font-weight-bold">Rekomendasi</label>
-                                                <textarea name="penilaian[{{ $index }}][rekomendasi]" class="form-control" rows="2"
-                                                    placeholder="Rekomendasi untuk perbaikan..."></textarea>
-                                            </div>
-                                        </div>
-                                    @endforeach
-
-                                    <div class="card bg-light mt-4">
-                                        <div class="card-body">
-                                            <h6 class="font-weight-bold">Kesimpulan Pemeriksaan</h6>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <label>Pengendalian</label>
-                                                    <textarea name="pengendalian" class="form-control" rows="3" placeholder="Deskripsi pengendalian risiko..."></textarea>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label>Mitigasi Risiko</label>
-                                                    <textarea name="mitigasi" class="form-control" rows="3" placeholder="Rencana mitigasi risiko..."></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="text-center mt-4">
-                                        <button type="submit" class="btn btn-primary btn-lg px-5 mr-2">
-                                            <i class="fas fa-check-circle"></i> Submit Verifikasi
-                                        </button>
-                                        <button type="button" class="btn btn-warning btn-lg px-5" data-toggle="modal"
-                                            data-target="#modalKirimRevisi">
-                                            <i class="fas fa-redo"></i> Minta Perbaikan
-                                        </button>
-                                    </div>
-                                @else
-                                    <div class="alert alert-warning">
-                                        Belum ada jawaban dari Unit Kerja untuk diverifikasi.
-                                    </div>
-                                @endif
-                            </form>
-                        </div>
-                    </div>
-                @elseif($isAuditor && $peta->auditorCanConfirmRevision())
-                    {{-- ========================================
-                     SECTION 3B: AUDITOR KONFIRMASI PERBAIKAN UNIT KERJA
-                    ======================================== --}}
-                    <div class="card mb-4">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0"><i class="fas fa-check-circle"></i> Konfirmasi Hasil Perbaikan Unit Kerja
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Unit Kerja telah mengirim perbaikan!</strong>
-                                <p class="mb-0 mt-2">Silakan periksa jawaban yang telah diperbaiki, kemudian konfirmasi
-                                    jika sudah memadai.</p>
-                            </div>
-
-                            @if (!empty($questions))
-                                @foreach ($questions as $index => $q)
-                                    @php
-                                        $response = $responses[$index] ?? null;
-                                    @endphp
-                                    <div class="mb-4 p-4 border rounded bg-light">
-                                        <h6 class="text-primary font-weight-bold">{{ $index + 1 }}.
-                                            {{ $q['question'] }}</h6>
-
-                                        @if ($response)
-                                            <div class="mt-3">
-                                                <strong>Jawaban Perbaikan dari Unit Kerja:</strong>
-                                                <div class="p-3 bg-white rounded border">
-                                                    {{ $response['answer'] }}
-                                                </div>
-                                            </div>
-
-                                            @if (!empty($response['links']))
-                                                <div class="mt-2">
-                                                    <strong>Data Dukung:</strong>
-                                                    <ul class="list-unstyled ml-3">
-                                                        @foreach ($response['links'] as $link)
-                                                            @if ($link)
-                                                                <li><a href="{{ $link }}" target="_blank"
-                                                                        class="text-primary">
-                                                                        <i class="fas fa-link"></i> {{ $link }}
-                                                                    </a></li>
-                                                            @endif
-                                                        @endforeach
-                                                    </ul>
-                                                </div>
-                                            @endif
-
-                                            @if (!empty($response['notes']))
-                                                <div class="mt-2">
-                                                    <strong>Catatan:</strong>
-                                                    <div class="p-2 bg-light rounded border">{{ $response['notes'] }}
-                                                    </div>
-                                                </div>
-                                            @endif
-
-                                            @if (!empty($response['revised_at']))
-                                                <div class="mt-2">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-clock"></i> Direvisi pada:
-                                                        {{ date('d M Y H:i', strtotime($response['revised_at'])) }}
-                                                    </small>
-                                                </div>
-                                            @endif
-                                        @else
-                                            <p class="text-muted mt-2">Belum ada jawaban perbaikan.</p>
-                                        @endif
-                                    </div>
-                                @endforeach
-
-                                {{-- Form Konfirmasi Perbaikan --}}
-                                <form action="{{ route('manajemen-risiko.auditor.update-template', $peta->id) }}"
-                                    method="POST" class="mt-4">
-                                    @csrf
-                                    @method('PUT')
-                                    <input type="hidden" name="action" value="confirm_revision">
-
-                                    <div class="card bg-light">
-                                        <div class="card-body">
-                                            <div class="form-group">
-                                                <label class="font-weight-bold">Catatan Konfirmasi (Opsional)</label>
-                                                <textarea name="catatan_konfirmasi" class="form-control" rows="3"
-                                                    placeholder="Catatan atau tanggapan Anda terhadap perbaikan..."></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="text-center mt-4">
-                                        <button type="submit" class="btn btn-success btn-lg px-5">
-                                            <i class="fas fa-check-circle"></i> Konfirmasi Perbaikan Unit Kerja
-                                        </button>
-                                        <a href="{{ route('manajemen-risiko.auditor.index') }}"
-                                            class="btn btn-secondary btn-lg px-5">
-                                            <i class="fas fa-arrow-left"></i> Kembali
-                                        </a>
-                                    </div>
-                                </form>
-                            @else
-                                <div class="alert alert-warning">
-                                    Belum ada pertanyaan untuk diverifikasi.
-                                </div>
-                            @endif
-                        </div>
-                    </div>
                 @elseif($isAuditee)
-                    {{-- ========================================
-                     SECTION NEW: AUDITEE VIEW AUDIT RESULT & CONFIRMATION (SESUAI REQUIREMENT DOSEN)
-                     ✅ STRICT GUARD: HANYA MUNCUL SETELAH AUDITOR SUBMIT HASIL AUDIT
-                    ======================================== --}}
-
                     @php
                         // ✅ VALIDASI KETAT: Auditor harus sudah submit hasil audit
                         $auditorHasSubmitted = false;
@@ -762,6 +318,7 @@
                         // Alternatif: cek dari hasil_audit table
                         if (
                             !$auditorHasSubmitted &&
+                            isset($hasilAudit) &&
                             $hasilAudit &&
                             $hasilAudit->pengendalian &&
                             $hasilAudit->mitigasi
@@ -769,10 +326,6 @@
                             $auditorHasSubmitted = true;
                         }
                     @endphp
-
-                    {{-- ========================================
-                         CONDITIONAL RENDERING BASED ON AUDITOR SUBMISSION STATUS
-                    ======================================== --}}
 
                     @if (!$auditorHasSubmitted)
                         {{-- ❌ AUDITOR BELUM SUBMIT: HANYA TAMPILKAN INFORMASI --}}
@@ -804,7 +357,7 @@
                     @else
                         {{-- ✅ AUDITOR SUDAH SUBMIT: TAMPILKAN HASIL AUDIT & FORM KONFIRMASI --}}
                         <div class="card mb-4">
-                            <div class="card-header bg-info text-white">
+                            <div class="card-header bg-primary text-white">
                                 <h5 class="mb-0">
                                     <i class="fas fa-clipboard-list"></i> Hasil Pemeriksaan Audit dari Auditor
                                 </h5>
@@ -820,18 +373,13 @@
                                     </p>
                                 </div>
 
-                                {{-- SECTION 1: HASIL AUDIT DARI AUDITOR (READ-ONLY) --}}
+                                {{-- HASIL AUDIT DARI AUDITOR (READ-ONLY) --}}
                                 <div class="card bg-light mb-4">
-                                    <div class="card-header bg-primary text-white">
-                                        <h6 class="mb-0">
-                                            <i class="fas fa-clipboard-check"></i> Hasil Audit (Read-Only)
-                                        </h6>
-                                    </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label class="font-weight-bold">
-                                                    <i class="fas fa-shield-alt"></i> Pengendalian Risiko (Risk Control)
+                                                    <i class="fas fa-shield-alt"></i> Pengendalian Risiko
                                                 </label>
                                                 <div class="p-3 bg-white border rounded" style="min-height: 100px;">
                                                     {{ $peta->pengendalian ?? ($hasilAudit->pengendalian ?? '-') }}
@@ -840,7 +388,7 @@
 
                                             <div class="col-md-6 mb-3">
                                                 <label class="font-weight-bold">
-                                                    <i class="fas fa-chart-line"></i> Mitigasi Risiko (Risk Mitigation)
+                                                    <i class="fas fa-chart-line"></i> Mitigasi Risiko
                                                 </label>
                                                 <div class="p-3 bg-white border rounded">
                                                     @php
@@ -860,13 +408,11 @@
                                             </div>
                                         </div>
 
-                                        <div class="form-group mb-3">
-                                            <label class="font-weight-bold">
-                                                <i class="fas fa-comment-dots"></i> Komentar Auditor (Auditor Comment)
-                                            </label>
-                                            <div class="p-3 bg-white border rounded"
-                                                style="min-height: 100px; white-space: pre-wrap;">
-                                                {{ $hasilAudit->komentar_1 ?? '-' }}
+                                        <div class="mb-3">
+                                            <label class="font-weight-bold text-dark">Komentar Auditor</label>
+                                            <div class="p-3 bg-white border rounded shadow-sm"
+                                                style="min-height: 100px; line-height: 1.6;">
+                                                {!! nl2br(e($hasilAudit->komentar_1 ?? '-')) !!}
                                             </div>
                                         </div>
 
@@ -898,7 +444,7 @@
                                             <div class="col-md-4">
                                                 <label class="font-weight-bold">Level Risiko</label>
                                                 <div class="mt-2">
-                                                    <span class="badge badge-warning p-2">
+                                                    <span class="badge {{ $levelBadge }} p-2">
                                                         {{ $hasilAudit->level_risiko ?? $levelText }}
                                                     </span>
                                                 </div>
@@ -915,9 +461,9 @@
                                     </div>
                                 </div>
 
-                                {{-- SECTION 2: CONDITIONAL AUDITEE ACTION BASED ON AUDITOR STATUS --}}
+                                {{-- CONDITIONAL AUDITEE ACTION BASED ON AUDITOR STATUS --}}
                                 @if ($peta->status_konfirmasi_auditor == 'Completed')
-                                    {{-- ✅ JIKA AUDITOR STATUS = COMPLETED: HANYA APPROVAL --}}
+                                    {{-- ✅ AUDITOR = COMPLETED: HANYA APPROVAL --}}
                                     <div class="card border-success">
                                         <div class="card-header bg-success text-white">
                                             <h6 class="mb-0">
@@ -944,16 +490,6 @@
                                                 @method('PUT')
                                                 <input type="hidden" name="action" value="final_approval">
 
-                                                <div class="form-group">
-                                                    <label class="font-weight-bold">Catatan Konfirmasi (Opsional)</label>
-                                                    <textarea name="catatan_auditee" class="form-control" rows="3"
-                                                        placeholder="Tanggapan atau catatan Anda terhadap hasil audit..."></textarea>
-                                                    <small class="form-text text-muted">
-                                                        <i class="fas fa-info-circle"></i> Catatan ini akan tersimpan
-                                                        sebagai riwayat aktivitas.
-                                                    </small>
-                                                </div>
-
                                                 <div class="text-center mt-4">
                                                     <button type="submit" class="btn btn-success btn-lg px-5">
                                                         <i class="fas fa-check-double"></i> Approve & Konfirmasi Hasil
@@ -964,12 +500,11 @@
                                         </div>
                                     </div>
                                 @elseif($peta->status_konfirmasi_auditor == 'Not Completed')
-                                    {{-- ⚠️ JIKA AUDITOR STATUS = NOT COMPLETED: FORM REVISI --}}
+                                    {{-- ⚠️ AUDITOR = NOT COMPLETED: FORM TINDAK LANJUT --}}
                                     <div class="card border-warning">
                                         <div class="card-header bg-warning text-dark">
                                             <h6 class="mb-0">
-                                                <i class="fas fa-exclamation-triangle"></i> Tindak Lanjut & Revisi
-                                                Diperlukan
+                                                <i class="fas fa-exclamation-triangle"></i> Tindak Lanjut Diperlukan
                                             </h6>
                                         </div>
                                         <div class="card-body">
@@ -978,10 +513,8 @@
                                                 <strong>Status Audit: BELUM SELESAI</strong>
                                                 <p class="mb-0 mt-2">
                                                     Auditor menyatakan bahwa audit <strong>BELUM SELESAI</strong> dan
-                                                    memerlukan
-                                                    <strong>tindak lanjut</strong> dari Unit Kerja. Silakan lakukan
-                                                    perbaikan atau
-                                                    revisi sesuai catatan/komentar Auditor di atas.
+                                                    memerlukan <strong>tindak lanjut</strong> dari Unit Kerja.
+                                                    Silakan lakukan perbaikan sesuai catatan Auditor di atas.
                                                 </p>
                                             </div>
 
@@ -994,13 +527,13 @@
 
                                                 <div class="form-group">
                                                     <label class="font-weight-bold">
-                                                        Catatan Tindak Lanjut / Revisi <span class="text-danger">*</span>
+                                                        Catatan Tindak Lanjut <span class="text-danger">*</span>
                                                     </label>
                                                     <textarea name="catatan_tindak_lanjut" class="form-control" rows="5" required
-                                                        placeholder="Jelaskan tindak lanjut atau perbaikan yang telah/akan dilakukan berdasarkan komentar Auditor..."></textarea>
+                                                        placeholder="Jelaskan tindak lanjut yang telah/akan dilakukan..."></textarea>
                                                     <small class="form-text text-muted">
-                                                        <i class="fas fa-info-circle"></i> Jelaskan secara detail
-                                                        langkah-langkah perbaikan yang Anda lakukan.
+                                                        <i class="fas fa-info-circle"></i> Jelaskan secara detail langkah
+                                                        perbaikan Anda.
                                                     </small>
                                                 </div>
 
@@ -1018,137 +551,173 @@
                                                     </select>
                                                     <small class="form-text text-muted">
                                                         Pilih "Completed" jika tindak lanjut sudah selesai.
-                                                        Pilih "Not Completed" jika masih dalam proses.
                                                     </small>
                                                 </div>
 
                                                 <div class="text-center mt-4">
                                                     <button type="submit" class="btn btn-primary btn-lg px-5">
-                                                        <i class="fas fa-paper-plane"></i> Submit Tindak Lanjut ke Auditor
+                                                        <i class="fas fa-paper-plane"></i> Submit Tindak Lanjut
                                                     </button>
                                                 </div>
                                             </form>
                                         </div>
                                     </div>
                                 @else
-                                    {{-- ℹ️ FALLBACK: AUDITOR BELUM SET STATUS (SEHARUSNYA TIDAK TERJADI) --}}
                                     <div class="alert alert-warning">
                                         <i class="fas fa-exclamation-triangle"></i>
                                         <strong>Status Tidak Lengkap</strong>
                                         <p class="mb-0 mt-2">
-                                            Auditor telah menginput hasil audit, tetapi belum menentukan status konfirmasi.
-                                            Silakan hubungi Auditor untuk melengkapi status pemeriksaan.
+                                            Auditor belum menentukan status konfirmasi. Silakan hubungi Auditor.
                                         </p>
                                     </div>
                                 @endif
                             </div>
                         </div>
                     @endif
-                @else
+
                     {{-- ========================================
-                     SECTION 5: READ-ONLY (FINAL / DEFAULT)
+                     SECTION 3: READ-ONLY VIEW (ADMIN / FINAL STATE)
                 ======================================== --}}
+                @else
                     <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0"><i class="fas fa-eye"></i> Detail Pemeriksaan Manajemen Risiko (Hanya Baca)
-                            </h5>
-                        </div>
                         <div class="card-body">
-                            @if (!empty($questions))
-                                @foreach ($questions as $index => $q)
-                                    @php
-                                        $response = $responses[$index] ?? null;
-                                        $penilaian = $penilaianAuditor[$index] ?? null;
-                                    @endphp
-                                    <div class="mb-4 p-4 border rounded">
-                                        <h6 class="text-primary font-weight-bold">{{ $index + 1 }}.
-                                            {{ $q['question'] }}</h6>
-
-                                        @if ($response)
-                                            <div class="mt-3">
-                                                <strong>Jawaban:</strong>
-                                                <div class="p-3 bg-light rounded">{{ $response['answer'] }}</div>
-                                            </div>
-
-                                            @if (!empty($response['links']))
-                                                <div class="mt-2">
-                                                    <strong>Data Dukung:</strong>
-                                                    <ul class="list-unstyled ml-3">
-                                                        @foreach ($response['links'] as $link)
-                                                            @if ($link)
-                                                                <li><a href="{{ $link }}" target="_blank"
-                                                                        class="text-primary"><i class="fas fa-link"></i>
-                                                                        {{ $link }}</a></li>
-                                                            @endif
-                                                        @endforeach
-                                                    </ul>
-                                                </div>
-                                            @endif
-
-                                            @if ($penilaian)
-                                                <hr class="my-3">
-                                                <div class="bg-light p-3 rounded">
-                                                    <strong>Penilaian Auditor:</strong>
-                                                    @php
-                                                        $statusBadgeReview = 'secondary';
-                                                        if (($penilaian['status'] ?? '') === 'memadai') {
-                                                            $statusBadgeReview = 'success';
-                                                        } elseif (($penilaian['status'] ?? '') === 'kurang_memadai') {
-                                                            $statusBadgeReview = 'warning';
-                                                        } elseif (($penilaian['status'] ?? '') === 'tidak_memadai') {
-                                                            $statusBadgeReview = 'danger';
-                                                        }
-                                                    @endphp
-                                                    <span
-                                                        class="badge badge-{{ $statusBadgeReview }} p-2">{{ ucfirst(str_replace('_', ' ', $penilaian['status'] ?? '-')) }}</span>
-                                                    @if (!empty($penilaian['komentar']))
-                                                        <div class="mt-2"><strong>Komentar:</strong>
-                                                            {{ $penilaian['komentar'] }}</div>
-                                                    @endif
-                                                    @if (!empty($penilaian['rekomendasi']))
-                                                        <div class="mt-2"><strong>Rekomendasi:</strong>
-                                                            {{ $penilaian['rekomendasi'] }}</div>
-                                                    @endif
-                                                </div>
-                                            @endif
-                                        @else
-                                            <p class="text-muted mt-2">Belum ada jawaban.</p>
-                                        @endif
+                            @if ($peta->pengendalian || $peta->mitigasi || (isset($hasilAudit) && $hasilAudit))
+                                {{-- Tampilkan Hasil Audit jika ada --}}
+                                <div class="card bg-light mb-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">Hasil Pemeriksaan Audit</h6>
                                     </div>
-                                @endforeach
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="font-weight-bold">Pengendalian Risiko</label>
+                                                <div class="p-3 bg-white border rounded">
+                                                    {{ $peta->pengendalian ?? ($hasilAudit->pengendalian ?? '-') }}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="font-weight-bold">Mitigasi Risiko</label>
+                                                <div class="p-3 bg-white border rounded">
+                                                    @php
+                                                        $mitigasi = $peta->mitigasi ?? ($hasilAudit->mitigasi ?? '-');
+                                                    @endphp
+                                                    {{ $mitigasi }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="font-weight-bold text-dark">Komentar Auditor</label>
+                                            <div class="p-3 bg-white border rounded shadow-sm"
+                                                style="min-height: 100px; line-height: 1.6;">
+                                                {!! nl2br(e($hasilAudit->komentar_1 ?? '-')) !!}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="font-weight-bold">Status Auditor</label>
+                                                <div class="mt-2">
+                                                    <span class="badge badge-secondary p-2">
+                                                        {{ $peta->status_konfirmasi_auditor ?? '-' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="font-weight-bold">Status Auditee</label>
+                                                <div class="mt-2">
+                                                    <span class="badge badge-secondary p-2">
+                                                        {{ $peta->status_konfirmasi_auditee ?? '-' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             @else
                                 <div class="alert alert-info">
-                                    Belum ada pertanyaan pemeriksaan yang diinput.
+                                    <i class="fas fa-info-circle"></i>
+                                    Belum ada hasil pemeriksaan audit yang diinput.
                                 </div>
                             @endif
                         </div>
                     </div>
                 @endif
 
-                {{-- Riwayat Aktivitas --}}
+                {{-- ========================================
+                     RIWAYAT AKTIVITAS PEMERIKSAAN
+                     ✅ TAMPILAN TIMELINE YANG RAPI DAN TERSTRUKTUR
+                ======================================== --}}
                 @if ($peta->comment_prs->count() > 0)
-                    <div class="card">
+                    <div class="card mb-4">
                         <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0"><i class="fas fa-history"></i> Riwayat Aktivitas Pemeriksaan</h5>
+                            <h5 class="mb-0">
+                                <i class="fas fa-history"></i> Riwayat Aktivitas Pemeriksaan
+                            </h5>
                         </div>
                         <div class="card-body">
-                            <ul class="timeline">
-                                @foreach ($peta->comment_prs->sortByDesc('created_at') as $comment)
-                                    <li class="mb-3">
-                                        <div class="d-flex">
-                                            <div class="mr-3">
-                                                <i class="fas fa-circle text-primary" style="font-size: 8px;"></i>
+                            <div class="timeline-wrapper">
+                                @foreach ($peta->comment_prs->sortByDesc('created_at') as $index => $comment)
+                                    <div class="timeline-item {{ $index === 0 ? 'timeline-item-latest' : '' }}">
+                                        <div class="timeline-marker">
+                                            <i class="fas fa-circle"></i>
+                                        </div>
+                                        <div class="timeline-content">
+                                            <div class="timeline-header">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-1 font-weight-bold text-primary">
+                                                            {{ $comment->user->name ?? 'System' }}
+                                                        </h6>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            {{ $comment->created_at->format('d M Y, H:i') }}
+                                                            <span
+                                                                class="ml-2">({{ $comment->created_at->diffForHumans() }})</span>
+                                                        </small>
+                                                    </div>
+                                                    @php
+                                                        // Tentukan badge berdasarkan jenis komentar
+                                                        $jenisBadge = 'secondary';
+                                                        $jenisIcon = 'comment';
+                                                        $jenisLabel = ucfirst($comment->jenis ?? 'Aktivitas');
+
+                                                        if ($comment->jenis === 'analisis') {
+                                                            $jenisBadge = 'info';
+                                                            $jenisIcon = 'chart-line';
+                                                            $jenisLabel = 'Analisis Audit';
+                                                        } elseif ($comment->jenis === 'keuangan') {
+                                                            $jenisBadge = 'success';
+                                                            $jenisIcon = 'dollar-sign';
+                                                            $jenisLabel = 'Keuangan';
+                                                        } elseif ($comment->jenis === 'mitigasi') {
+                                                            $jenisBadge = 'warning';
+                                                            $jenisIcon = 'shield-alt';
+                                                            $jenisLabel = 'Mitigasi';
+                                                        }
+                                                    @endphp
+                                                    <span class="badge badge-{{ $jenisBadge }} px-3 py-2">
+                                                        <i class="fas fa-{{ $jenisIcon }} mr-1"></i>
+                                                        {{ $jenisLabel }}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div class="flex-grow-1">
-                                                <strong>{{ $comment->user->name ?? 'System' }}</strong>
-                                                <span
-                                                    class="text-muted ml-2">{{ $comment->created_at->diffForHumans() }}</span>
-                                                <p class="mb-0 mt-1">{{ $comment->comment }}</p>
+                                            <div class="timeline-body mt-3">
+                                                <div class="alert alert-light mb-0 border-left-{{ $jenisBadge }}">
+                                                    <p class="mb-0" style="line-height: 1.6;">
+                                                        {{ $comment->comment }}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </li>
+                                    </div>
                                 @endforeach
-                            </ul>
+                            </div>
+
+                            @if ($peta->comment_prs->count() === 0)
+                                <div class="text-center py-5">
+                                    <i class="fas fa-inbox text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-3 mb-0">Belum ada aktivitas pemeriksaan.</p>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -1329,81 +898,6 @@
             </div>
         </div>
     @endif
-
-    {{-- ========================================
-         MODAL: MINTA PERBAIKAN (AUDITOR)
-    ======================================== --}}
-    @if ($isAuditor && $viewMode === 'review_answers')
-        <div class="modal fade" id="modalKirimRevisi" tabindex="-1" role="dialog"
-            aria-labelledby="modalKirimRevisiLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg" role="document">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary">
-                        <h5 class="modal-title" id="modalKirimRevisiLabel">
-                            <i class="fas fa-redo"></i> Minta Perbaikan kepada Unit Kerja
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form action="{{ route('manajemen-risiko.auditor.send-revision', $peta->id) }}" method="POST">
-                        @csrf
-                        <div class="modal-body">
-                            <div class="alert alert-primary">
-                                <i class="fas fa-info-circle"></i> Tandai pertanyaan yang perlu diperbaiki oleh Unit Kerja.
-                                Sistem akan mengirim notifikasi dan Unit Kerja dapat melakukan perbaikan jawaban.
-                            </div>
-
-                            <div class="form-group">
-                                <label class="font-weight-bold">Catatan Perbaikan Umum <span
-                                        class="text-danger">*</span></label>
-                                <textarea name="catatan_revisi" class="form-control" rows="3" required
-                                    placeholder="Jelaskan secara umum aspek yang perlu diperbaiki oleh Unit Kerja..."></textarea>
-                            </div>
-
-                            <hr>
-
-                            <h6 class="font-weight-bold mb-3">Tandai Item yang Memerlukan Perbaikan:</h6>
-
-                            <div id="revisiItemsContainer">
-                                @foreach ($questions as $index => $q)
-                                    <div class="form-check mb-3 p-3 border rounded">
-                                        <div class="d-flex align-items-start">
-                                            <input class="form-check-input mt-1" type="checkbox"
-                                                name="revisi_check[{{ $index }}]"
-                                                id="revisi{{ $index }}" value="1">
-                                            <label class="form-check-label ml-2 flex-grow-1"
-                                                for="revisi{{ $index }}">
-                                                <strong>Pertanyaan {{ $index + 1 }}:</strong> {{ $q['question'] }}
-                                            </label>
-                                        </div>
-                                        <div class="mt-2 ml-4" id="catatanRevisi{{ $index }}"
-                                            style="display:none;">
-                                            <input type="hidden"
-                                                name="items_revisi[{{ $index }}][pertanyaan_no]"
-                                                value="{{ $index }}">
-                                            <label class="font-weight-bold text-danger">Catatan Perbaikan <span
-                                                    class="text-danger">*</span></label>
-                                            <textarea name="items_revisi[{{ $index }}][catatan]" class="form-control catatan-revisi-input"
-                                                rows="2" placeholder="Jelaskan apa yang perlu diperbaiki untuk pertanyaan ini..."></textarea>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                <i class="fas fa-times"></i> Batal
-                            </button>
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-paper-plane"></i> Kirim Permintaan Perbaikan
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
 @endsection
 
 @push('scripts')
@@ -1424,106 +918,6 @@
                 $('#alertNotCompleted').show();
             }
         });
-
-        // ✅ Script untuk Auditor - Tambah/Hapus Pertanyaan dengan auto-update nomor
-        function updateQuestionNumbers() {
-            $('.question-item').each(function(index) {
-                $(this).find('label.font-weight-bold').first().text('Pertanyaan ' + (index + 1));
-                // Update name attribute untuk textarea
-                $(this).find('textarea').attr('name', 'questions[' + index + '][question]');
-            });
-        }
-
-        $('#addQuestion').on('click', function() {
-            const currentCount = $('.question-item').length;
-            const newQuestion = `
-            <div class="question-item mb-3 p-3 border rounded">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="font-weight-bold">Pertanyaan ${currentCount + 1}</label>
-                    <button type="button" class="btn btn-sm btn-danger remove-question">
-                        <i class="fas fa-trash"></i> Hapus
-                    </button>
-                </div>
-                <textarea name="questions[${currentCount}][question]" class="form-control" rows="3" required placeholder="Tulis pertanyaan pemeriksaan..."></textarea>
-            </div>
-        `;
-            $('#questionsContainer').append(newQuestion);
-        });
-
-        $(document).on('click', '.remove-question', function() {
-            if ($('.question-item').length > 1) {
-                $(this).closest('.question-item').remove();
-                // ✅ Update penomoran setelah hapus
-                updateQuestionNumbers();
-            } else {
-                alert('Minimal harus ada 1 pertanyaan!');
-            }
-        });
-
-        // Script untuk Unit Kerja - Tambah/Hapus Link
-        $(document).on('click', '.add-link', function() {
-            const index = $(this).data('index');
-            const newLink = `
-            <div class="input-group mb-2">
-                <input type="url" name="answers[${index}][links][]" class="form-control" placeholder="https://example.com/dokumen">
-                <div class="input-group-append">
-                    <button type="button" class="btn btn-danger remove-link">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-            $(`.links-container-${index}`).append(newLink);
-        });
-
-        $(document).on('click', '.remove-link', function() {
-            $(this).closest('.input-group').remove();
-        });
-
-        // ✅ Script untuk Modal Perbaikan - Toggle checkbox
-        $(document).on('change', 'input[name^="revisi_check"]', function() {
-            const index = $(this).attr('id').replace('revisi', '');
-            const catatanDiv = $('#catatanRevisi' + index);
-            const catatanInput = catatanDiv.find('.catatan-revisi-input');
-
-            if ($(this).is(':checked')) {
-                catatanDiv.slideDown();
-                catatanInput.prop('required', true);
-            } else {
-                catatanDiv.slideUp();
-                catatanInput.prop('required', false);
-                catatanInput.val('');
-            }
-        });
-
-        // ✅ Validasi form perbaikan sebelum submit
-        $('form[action*="send-revision"]').on('submit', function(e) {
-            const checkedItems = $('input[name^="revisi_check"]:checked').length;
-
-            if (checkedItems === 0) {
-                e.preventDefault();
-                alert('Silakan tandai minimal 1 pertanyaan yang perlu diperbaiki!');
-                return false;
-            }
-
-            // Validasi setiap checkbox yang dicentang harus punya catatan
-            let isValid = true;
-            $('input[name^="revisi_check"]:checked').each(function() {
-                const index = $(this).attr('id').replace('revisi', '');
-                const catatan = $(`textarea[name="items_revisi[${index}][catatan]"]`).val().trim();
-
-                if (catatan === '') {
-                    isValid = false;
-                    $(`textarea[name="items_revisi[${index}][catatan]"]`).addClass('is-invalid');
-                }
-            });
-
-            if (!isValid) {
-                e.preventDefault();
-                alert('Silakan isi catatan perbaikan untuk setiap item yang ditandai!');
-                return false;
-            }
-        });
     </script>
 @endpush
 
@@ -1537,13 +931,132 @@
             background-color: #d1cdff;
         }
 
-        .timeline {
-            list-style: none;
-            padding-left: 0;
+        /* ========================================
+                               TIMELINE STYLES - RIWAYAT AKTIVITAS
+                            ======================================== */
+        .timeline-wrapper {
+            position: relative;
+            padding: 20px 0;
         }
 
+        .timeline-item {
+            position: relative;
+            padding-left: 50px;
+            padding-bottom: 30px;
+            border-left: 2px solid #e3e6f0;
+        }
+
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+            padding-bottom: 0;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #4e73df;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 3px #e3e6f0;
+        }
+
+        .timeline-item-latest .timeline-marker {
+            width: 20px;
+            height: 20px;
+            left: -10px;
+            background-color: #1cc88a;
+            box-shadow: 0 0 0 4px #d1f4e4;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(28, 200, 138, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(28, 200, 138, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(28, 200, 138, 0);
+            }
+        }
+
+        .timeline-marker i {
+            display: none;
+        }
+
+        .timeline-content {
+            background: #fff;
+            border-radius: 8px;
+            padding: 0;
+        }
+
+        .timeline-header {
+            padding: 15px 20px 10px 20px;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .timeline-header h6 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .timeline-body {
+            padding: 0 20px 15px 20px;
+        }
+
+        .timeline-body .alert {
+            border-radius: 6px;
+            background-color: #f8f9fc;
+            border: 1px solid #e3e6f0;
+        }
+
+        /* Border kiri untuk kategori */
+        .border-left-info {
+            border-left: 4px solid #36b9cc !important;
+        }
+
+        .border-left-success {
+            border-left: 4px solid #1cc88a !important;
+        }
+
+        .border-left-warning {
+            border-left: 4px solid #f6c23e !important;
+        }
+
+        .border-left-secondary {
+            border-left: 4px solid #858796 !important;
+        }
+
+        /* Badge styling */
         .badge {
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .timeline-item {
+                padding-left: 35px;
+            }
+
+            .timeline-header {
+                padding: 12px 15px 8px 15px;
+            }
+
+            .timeline-body {
+                padding: 0 15px 12px 15px;
+            }
+
+            .timeline-header h6 {
+                font-size: 14px;
+            }
         }
     </style>
 @endpush

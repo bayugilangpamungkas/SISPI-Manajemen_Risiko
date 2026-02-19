@@ -155,8 +155,8 @@ class AuditorController extends Controller
     /**
      * Detail risiko untuk Auditor - Input Pertanyaan & Review Jawaban
      * WORKFLOW: 
-     * - Jika status = menunggu_wawancara: Auditor input pertanyaan
-     * - Jika status = menunggu_review: Auditor review jawaban auditee
+     * - Jika status = menunggu_audit: Auditor input hasil audit (pengendalian, mitigasi, komentar, status)
+     * - Jika status = final: Read-only
      */
     public function auditorShowDetail($id)
     {
@@ -181,26 +181,31 @@ class AuditorController extends Controller
         $questions = $peta->questions; // Menggunakan accessor dari Model
         $responses = $peta->responses; // Menggunakan accessor dari Model
 
-        // ✅ Tentukan mode view berdasarkan status
+        // ✅ PERBAIKAN: Tentukan mode view berdasarkan NEW WORKFLOW
         $viewMode = 'read_only'; // Default
 
-        if ($peta->auditorCanInputQuestions()) {
-            $viewMode = 'input_questions'; // Auditor bisa input/edit pertanyaan
-        } elseif ($peta->auditorCanReview()) {
-            $viewMode = 'review_answers'; // Auditor bisa review jawaban
+        // ✅ NEW: Cek apakah Auditor bisa input hasil audit (sesuai revisi dosen)
+        if ($peta->auditorCanInputAudit()) {
+            // Mode input hasil audit: pengendalian, mitigasi, komentar, status konfirmasi
+            $viewMode = 'input_questions'; // Nama tetap sama, tapi konten berbeda (lihat view)
         } elseif ($peta->isAuditFinal()) {
             $viewMode = 'final'; // Semua read-only
         }
+
+        // Hitung Skor Risiko
+        $skorTotal = ($peta->skor_kemungkinan ?? 0) * ($peta->skor_dampak ?? 0);
 
         // ✅ GUNAKAN VIEW YANG SUDAH ADA: manajemen_risiko.show
         return view('manajemen_risiko.show', compact(
             'active',
             'peta',
+            'user',
             'hasilAudit',
             'questions',
             'responses',
             'statusAudit',
-            'viewMode'
+            'viewMode',
+            'skorTotal'
         ));
     }
 
@@ -273,6 +278,9 @@ class AuditorController extends Controller
                     'pengendalian' => $request->pengendalian,
                     'mitigasi' => $request->mitigasi,
                     'komentar_1' => $request->komentar_auditor,
+                    'komentar_2' => '-', // ✅ PERBAIKAN: Set default value untuk komentar_2
+                    'komentar_3' => '-',
+                    'komentar_4' => '-', // ✅ PERBAIKAN: Set default value untuk komentar_3
                     'unit_kerja' => $peta->jenis,
                     'kode_risiko' => $peta->kode_regist,
                     'kegiatan' => $peta->kegiatan->judul ?? $peta->judul,

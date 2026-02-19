@@ -694,12 +694,93 @@ class AuditeeController extends Controller
         // Cari risiko berdasarkan ID
         $peta = Peta::where('jenis', $unitKerjaUser)->findOrFail($id);
 
-        // ✅ CEK: Tentukan mode action (jawab pertanyaan atau konfirmasi)
-        $action = $request->input('action'); // 'answer_questions' atau 'confirm_review'
+        // ✅ CEK: Tentukan mode action
+        $action = $request->input('action');
 
-        if ($action === 'answer_questions') {
-            // ✅ MODE 1: AUDITEE JAWAB PERTANYAAN
+        // ========================================
+        // ✅ NEW WORKFLOW (SESUAI REQUIREMENT DOSEN)
+        // ========================================
 
+        if ($action === 'final_approval') {
+            // ✅ MODE BARU 1: AUDITEE APPROVE HASIL AUDIT (KETIKA AUDITOR STATUS = COMPLETED)
+
+            // Validasi: Auditor harus sudah set status = Completed
+            if ($peta->status_konfirmasi_auditor !== 'Completed') {
+                return redirect()->back()->with('error', 'Auditor belum menyelesaikan audit! Anda tidak dapat melakukan approval.');
+            }
+
+            $request->validate([
+                'catatan_auditee' => 'nullable|string',
+            ]);
+
+            // Update status konfirmasi auditee = Completed
+            $peta->update([
+                'status_konfirmasi_auditee' => 'Completed',
+            ]);
+
+            // Log activity
+            CommentPr::create([
+                'peta_id' => $peta->id,
+                'user_id' => $user->id,
+                'jenis' => 'analisis',
+                'comment' => 'Auditee telah menyetujui (approve) hasil audit. ' .
+                    ($request->catatan_auditee ? 'Catatan: ' . $request->catatan_auditee : 'Tidak ada catatan tambahan.'),
+            ]);
+
+            return redirect()
+                ->route('manajemen-risiko.auditee.show-detail', $peta->id)
+                ->with('success', '✅ Approval berhasil! Hasil audit telah Anda setujui. Menunggu finalisasi dari Auditor.');
+        } elseif ($action === 'submit_follow_up') {
+            // ✅ MODE BARU 2: AUDITEE SUBMIT TINDAK LANJUT (KETIKA AUDITOR STATUS = NOT COMPLETED)
+
+            // Validasi: Auditor harus sudah set status = Not Completed
+            if ($peta->status_konfirmasi_auditor !== 'Not Completed') {
+                return redirect()->back()->with('error', 'Auditor tidak meminta tindak lanjut! Action tidak valid.');
+            }
+
+            $request->validate([
+                'catatan_tindak_lanjut' => 'required|string',
+                'status_konfirmasi_auditee' => 'required|in:Completed,Not Completed',
+            ]);
+
+            // Simpan catatan tindak lanjut ke field yang sesuai
+            // Bisa menggunakan field baru atau field existing seperti auditee_response
+            $tindakLanjutData = [
+                'catatan_tindak_lanjut' => $request->catatan_tindak_lanjut,
+                'status_auditee' => $request->status_konfirmasi_auditee,
+                'submitted_at' => now()->toDateTimeString(),
+                'submitted_by' => $user->name,
+            ];
+
+            // Update peta dengan data tindak lanjut
+            $peta->update([
+                'status_konfirmasi_auditee' => $request->status_konfirmasi_auditee,
+                'catatan_revisi' => json_encode($tindakLanjutData), // Simpan di catatan_revisi sebagai JSON
+            ]);
+
+            // Log activity
+            CommentPr::create([
+                'peta_id' => $peta->id,
+                'user_id' => $user->id,
+                'jenis' => 'analisis',
+                'comment' => 'Auditee telah mengirim tindak lanjut. Status: ' . $request->status_konfirmasi_auditee .
+                    '. Catatan: ' . substr($request->catatan_tindak_lanjut, 0, 100) .
+                    (strlen($request->catatan_tindak_lanjut) > 100 ? '...' : ''),
+            ]);
+
+            $successMessage = $request->status_konfirmasi_auditee === 'Completed'
+                ? '✅ Tindak lanjut berhasil dikirim! Status Anda: Completed. Menunggu review dari Auditor.'
+                : '⏳ Tindak lanjut berhasil dikirim! Status Anda: Not Completed (masih dalam proses).';
+
+            return redirect()
+                ->route('manajemen-risiko.auditee.show-detail', $peta->id)
+                ->with('success', $successMessage);
+
+            // ========================================
+            // OLD WORKFLOW (TETAP DIPERTAHANKAN)
+            // ========================================
+
+        } elseif ($action === 'answer_questions') {
             // Validasi: Hanya bisa jawab jika status memungkinkan
             if (!$peta->auditeeCanAnswer()) {
                 return redirect()->back()->with('error', 'Anda tidak dapat menjawab pertanyaan pada status ini!');
@@ -742,8 +823,6 @@ class AuditeeController extends Controller
                 ->route('manajemen-risiko.auditee.show-detail', $peta->id)
                 ->with('success', 'Jawaban berhasil disimpan! Menunggu review dari Auditor.');
         } elseif ($action === 'confirm_review') {
-            // ✅ MODE 2: AUDITEE KONFIRMASI HASIL REVIEW
-
             // Validasi: Hanya bisa konfirmasi jika auditor sudah review
             if (!$peta->auditeeCanConfirm()) {
                 return redirect()->back()->with('error', 'Belum ada hasil review dari Auditor untuk dikonfirmasi!');
@@ -770,8 +849,6 @@ class AuditeeController extends Controller
                 ->route('manajemen-risiko.auditee.show-detail', $peta->id)
                 ->with('success', 'Konfirmasi berhasil! Menunggu finalisasi dari Admin/Auditor.');
         } elseif ($action === 'submit_revision') {
-            // ✅ MODE 3: AUDITEE SUBMIT REVISI
-
             // Validasi: Hanya bisa submit revisi jika status = need_revision
             if (!$peta->auditeeNeedRevision()) {
                 return redirect()->back()->with('error', 'Tidak ada permintaan revisi yang aktif!');

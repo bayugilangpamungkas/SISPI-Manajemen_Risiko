@@ -220,7 +220,84 @@ class AuditorController extends Controller
         // ✅ CEK: Tentukan mode action (input pertanyaan atau review jawaban)
         $action = $request->input('action'); // 'input_questions', 'review_answers', atau 'confirm_revision'
 
-        if ($action === 'input_questions') {
+        if ($action === 'input_audit_result') {
+            // ✅ MODE BARU: AUDITOR INPUT HASIL AUDIT LANGSUNG (SESUAI REQUIREMENT DOSEN)
+
+            // Validasi input
+            $request->validate([
+                'pengendalian' => 'required|string|max:5000',
+                'mitigasi' => 'required|in:Accept Risk,Share Risk,Transfer Risk',
+                'komentar_auditor' => 'required|string|max:5000',
+                'status_konfirmasi_auditor' => 'required|in:Completed,Not Completed',
+            ]);
+
+            // Calculate score and level
+            $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
+
+            if ($skorTotal >= 20) {
+                $levelText = 'EXTREME';
+            } elseif ($skorTotal >= 15) {
+                $levelText = 'HIGH';
+            } elseif ($skorTotal >= 10) {
+                $levelText = 'MODERATE';
+            } else {
+                $levelText = 'LOW';
+            }
+
+            // Calculate residual risk
+            if ($skorTotal >= 20) {
+                $residualText = 'Extreme';
+            } elseif ($skorTotal >= 15) {
+                $residualText = 'High';
+            } elseif ($skorTotal >= 10) {
+                $residualText = 'Moderate';
+            } else {
+                $residualText = 'Low';
+            }
+
+            // ✅ UPDATE DATA PETA dengan hasil audit
+            $peta->update([
+                'pengendalian' => $request->pengendalian,
+                'mitigasi' => $request->mitigasi,
+                'status_konfirmasi_auditor' => $request->status_konfirmasi_auditor,
+            ]);
+
+            // ✅ SIMPAN/UPDATE KE TABEL HASIL_AUDIT
+            $hasilAudit = HasilAudit::updateOrCreate(
+                [
+                    'peta_id' => $peta->id,
+                    'auditor_id' => $user->id,
+                    'tahun_anggaran' => date('Y'),
+                ],
+                [
+                    'pengendalian' => $request->pengendalian,
+                    'mitigasi' => $request->mitigasi,
+                    'komentar_1' => $request->komentar_auditor,
+                    'unit_kerja' => $peta->jenis,
+                    'kode_risiko' => $peta->kode_regist,
+                    'kegiatan' => $peta->kegiatan->judul ?? $peta->judul,
+                    'level_risiko' => $levelText,
+                    'risiko_residual' => $residualText,
+                    'skor_total' => $skorTotal,
+                    'nama_pemonev' => $user->name,
+                    'nip_pemonev' => $user->nip ?? '-',
+                ]
+            );
+
+            // ✅ LOG ACTIVITY
+            $statusLabel = $request->status_konfirmasi_auditor == 'Completed' ? 'Audit Selesai' : 'Audit Belum Selesai (Perlu Tindak Lanjut Auditee)';
+
+            CommentPr::create([
+                'peta_id' => $peta->id,
+                'user_id' => $user->id,
+                'jenis' => 'analisis',
+                'comment' => "Auditor telah menginput hasil audit. Status: {$statusLabel}. Mitigasi: {$request->mitigasi}.",
+            ]);
+
+            return redirect()
+                ->route('manajemen-risiko.auditor.show-detail', $peta->id)
+                ->with('success', 'Hasil audit berhasil disimpan! Status Konfirmasi: ' . $statusLabel);
+        } elseif ($action === 'input_questions') {
             // ✅ MODE 1: AUDITOR INPUT PERTANYAAN
 
             // Validasi: Hanya bisa input jika status memungkinkan

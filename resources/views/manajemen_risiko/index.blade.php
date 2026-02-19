@@ -495,23 +495,55 @@
                                                             @elseif ($isAuditee)
                                                                 {{-- Auditee actions --}}
                                                                 @if (!$peta->auditor_id)
+                                                                    {{-- Belum ada auditor yang ditugaskan --}}
                                                                     <span class="badge badge-secondary"
                                                                         title="Belum ada auditor">
                                                                         <i class="fas fa-user-slash"></i> Belum Ditugaskan
                                                                     </span>
                                                                 @elseif ($peta->koreksiPr == 'rejected')
+                                                                    {{-- Auditor minta perbaikan (OLD WORKFLOW) --}}
                                                                     <button class="btn btn-sm btn-warning mb-1"
                                                                         onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'"
                                                                         title="Lakukan perbaikan">
                                                                         <i class="fas fa-edit"></i>
                                                                         Lakukan Perbaikan
                                                                     </button>
-                                                                @elseif (!$peta->status_telaah && !$peta->koreksiPr)
+                                                                @elseif ($peta->status_konfirmasi_auditor == 'Completed' && $peta->status_konfirmasi_auditee != 'Completed')
+                                                                    {{-- ✅ NEW WORKFLOW: Auditor sudah selesai, auditee perlu approve --}}
+                                                                    <button class="btn btn-sm btn-success mb-1"
+                                                                        onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'"
+                                                                        title="Konfirmasi hasil audit">
+                                                                        <i class="fas fa-check-double"></i> Konfirmasi
+                                                                        Hasil
+                                                                    </button>
+                                                                @elseif ($peta->status_konfirmasi_auditor == 'Not Completed' && $peta->status_konfirmasi_auditee != 'Completed')
+                                                                    {{-- ✅ NEW WORKFLOW: Auditor belum selesai, auditee perlu tindak lanjut --}}
+                                                                    <button class="btn btn-sm btn-warning mb-1"
+                                                                        onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'"
+                                                                        title="Submit tindak lanjut">
+                                                                        <i class="fas fa-tasks"></i> Tindak Lanjut
+                                                                    </button>
+                                                                @elseif ($peta->status_konfirmasi_auditee == 'Completed')
+                                                                    {{-- ✅ NEW WORKFLOW: Auditee sudah selesai konfirmasi --}}
+                                                                    <span class="badge badge-success"
+                                                                        title="Anda sudah konfirmasi">
+                                                                        <i class="fas fa-check-circle"></i> Selesai
+                                                                        Dikonfirmasi
+                                                                    </span>
+                                                                @elseif ($peta->pengendalian && $peta->mitigasi)
+                                                                    {{-- ✅ NEW WORKFLOW: Auditor sudah input hasil audit, auditee bisa proses --}}
                                                                     <button class="btn btn-sm btn-primary mb-1"
                                                                         onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'"
-                                                                        title="Proses penugasan">
-                                                                        <i class="fas fa-tasks"></i> Proses Penugasan
+                                                                        title="Proses hasil audit">
+                                                                        <i class="fas fa-tasks"></i> Lihat Proses Audit
                                                                     </button>
+                                                                @else
+                                                                    {{-- Menunggu input dari Auditor --}}
+                                                                    <span class="badge badge-info"
+                                                                        title="Menunggu auditor input hasil audit">
+                                                                        <i class="fas fa-hourglass-half"></i> Menunggu
+                                                                        Auditor
+                                                                    </span>
                                                                 @endif
                                                             @endif
                                                         @endif

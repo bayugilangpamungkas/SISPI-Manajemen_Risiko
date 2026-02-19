@@ -521,6 +521,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/manajemen-risiko', [App\Http\Controllers\ManajemenRisikoController::class, 'index'])->name('manajemen-risiko.index')->middleware('auth');
     // ✅ Detail Risiko (Admin View) - Route yang hilang
     Route::get('/manajemen-risiko/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'show'])->name('manajemen-risiko.show')->middleware('auth');
+    // ✅ Route Cetak PDF & Excel (ADMIN ONLY)
+    Route::get('/manajemen-risiko/{id}/cetak-pdf', [App\Http\Controllers\ManajemenRisikoController::class, 'cetakPDF'])->name('manajemen-risiko.cetak-pdf')->middleware('auth');
+    Route::get('/manajemen-risiko/{id}/cetak-excel', [App\Http\Controllers\ManajemenRisikoController::class, 'cetakExcel'])->name('manajemen-risiko.cetak-excel')->middleware('auth');
     Route::get('/manajemen-risiko/generate/report', [App\Http\Controllers\ManajemenRisikoController::class, 'generateReport'])->name('manajemen-risiko.generate-report')->middleware('auth');
     Route::get('/manajemen-risiko/export/excel', [App\Http\Controllers\ManajemenRisikoController::class, 'export'])->name('manajemen-risiko.export')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/comment', [App\Http\Controllers\ManajemenRisikoController::class, 'comment'])->name('manajemen-risiko.comment')->middleware('auth');

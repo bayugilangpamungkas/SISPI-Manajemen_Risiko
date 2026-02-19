@@ -723,6 +723,84 @@
                 @endif
 
                 {{-- ========================================
+                     TOMBOL CETAK (HANYA UNTUK ADMIN - AUDIT FINAL)
+                     ✅ MUNCUL JIKA STATUS AUDIT = FINAL
+                ======================================== --}}
+                @if ($isAdmin && $statusAudit === 'final')
+                    <div class="card border-success mt-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-print"></i> Cetak Dokumen Hasil Audit
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Audit Telah Final!</strong>
+                                <p class="mb-0 mt-2">
+                                    Pemeriksaan audit untuk risiko ini telah selesai dan difinalisasi.
+                                    Klik tombol di bawah untuk mencetak dokumen hasil audit.
+                                </p>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-danger h-100">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-file-pdf text-danger mb-3" style="font-size: 3rem;"></i>
+                                            <h5 class="card-title">Cetak Format PDF</h5>
+                                            <p class="card-text text-muted">
+                                                Format resmi untuk arsip dan dokumentasi audit
+                                            </p>
+                                            <button onclick="cetakPDF({{ $peta->id }})"
+                                                class="btn btn-danger btn-lg btn-block">
+                                                <i class="fas fa-print mr-2"></i> Cetak PDF
+                                            </button>
+                                            <small class="text-muted mt-2 d-block">
+                                                <i class="fas fa-info-circle"></i> Template: Lembar Monitoring Manajemen
+                                                Risiko
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-file-excel text-success mb-3" style="font-size: 3rem;"></i>
+                                            <h5 class="card-title">Cetak Format Excel</h5>
+                                            <p class="card-text text-muted">
+                                                Format untuk analisis dan pengolahan data lebih lanjut
+                                            </p>
+                                            <button onclick="cetakExcel({{ $peta->id }})"
+                                                class="btn btn-success btn-lg btn-block">
+                                                <i class="fas fa-print mr-2"></i> Cetak Excel
+                                            </button>
+                                            <small class="text-muted mt-2 d-block">
+                                                <i class="fas fa-info-circle"></i> Template: Buku template.xlsx
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Informasi Dokumen:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Unit Kerja: <strong>{{ $peta->jenis }}</strong></li>
+                                    <li>Kode Risiko: <strong>{{ $peta->kode_regist }}</strong></li>
+                                    <li>Auditor: <strong>{{ $peta->auditor->name ?? '-' }}</strong></li>
+                                    <li>Tanggal Finalisasi:
+                                        <strong>{{ $peta->waktu_telaah_spi ? date('d F Y', strtotime($peta->waktu_telaah_spi)) : '-' }}</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ========================================
                      TOMBOL FINALISASI (HANYA AUDITOR)
                 ======================================== --}}
                 @if ($isAuditor && $peta->canBeFinalized())
@@ -918,6 +996,18 @@
                 $('#alertNotCompleted').show();
             }
         });
+
+        // ✅ Script untuk cetak PDF
+        function cetakPDF(id) {
+            const url = `{{ route('manajemen-risiko.cetak-pdf', ':id') }}`.replace(':id', id);
+            window.open(url, '_blank');
+        }
+
+        // ✅ Script untuk cetak Excel
+        function cetakExcel(id) {
+            const url = `{{ route('manajemen-risiko.cetak-excel', ':id') }}`.replace(':id', id);
+            window.open(url, '_blank');
+        }
     </script>
 @endpush
 
@@ -932,8 +1022,8 @@
         }
 
         /* ========================================
-                               TIMELINE STYLES - RIWAYAT AKTIVITAS
-                            ======================================== */
+                                           TIMELINE STYLES - RIWAYAT AKTIVITAS
+                                        ======================================== */
         .timeline-wrapper {
             position: relative;
             padding: 20px 0;

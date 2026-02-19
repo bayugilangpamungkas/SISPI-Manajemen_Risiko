@@ -1400,4 +1400,154 @@ class ManajemenRisikoController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan saat upload file: ' . $e->getMessage());
         }
     }
+
+    /**
+     * ✅ CETAK PDF - Menggunakan template dari public/templates/Lembar Monitoring Manajemen Risiko.pdf
+     * Route: GET /manajemen-risiko/{id}/cetak-pdf
+     * HANYA untuk ADMIN yang mengakses halaman detail audit FINAL
+     */
+    public function cetakPDF($id)
+    {
+        try {
+            $user = Auth::user();
+            $peta = Peta::with(['comment_prs.user', 'kegiatan', 'auditor'])->findOrFail($id);
+
+            // ✅ Validasi: Hanya Admin yang bisa cetak
+            if (!$user->Level || !in_array($user->Level->name, ['Super Admin', 'Admin'])) {
+                return redirect()->back()->with('error', 'Hanya Admin yang memiliki akses untuk cetak dokumen!');
+            }
+
+            // ✅ Validasi: Hanya bisa cetak jika audit sudah FINAL
+            if ($peta->status_telaah != 1) {
+                return redirect()->back()->with('error', 'Dokumen hanya dapat dicetak setelah audit difinalisasi!');
+            }
+
+            // Get hasil audit
+            $hasilAudit = HasilAudit::where('peta_id', $peta->id)
+                ->where('tahun_anggaran', date('Y'))
+                ->first();
+
+            // Hitung skor
+            $skorTotal = ($peta->skor_kemungkinan ?? 0) * ($peta->skor_dampak ?? 0);
+
+            // Tentukan level risiko
+            if ($skorTotal >= 20) {
+                $levelText = 'EXTREME';
+                $levelBadge = 'bg-danger text-white';
+            } elseif ($skorTotal >= 15) {
+                $levelText = 'HIGH';
+                $levelBadge = 'bg-warning text-dark';
+            } elseif ($skorTotal >= 10) {
+                $levelText = 'MODERATE';
+                $levelBadge = 'bg-info text-white';
+            } else {
+                $levelText = 'LOW';
+                $levelBadge = 'bg-success text-white';
+            }
+
+            // Generate PDF menggunakan view (tanpa template PDF)
+            $pdf = Pdf::loadView('manajemen_risiko.cetak_pdf', compact(
+                'peta',
+                'hasilAudit',
+                'user',
+                'skorTotal',
+                'levelText',
+                'levelBadge'
+            ));
+
+            // Set paper size
+            $pdf->setPaper('A4', 'portrait');
+
+            $filename = 'Lembar_Monitoring_' . $peta->kode_regist . '_' . date('Y-m-d') . '.pdf';
+
+            // Return PDF untuk dibuka di tab baru (bukan download)
+            return $pdf->stream($filename);
+        } catch (\Exception $e) {
+            Log::error('Error cetak PDF: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencetak PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ✅ CETAK EXCEL - Menggunakan template dari public/templates/Buku template.xlsx
+     * Route: GET /manajemen-risiko/{id}/cetak-excel
+     * HANYA untuk ADMIN yang mengakses halaman detail audit FINAL
+     */
+    public function cetakExcel($id)
+    {
+        try {
+            $user = Auth::user();
+            $peta = Peta::with(['comment_prs.user', 'kegiatan', 'auditor'])->findOrFail($id);
+
+            // ✅ Validasi: Hanya Admin yang bisa cetak
+            if (!$user->Level || !in_array($user->Level->name, ['Super Admin', 'Admin'])) {
+                return redirect()->back()->with('error', 'Hanya Admin yang memiliki akses untuk cetak dokumen!');
+            }
+
+            // ✅ Validasi: Hanya bisa cetak jika audit sudah FINAL
+            if ($peta->status_telaah != 1) {
+                return redirect()->back()->with('error', 'Dokumen hanya dapat dicetak setelah audit difinalisasi!');
+            }
+
+            // Get hasil audit
+            $hasilAudit = HasilAudit::where('peta_id', $peta->id)
+                ->where('tahun_anggaran', date('Y'))
+                ->first();
+
+            // ✅ Load template Excel dari public/templates/
+            $templatePath = public_path('templates/Buku template.xlsx');
+
+            if (!file_exists($templatePath)) {
+                Log::error('Template Excel tidak ditemukan: ' . $templatePath);
+                return redirect()->back()->with('error', 'Template Excel tidak ditemukan di folder public/templates/');
+            }
+
+            // Load template menggunakan PhpSpreadsheet
+            $spreadsheet = IOFactory::load($templatePath);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // ✅ ISI DATA KE TEMPLATE EXCEL
+            // Sesuaikan cell reference dengan template yang ada
+            $sheet->setCellValue('B5', $peta->jenis); // Unit Kerja
+            $sheet->setCellValue('B6', $peta->kegiatan->judul ?? $peta->judul); // Kegiatan
+            $sheet->setCellValue('B7', $peta->kode_regist); // Kode Risiko
+            $sheet->setCellValue('B8', $peta->judul); // Judul Risiko
+            $sheet->setCellValue('B9', $peta->pernyataan ?? '-'); // Pernyataan Risiko
+            $sheet->setCellValue('B10', $peta->skor_kemungkinan); // Skor Kemungkinan
+            $sheet->setCellValue('B11', $peta->skor_dampak); // Skor Dampak
+            $sheet->setCellValue('B12', ($peta->skor_kemungkinan * $peta->skor_dampak)); // Skor Total
+
+            // Data dari hasil audit
+            if ($hasilAudit) {
+                $sheet->setCellValue('B14', $hasilAudit->pengendalian ?? '-'); // Pengendalian
+                $sheet->setCellValue('B15', $hasilAudit->mitigasi ?? '-'); // Mitigasi
+                $sheet->setCellValue('B16', $hasilAudit->komentar_1 ?? '-'); // Komentar Auditor
+                $sheet->setCellValue('B17', $peta->status_konfirmasi_auditor ?? '-'); // Status Auditor
+                $sheet->setCellValue('B18', $peta->status_konfirmasi_auditee ?? '-'); // Status Auditee
+            }
+
+            // Info audit
+            $sheet->setCellValue('B20', $peta->auditor->name ?? '-'); // Nama Auditor
+            $sheet->setCellValue('B21', $peta->waktu_telaah_spi ? date('d F Y', strtotime($peta->waktu_telaah_spi)) : '-'); // Tanggal Finalisasi
+            $sheet->setCellValue('B22', date('Y')); // Tahun Anggaran
+
+            // Generate filename
+            $filename = 'Buku_Template_' . $peta->kode_regist . '_' . date('Y-m-d') . '.xlsx';
+
+            // Save to temporary file
+            $writer = new Xlsx($spreadsheet);
+            $temp_file = tempnam(sys_get_temp_dir(), $filename);
+            $writer->save($temp_file);
+
+            // Return file untuk dibuka di tab baru
+            return response()->download($temp_file, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error('Error cetak Excel: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencetak Excel: ' . $e->getMessage());
+        }
+    }
 }

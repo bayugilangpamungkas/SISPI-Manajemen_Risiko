@@ -210,7 +210,7 @@
 
                                 <div class="row">
                                     <div class="col-md-6 mb-4">
-                                        <label class="font-weight-bold">Pengendalian Risiko (Risk Control) <span
+                                        <label class="font-weight-bold">Pengendalian<span
                                                 class="text-danger">*</span></label>
                                         <textarea name="pengendalian" class="form-control" rows="4" required
                                             placeholder="Deskripsi pengendalian risiko yang sudah dilakukan oleh Unit Kerja...">{{ old('pengendalian', $peta->pengendalian) }}</textarea>
@@ -221,21 +221,20 @@
                                     </div>
 
                                     <div class="col-md-6 mb-4">
-                                        <label class="font-weight-bold">Mitigasi Risiko (Risk Mitigation) <span
-                                                class="text-danger">*</span></label>
+                                        <label class="font-weight-bold">Mitigasi <span class="text-danger">*</span></label>
                                         <select name="mitigasi" class="form-control" required>
                                             <option value="">-- Pilih Strategi Mitigasi --</option>
                                             <option value="Accept Risk"
                                                 {{ old('mitigasi', $peta->mitigasi) == 'Accept Risk' ? 'selected' : '' }}>
-                                                Accept Risk (Terima Risiko)
+                                                Terima Risiko
                                             </option>
                                             <option value="Share Risk"
                                                 {{ old('mitigasi', $peta->mitigasi) == 'Share Risk' ? 'selected' : '' }}>
-                                                Share Risk (Bagikan Risiko)
+                                                Bagikan Risiko
                                             </option>
                                             <option value="Transfer Risk"
                                                 {{ old('mitigasi', $peta->mitigasi) == 'Transfer Risk' ? 'selected' : '' }}>
-                                                Transfer Risk (Transfer Risiko)
+                                                Transfer Risiko
                                             </option>
                                         </select>
                                         <small class="form-text text-muted">
@@ -245,7 +244,7 @@
                                 </div>
 
                                 <div class="form-group mb-4">
-                                    <label class="font-weight-bold">Komentar Auditor (Auditor Comment) <span
+                                    <label class="font-weight-bold">Komentar Auditor<span
                                             class="text-danger">*</span></label>
                                     <textarea name="komentar_auditor" class="form-control" rows="5" required
                                         placeholder="Komentar, catatan, atau rekomendasi dari Auditor...">{{ old('komentar_auditor', $hasilAudit->komentar_1 ?? '') }}</textarea>
@@ -255,24 +254,25 @@
                                 </div>
 
                                 <div class="form-group mb-4">
-                                    <label class="font-weight-bold">Status Konfirmasi Auditor (Auditor Confirmation Status)
+                                    <label class="font-weight-bold">Status Konfirmasi
                                         <span class="text-danger">*</span></label>
                                     <select name="status_konfirmasi_auditor" class="form-control" required
                                         id="selectStatusAuditor">
                                         <option value="">-- Pilih Status Konfirmasi --</option>
                                         <option value="Completed"
                                             {{ old('status_konfirmasi_auditor', $peta->status_konfirmasi_auditor) == 'Completed' ? 'selected' : '' }}>
-                                            ✅ Completed (Audit Selesai)
+                                            ✅ Selesai
                                         </option>
                                         <option value="Not Completed"
                                             {{ old('status_konfirmasi_auditor', $peta->status_konfirmasi_auditor) == 'Not Completed' ? 'selected' : '' }}>
-                                            ⚠️ Not Completed (Perlu Tindak Lanjut dari Auditee)
+                                            ⚠️ Tindak Lanjut
                                         </option>
                                     </select>
                                     <small class="form-text text-muted" id="helpTextStatus">
-                                        <i class="fas fa-info-circle"></i> Pilih <strong>Completed</strong> jika audit
+                                        <i class="fas fa-info-circle"></i> Pilih <strong>Selesai</strong> jika audit
                                         selesai dan tidak perlu revisi.
-                                        Pilih <strong>Not Completed</strong> jika Auditee perlu melakukan tindak lanjut.
+                                        Pilih <strong>Tindak Lanjut</strong> jika Auditee perlu melakukan tindak lanjut
+                                        untuk revisi.
                                     </small>
                                 </div>
 
@@ -491,9 +491,10 @@
                                                 <input type="hidden" name="action" value="final_approval">
 
                                                 <div class="text-center mt-4">
-                                                    <button type="submit" class="btn btn-success btn-lg px-5">
-                                                        <i class="fas fa-check-double"></i> Approve & Konfirmasi Hasil
-                                                        Audit
+                                                    <button type="submit" class="btn btn-success shadow-sm px-5"
+                                                        id="btnFinalApproval"
+                                                        style="border-radius: 50px; padding-top: 10px; padding-bottom: 10px; font-weight: 600; letter-spacing: 0.5px;">
+                                                        <i class="fas fa-check-double mr-2"></i> FINALISASI & SUBMIT
                                                     </button>
                                                 </div>
                                             </form>
@@ -642,6 +643,87 @@
                     </div>
                 @endif
 
+
+
+                {{-- ========================================
+                     TOMBOL CETAK (HANYA UNTUK ADMIN - AUDIT FINAL)
+                     ✅ MUNCUL JIKA STATUS AUDIT = FINAL
+                ======================================== --}}
+                @if ($isAdmin && $statusAudit === 'final')
+                    <div class="card border-success mt-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-print"></i> Cetak Dokumen Hasil Audit
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-white">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Audit Telah Final!</strong>
+                                <p class="mb-0 mt-2">
+                                    Pemeriksaan audit untuk risiko ini telah selesai dan difinalisasi.
+                                    Klik tombol di bawah untuk mencetak dokumen hasil audit.
+                                </p>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-danger h-100">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-file-pdf text-danger mb-3" style="font-size: 3rem;"></i>
+                                            <h5 class="card-title">Cetak Format PDF</h5>
+                                            <p class="card-text text-muted">
+                                                Format resmi untuk arsip dan dokumentasi audit
+                                            </p>
+                                            <button onclick="cetakPDF({{ $peta->id }})"
+                                                class="btn btn-danger btn-lg btn-block">
+                                                <i class="fas fa-print mr-2"></i> Cetak PDF
+                                            </button>
+                                            <small class="text-muted mt-2 d-block">
+                                                <i class="fas fa-info-circle"></i> Template: Lembar Monitoring Manajemen
+                                                Risiko
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-file-excel text-success mb-3" style="font-size: 3rem;"></i>
+                                            <h5 class="card-title">Cetak Format Excel</h5>
+                                            <p class="card-text text-muted">
+                                                Format untuk analisis dan pengolahan data lebih lanjut
+                                            </p>
+                                            <button onclick="cetakExcel({{ $peta->id }})"
+                                                class="btn btn-success btn-lg btn-block">
+                                                <i class="fas fa-print mr-2"></i> Cetak Excel
+                                            </button>
+                                            <small class="text-muted mt-2 d-block">
+                                                <i class="fas fa-info-circle"></i> Template: Buku template.xlsx
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Informasi Dokumen:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Unit Kerja: <strong>{{ $peta->jenis }}</strong></li>
+                                    <li>Kode Risiko: <strong>{{ $peta->kode_regist }}</strong></li>
+                                    <li>Auditor: <strong>{{ $peta->auditor->name ?? '-' }}</strong></li>
+                                    <li>Tanggal Finalisasi:
+                                        <strong>{{ $peta->waktu_telaah_spi ? date('d F Y', strtotime($peta->waktu_telaah_spi)) : '-' }}</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+
                 {{-- ========================================
                      RIWAYAT AKTIVITAS PEMERIKSAAN
                      ✅ TAMPILAN TIMELINE YANG RAPI DAN TERSTRUKTUR
@@ -718,84 +800,6 @@
                                     <p class="text-muted mt-3 mb-0">Belum ada aktivitas pemeriksaan.</p>
                                 </div>
                             @endif
-                        </div>
-                    </div>
-                @endif
-
-                {{-- ========================================
-                     TOMBOL CETAK (HANYA UNTUK ADMIN - AUDIT FINAL)
-                     ✅ MUNCUL JIKA STATUS AUDIT = FINAL
-                ======================================== --}}
-                @if ($isAdmin && $statusAudit === 'final')
-                    <div class="card border-success mt-4">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-print"></i> Cetak Dokumen Hasil Audit
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
-                                <strong>Audit Telah Final!</strong>
-                                <p class="mb-0 mt-2">
-                                    Pemeriksaan audit untuk risiko ini telah selesai dan difinalisasi.
-                                    Klik tombol di bawah untuk mencetak dokumen hasil audit.
-                                </p>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="card border-danger h-100">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-file-pdf text-danger mb-3" style="font-size: 3rem;"></i>
-                                            <h5 class="card-title">Cetak Format PDF</h5>
-                                            <p class="card-text text-muted">
-                                                Format resmi untuk arsip dan dokumentasi audit
-                                            </p>
-                                            <button onclick="cetakPDF({{ $peta->id }})"
-                                                class="btn btn-danger btn-lg btn-block">
-                                                <i class="fas fa-print mr-2"></i> Cetak PDF
-                                            </button>
-                                            <small class="text-muted mt-2 d-block">
-                                                <i class="fas fa-info-circle"></i> Template: Lembar Monitoring Manajemen
-                                                Risiko
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <div class="card border-success h-100">
-                                        <div class="card-body text-center">
-                                            <i class="fas fa-file-excel text-success mb-3" style="font-size: 3rem;"></i>
-                                            <h5 class="card-title">Cetak Format Excel</h5>
-                                            <p class="card-text text-muted">
-                                                Format untuk analisis dan pengolahan data lebih lanjut
-                                            </p>
-                                            <button onclick="cetakExcel({{ $peta->id }})"
-                                                class="btn btn-success btn-lg btn-block">
-                                                <i class="fas fa-print mr-2"></i> Cetak Excel
-                                            </button>
-                                            <small class="text-muted mt-2 d-block">
-                                                <i class="fas fa-info-circle"></i> Template: Buku template.xlsx
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="alert alert-info mt-3">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Informasi Dokumen:</strong>
-                                <ul class="mb-0 mt-2">
-                                    <li>Unit Kerja: <strong>{{ $peta->jenis }}</strong></li>
-                                    <li>Kode Risiko: <strong>{{ $peta->kode_regist }}</strong></li>
-                                    <li>Auditor: <strong>{{ $peta->auditor->name ?? '-' }}</strong></li>
-                                    <li>Tanggal Finalisasi:
-                                        <strong>{{ $peta->waktu_telaah_spi ? date('d F Y', strtotime($peta->waktu_telaah_spi)) : '-' }}</strong>
-                                    </li>
-                                </ul>
-                            </div>
                         </div>
                     </div>
                 @endif
@@ -1022,8 +1026,8 @@
         }
 
         /* ========================================
-                                           TIMELINE STYLES - RIWAYAT AKTIVITAS
-                                        ======================================== */
+                                                                       TIMELINE STYLES - RIWAYAT AKTIVITAS
+                                                                    ======================================== */
         .timeline-wrapper {
             position: relative;
             padding: 20px 0;

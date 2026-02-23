@@ -709,13 +709,13 @@
                                 @if ($peta->status_konfirmasi_auditor == 'Completed')
                                     {{-- ✅ AUDITOR = COMPLETED: HANYA APPROVAL --}}
                                     <div class="card border-success">
-                                        <div class="card-header bg-success text-white">
+                                        {{-- <div class="card-header bg-primary text-white">
                                             <h6 class="mb-0">
-                                                <i class="fas fa-check-circle"></i> Konfirmasi Akhir (Approval Only)
+                                                <i class="fas fa-check-circle"></i> Konfirmasi Akhir
                                             </h6>
-                                        </div>
+                                        </div> --}}
                                         <div class="card-body">
-                                            <div class="alert alert-success">
+                                            {{-- <div class="alert alert-success">
                                                 <i class="fas fa-check-circle"></i>
                                                 <strong>Status Audit: SELESAI</strong>
                                                 <p class="mb-0 mt-2">
@@ -725,7 +725,7 @@
                                                         akhir</strong>
                                                     (approve) untuk menyelesaikan proses dari sisi Unit Kerja.
                                                 </p>
-                                            </div>
+                                            </div> --}}
 
                                             <form
                                                 action="{{ route('manajemen-risiko.auditee.submit-response', $peta->id) }}"
@@ -738,7 +738,7 @@
                                                     <button type="submit" class="btn btn-success shadow-sm px-5"
                                                         id="btnFinalApproval"
                                                         style="border-radius: 50px; padding-top: 10px; padding-bottom: 10px; font-weight: 600; letter-spacing: 0.5px;">
-                                                        <i class="fas fa-check-double mr-2"></i> FINALISASI & SUBMIT
+                                                        <i class="fas fa-check-double mr-2"></i> SUBMIT
                                                     </button>
                                                 </div>
                                             </form>
@@ -951,7 +951,7 @@
                                 </div>
                             </div>
 
-                            <div class="alert alert-info mt-3">
+                            {{-- <div class="alert alert-info mt-3">
                                 <i class="fas fa-info-circle"></i>
                                 <strong>Informasi Dokumen:</strong>
                                 <ul class="mb-0 mt-2">
@@ -962,7 +962,104 @@
                                         <strong>{{ $peta->waktu_telaah_spi ? date('d F Y', strtotime($peta->waktu_telaah_spi)) : '-' }}</strong>
                                     </li>
                                 </ul>
+                            </div> --}}
+                        </div>
+                    </div>
+                @endif
+
+
+
+
+                {{-- ========================================
+                     TOMBOL FINALISASI (HANYA AUDITOR)
+                ======================================== --}}
+                @if ($isAuditor && $peta->canBeFinalized())
+                    <div class="card border-success mt-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-lock"></i> Finalisasi Pemeriksaan
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert ">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Pemeriksaan siap difinalisasi!</strong>
+                                <p class="mb-2 mt-2">Unit Kerja telah mengkonfirmasi hasil pemeriksaan. Anda dapat
+                                    memfinalisasi
+                                    pemeriksaan ini untuk mengunci semua data dan menyelesaikan proses pemeriksaan secara
+                                    resmi.</p>
+                                <ul class="mb-0">
+                                    <li>Status saat ini: <span class="badge badge-info p-2">{{ $statusLabel }}</span>
+                                    </li>
+                                    <li>Unit Kerja: <strong>{{ $peta->jenis }}</strong></li>
+                                    <li>Auditor: <strong>{{ $peta->auditor->name ?? '-' }}</strong></li>
+                                    <li>Kode Kegiatan:
+                                        @php
+                                            // ✅ PERBAIKAN: Ambil kode kegiatan dengan format KEG-TAHUN-XXX
+                                            $kodeKegiatan = '-';
+                                            if ($peta->kegiatan) {
+                                                if (!empty($peta->kegiatan->kode_regist)) {
+                                                    $kodeKegiatan = $peta->kegiatan->kode_regist;
+                                                } elseif (!empty($peta->kegiatan->id_kegiatan)) {
+                                                    $kodeKegiatan = $peta->kegiatan->id_kegiatan;
+                                                } elseif (!empty($peta->kegiatan->kode)) {
+                                                    $kodeKegiatan = $peta->kegiatan->kode;
+                                                } else {
+                                                    // Fallback: buat format KEG-TAHUN-ID
+                                                    $kodeKegiatan =
+                                                        'KEG-' .
+                                                        date('Y') .
+                                                        '-' .
+                                                        str_pad($peta->kegiatan->id, 3, '0', STR_PAD_LEFT);
+                                                }
+                                            } elseif ($peta->id_kegiatan) {
+                                                $kegiatan = \App\Models\Kegiatan::find($peta->id_kegiatan);
+                                                if ($kegiatan) {
+                                                    $kodeKegiatan =
+                                                        $kegiatan->kode_regist ??
+                                                        'KEG-' .
+                                                            date('Y') .
+                                                            '-' .
+                                                            str_pad($kegiatan->id, 3, '0', STR_PAD_LEFT);
+                                                }
+                                            }
+                                        @endphp
+                                        {{ $kodeKegiatan }}</li>
+                                </ul>
                             </div>
+
+                            <form action="{{ route('manajemen-risiko.finalisasi', $peta->id) }}" method="POST"
+                                id="formFinalisasi">
+                                @csrf
+
+                                {{-- <div class="form-group">
+                                    <label class="font-weight-bold">Catatan Finalisasi (Opsional)</label>
+                                    <textarea name="catatan_finalisasi" class="form-control" rows="3"
+                                        placeholder="Catatan atau keterangan tambahan untuk finalisasi pemeriksaan ini..."></textarea>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i> Catatan ini akan tersimpan sebagai dokumen
+                                        resmi.
+                                    </small>
+                                </div> --}}
+
+                                {{-- <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>PERHATIAN:</strong> Setelah pemeriksaan difinalisasi:
+                                    <ul class="mb-0 mt-2">
+                                        <li>Status akan berubah menjadi <span class="badge badge-dark">FINAL</span></li>
+                                        <li>Semua data akan <strong>READ-ONLY</strong> (tidak dapat diubah)</li>
+                                        <li>Pemeriksaan dianggap <strong>SELESAI RESMI</strong></li>
+                                        <li>Proses tidak dapat dibatalkan</li>
+                                    </ul>
+                                </div> --}}
+
+                                <div class="text-center">
+                                    <button type="button" class="btn btn-success btn-lg px-5" data-toggle="modal"
+                                        data-target="#modalKonfirmasiFinalisasi">
+                                        <i class="fas fa-lock"></i> Finalisasi Pemeriksaan Sekarang
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 @endif
@@ -1048,99 +1145,6 @@
                     </div>
                 @endif
 
-                {{-- ========================================
-                     TOMBOL FINALISASI (HANYA AUDITOR)
-                ======================================== --}}
-                @if ($isAuditor && $peta->canBeFinalized())
-                    <div class="card border-success mt-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-lock"></i> Finalisasi Pemeriksaan
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert ">
-                                <i class="fas fa-check-circle"></i>
-                                <strong>Pemeriksaan siap difinalisasi!</strong>
-                                <p class="mb-2 mt-2">Unit Kerja telah mengkonfirmasi hasil pemeriksaan. Anda dapat
-                                    memfinalisasi
-                                    pemeriksaan ini untuk mengunci semua data dan menyelesaikan proses pemeriksaan secara
-                                    resmi.</p>
-                                <ul class="mb-0">
-                                    <li>Status saat ini: <span class="badge badge-info p-2">{{ $statusLabel }}</span>
-                                    </li>
-                                    <li>Unit Kerja: <strong>{{ $peta->jenis }}</strong></li>
-                                    <li>Auditor: <strong>{{ $peta->auditor->name ?? '-' }}</strong></li>
-                                    <li>Kode Kegiatan:
-                                        @php
-                                            // ✅ PERBAIKAN: Ambil kode kegiatan dengan format KEG-TAHUN-XXX
-                                            $kodeKegiatan = '-';
-                                            if ($peta->kegiatan) {
-                                                if (!empty($peta->kegiatan->kode_regist)) {
-                                                    $kodeKegiatan = $peta->kegiatan->kode_regist;
-                                                } elseif (!empty($peta->kegiatan->id_kegiatan)) {
-                                                    $kodeKegiatan = $peta->kegiatan->id_kegiatan;
-                                                } elseif (!empty($peta->kegiatan->kode)) {
-                                                    $kodeKegiatan = $peta->kegiatan->kode;
-                                                } else {
-                                                    // Fallback: buat format KEG-TAHUN-ID
-                                                    $kodeKegiatan =
-                                                        'KEG-' .
-                                                        date('Y') .
-                                                        '-' .
-                                                        str_pad($peta->kegiatan->id, 3, '0', STR_PAD_LEFT);
-                                                }
-                                            } elseif ($peta->id_kegiatan) {
-                                                $kegiatan = \App\Models\Kegiatan::find($peta->id_kegiatan);
-                                                if ($kegiatan) {
-                                                    $kodeKegiatan =
-                                                        $kegiatan->kode_regist ??
-                                                        'KEG-' .
-                                                            date('Y') .
-                                                            '-' .
-                                                            str_pad($kegiatan->id, 3, '0', STR_PAD_LEFT);
-                                                }
-                                            }
-                                        @endphp
-                                        {{ $kodeKegiatan }}</li>
-                                </ul>
-                            </div>
-
-                            <form action="{{ route('manajemen-risiko.finalisasi', $peta->id) }}" method="POST"
-                                id="formFinalisasi">
-                                @csrf
-
-                                <div class="form-group">
-                                    <label class="font-weight-bold">Catatan Finalisasi (Opsional)</label>
-                                    <textarea name="catatan_finalisasi" class="form-control" rows="3"
-                                        placeholder="Catatan atau keterangan tambahan untuk finalisasi pemeriksaan ini..."></textarea>
-                                    <small class="form-text text-muted">
-                                        <i class="fas fa-info-circle"></i> Catatan ini akan tersimpan sebagai dokumen
-                                        resmi.
-                                    </small>
-                                </div>
-
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <strong>PERHATIAN:</strong> Setelah pemeriksaan difinalisasi:
-                                    <ul class="mb-0 mt-2">
-                                        <li>Status akan berubah menjadi <span class="badge badge-dark">FINAL</span></li>
-                                        <li>Semua data akan <strong>READ-ONLY</strong> (tidak dapat diubah)</li>
-                                        <li>Pemeriksaan dianggap <strong>SELESAI RESMI</strong></li>
-                                        <li>Proses tidak dapat dibatalkan</li>
-                                    </ul>
-                                </div>
-
-                                <div class="text-center">
-                                    <button type="button" class="btn btn-success btn-lg px-5" data-toggle="modal"
-                                        data-target="#modalKonfirmasiFinalisasi">
-                                        <i class="fas fa-lock"></i> Finalisasi Pemeriksaan Sekarang
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                @endif
 
                 {{-- ✅ BADGE STATUS DISETUJUI UNIT KERJA (untuk Admin/Auditor) --}}
                 @if (($isAdmin || $isAuditor) && $statusAudit === 'disetujui_auditee')
@@ -1194,20 +1198,11 @@
                         <div class="alert alert-warning">
                             <strong>Konsekuensi finalisasi:</strong>
                             <ul class="mb-0 mt-2">
-                                <li>Status pemeriksaan akan berubah menjadi <span class="badge badge-dark">FINAL</span>
+                                <li>Status pemeriksaan akan berubah menjadi <span class="badge badge-dark">SELESAI</span>
                                 </li>
                                 <li>Semua data akan <strong>LOCKED</strong> (tidak dapat diubah)</li>
                                 <li>Pemeriksaan dianggap <strong>SELESAI RESMI</strong></li>
                                 <li><strong>Proses TIDAK DAPAT dibatalkan</strong></li>
-                            </ul>
-                        </div>
-                        <div class="alert alert-info">
-                            <strong>Detail Pemeriksaan:</strong>
-                            <ul class="mb-0 mt-2">
-                                <li>Unit Kerja: <strong>{{ $peta->jenis }}</strong></li>
-                                <li>Kode Risiko: <strong>{{ $peta->kode_regist }}</strong></li>
-                                <li>Auditor: <strong>{{ $peta->auditor->name ?? '-' }}</strong></li>
-                                <li>Kegiatan: <strong>{{ $peta->kegiatan->judul ?? $peta->judul }}</strong></li>
                             </ul>
                         </div>
                     </div>
@@ -1285,8 +1280,8 @@
         }
 
         /* ========================================
-                                                                               TIMELINE STYLES - RIWAYAT AKTIVITAS
-                                                                            ======================================== */
+                                                                                                                   TIMELINE STYLES - RIWAYAT AKTIVITAS
+                                                                                                                ======================================== */
         .timeline-wrapper {
             position: relative;
             padding: 20px 0;

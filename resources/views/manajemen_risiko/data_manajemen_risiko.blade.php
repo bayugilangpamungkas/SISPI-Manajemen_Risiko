@@ -283,7 +283,7 @@
                 </div>
 
                 {{-- ========== ACTION BUTTONS ========== --}}
-                <div class="card border-0 shadow-sm mb-4">
+                {{-- <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-lg-6 mb-3 mb-lg-0">
@@ -315,7 +315,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 {{-- ========== DATA TABLE ========== --}}
                 <div class="card border-0 shadow-sm">

@@ -290,13 +290,26 @@ class Peta extends Model
     }
 
     /**
-     * Cek apakah Auditee bisa konfirmasi hasil audit
+     * ✅ Cek apakah Auditee bisa konfirmasi hasil audit
      */
     public function auditeeCanConfirm()
     {
         $status = $this->status_audit;
         // Hanya bisa konfirmasi saat menunggu_konfirmasi_auditee
         return $status === 'menunggu_konfirmasi_auditee';
+    }
+
+    /**
+     * ✅ NEW: Cek apakah Auditor bisa review hasil tindak lanjut dari Auditee
+     * (Setelah Auditee submit tindak lanjut karena status = Not Completed)
+     */
+    public function auditorCanReviewFollowUp()
+    {
+        // Auditor bisa review tindak lanjut jika:
+        // 1. Auditor set status = Not Completed
+        // 2. Auditee sudah submit tindak lanjut (status_konfirmasi_auditee = Completed/Not Completed)
+        return $this->status_konfirmasi_auditor === 'Not Completed' &&
+               in_array($this->status_konfirmasi_auditee, ['Completed', 'Not Completed']);
     }
 
     /**

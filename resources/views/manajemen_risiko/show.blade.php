@@ -296,6 +296,182 @@
                         </div>
                     </div>
 
+                {{-- ========================================
+                     ✅ NEW SECTION: AUDITOR REVIEW FOLLOW-UP FROM AUDITEE
+                     (SETELAH AUDITEE SUBMIT TINDAK LANJUT)
+                ======================================== --}}
+                @elseif($isAuditor && $peta->auditorCanReviewFollowUp())
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-tasks"></i> Review Hasil Tindak Lanjut dari Auditee
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {{-- HASIL AUDIT YANG SUDAH DIINPUT AUDITOR (READ-ONLY) --}}
+                            <div class="card bg-light mb-4">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0">Hasil Audit Anda (Sebelumnya)</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="font-weight-bold">Pengendalian Risiko</label>
+                                            <div class="p-3 bg-white border rounded">
+                                                {{ $peta->pengendalian ?? '-' }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="font-weight-bold">Mitigasi Risiko</label>
+                                            <div class="p-3 bg-white border rounded">
+                                                <span class="badge badge-info p-2">{{ $peta->mitigasi ?? '-' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="font-weight-bold">Komentar Auditor</label>
+                                        <div class="p-3 bg-white border rounded">
+                                            {!! nl2br(e($hasilAudit->komentar_1 ?? '-')) !!}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="font-weight-bold">Status Konfirmasi Auditor</label>
+                                        <div>
+                                            <span class="badge badge-warning p-2" style="font-size: 14px;">
+                                                ⚠️ Not Completed (Perlu Tindak Lanjut)
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- HASIL TINDAK LANJUT DARI AUDITEE --}}
+                            <div class="card border-info mb-4">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-reply"></i> Tindak Lanjut dari Auditee
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    @php
+                                        $revisionNotes = $peta->revision_notes;
+                                    @endphp
+
+                                    @if ($revisionNotes && isset($revisionNotes['catatan_tindak_lanjut']))
+                                        <div class="mb-3">
+                                            <label class="font-weight-bold text-primary">
+                                                <i class="fas fa-edit"></i> Catatan Tindak Lanjut dari Auditee
+                                            </label>
+                                            <div class="p-4 bg-white border rounded shadow-sm" style="min-height: 150px; line-height: 1.8;">
+                                                {!! nl2br(e($revisionNotes['catatan_tindak_lanjut'])) !!}
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="font-weight-bold">Status Auditee</label>
+                                                <div class="mt-2">
+                                                    @php
+                                                        $statusAuditee = $revisionNotes['status_auditee'] ?? $peta->status_konfirmasi_auditee;
+                                                        $badgeAuditee = $statusAuditee === 'Completed' ? 'success' : 'warning';
+                                                    @endphp
+                                                    <span class="badge badge-{{ $badgeAuditee }} p-2" style="font-size: 14px;">
+                                                        @if($statusAuditee === 'Completed')
+                                                            ✅ Completed (Tindak Lanjut Selesai)
+                                                        @else
+                                                            ⏳ Not Completed (Masih Dalam Proses)
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="font-weight-bold">Waktu Submit</label>
+                                                <div class="mt-2">
+                                                    <span class="badge badge-secondary p-2">
+                                                        {{ isset($revisionNotes['submitted_at']) ? date('d M Y, H:i', strtotime($revisionNotes['submitted_at'])) : '-' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i>
+                                            Auditee telah submit tindak lanjut. Silakan review hasilnya.
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- FORM KEPUTUSAN AUDITOR --}}
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-gavel"></i> Keputusan Auditor
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form action="{{ route('manajemen-risiko.auditor.update-template', $peta->id) }}"
+                                        method="POST" id="formReviewFollowUp">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="action" value="approve_follow_up">
+
+                                        <div class="alert alert-primary">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Instruksi:</strong> Setelah meninjau hasil tindak lanjut dari Auditee, silakan pilih keputusan Anda:
+                                            <ul class="mb-0 mt-2">
+                                                <li><strong>APPROVE</strong> = Tindak lanjut diterima, audit selesai</li>
+                                                <li><strong>REJECT</strong> = Auditee perlu melakukan perbaikan ulang</li>
+                                            </ul>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="font-weight-bold">
+                                                Keputusan <span class="text-danger">*</span>
+                                            </label>
+                                            <select name="keputusan_auditor" class="form-control" required id="selectKeputusanAuditor">
+                                                <option value="">-- Pilih Keputusan --</option>
+                                                <option value="approve">✅ APPROVE (Setujui & Selesai)</option>
+                                                <option value="reject">❌ REJECT (Minta Perbaikan Ulang)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="font-weight-bold">
+                                                Catatan Auditor (Opsional)
+                                            </label>
+                                            <textarea name="catatan_auditor" class="form-control" rows="4"
+                                                placeholder="Berikan catatan atau feedback untuk Auditee..."></textarea>
+                                            <small class="form-text text-muted">
+                                                Catatan ini akan disampaikan kepada Auditee.
+                                            </small>
+                                        </div>
+
+                                        <div class="alert alert-success" id="alertApprove" style="display: none;">
+                                            <i class="fas fa-check-circle"></i>
+                                            <strong>APPROVE:</strong> Dengan memilih APPROVE, status audit akan berubah menjadi <strong>SELESAI</strong>, dan Auditee dapat melakukan konfirmasi akhir untuk finalisasi.
+                                        </div>
+
+                                        <div class="alert alert-danger" id="alertReject" style="display: none;">
+                                            <i class="fas fa-times-circle"></i>
+                                            <strong>REJECT:</strong> Dengan memilih REJECT, Auditee akan diminta untuk melakukan perbaikan ulang terhadap tindak lanjut mereka.
+                                        </div>
+
+                                        <div class="text-center mt-4">
+                                            <button type="submit" class="btn btn-success btn-lg px-5" id="btnSubmitKeputusan">
+                                                <i class="fas fa-check"></i> Submit Keputusan
+                                            </button>
+                                            <a href="{{ route('manajemen-risiko.auditor.index') }}"
+                                                class="btn btn-secondary btn-lg px-5">
+                                                <i class="fas fa-arrow-left"></i> Kembali
+                                            </a>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- ========================================
                      SECTION 2: AUDITEE VIEW & CONFIRMATION (NEW WORKFLOW)
                      ✅ TAMPILAN INI SESUAI REQUIREMENT DOSEN
@@ -998,6 +1174,21 @@
         $(document).ready(function() {
             if ($('#selectStatusAuditor').val() === 'Not Completed') {
                 $('#alertNotCompleted').show();
+            }
+        });
+
+        // ✅ Script untuk toggle alert berdasarkan Keputusan Auditor
+        $('#selectKeputusanAuditor').on('change', function() {
+            const selectedKeputusan = $(this).val();
+            if (selectedKeputusan === 'approve') {
+                $('#alertApprove').slideDown();
+                $('#alertReject').slideUp();
+            } else if (selectedKeputusan === 'reject') {
+                $('#alertReject').slideDown();
+                $('#alertApprove').slideUp();
+            } else {
+                $('#alertApprove').slideUp();
+                $('#alertReject').slideUp();
             }
         });
 

@@ -455,6 +455,70 @@ class AuditorController extends Controller
             return redirect()
                 ->route('manajemen-risiko.auditor.show-detail', $peta->id)
                 ->with('success', 'Revisi telah dikonfirmasi! Menunggu konfirmasi dari Auditee.');
+        } elseif ($action === 'approve_follow_up') {
+            // ✅ MODE BARU 4: AUDITOR APPROVE HASIL TINDAK LANJUT AUDITEE
+            // (SETELAH AUDITOR SET STATUS = NOT COMPLETED & AUDITEE SUDAH SUBMIT TINDAK LANJUT)
+
+            // Validasi: Hanya bisa approve jika Auditee sudah submit tindak lanjut
+            if (!$peta->auditorCanReviewFollowUp()) {
+                return redirect()->back()->with('error', 'Belum ada tindak lanjut dari Auditee untuk direview!');
+            }
+
+            $request->validate([
+                'keputusan_auditor' => 'required|in:approve,reject',
+                'catatan_auditor' => 'nullable|string|max:2000',
+            ]);
+
+            if ($request->keputusan_auditor === 'approve') {
+                // ✅ APPROVE: Set status Auditor menjadi Completed (Audit selesai)
+                $peta->update([
+                    'status_konfirmasi_auditor' => 'Completed', // ✅ UBAH STATUS AUDITOR KE COMPLETED
+                    // status_konfirmasi_auditee tetap (Completed/Not Completed)
+                ]);
+
+                // Log activity
+                CommentPr::create([
+                    'peta_id' => $peta->id,
+                    'user_id' => $user->id,
+                    'jenis' => 'analisis',
+                    'comment' => 'Auditor telah menyetujui (APPROVE) hasil tindak lanjut dari Auditee. Status Audit: SELESAI.' .
+                        ($request->catatan_auditor ? ' Catatan: ' . $request->catatan_auditor : ''),
+                ]);
+
+                return redirect()
+                    ->route('manajemen-risiko.auditor.show-detail', $peta->id)
+                    ->with('success', '✅ Tindak lanjut DISETUJUI! Status audit menjadi SELESAI. Auditee dapat melakukan konfirmasi akhir.');
+            } else {
+                // ❌ REJECT: Minta Auditee untuk revisi lagi
+                // Reset status_konfirmasi_auditee agar Auditee bisa submit ulang
+                $peta->update([
+                    'status_konfirmasi_auditee' => null, // Reset status Auditee
+                    // status_konfirmasi_auditor tetap "Not Completed"
+                ]);
+
+                // Simpan catatan penolakan ke catatan_revisi
+                $rejectionData = [
+                    'catatan_penolakan' => $request->catatan_auditor,
+                    'rejected_at' => now()->toDateTimeString(),
+                    'rejected_by' => $user->name,
+                ];
+
+                $peta->update([
+                    'catatan_revisi' => json_encode($rejectionData),
+                ]);
+
+                // Log activity
+                CommentPr::create([
+                    'peta_id' => $peta->id,
+                    'user_id' => $user->id,
+                    'jenis' => 'analisis',
+                    'comment' => 'Auditor MENOLAK hasil tindak lanjut. Auditee diminta melakukan revisi ulang. Catatan: ' . $request->catatan_auditor,
+                ]);
+
+                return redirect()
+                    ->route('manajemen-risiko.auditor.show-detail', $peta->id)
+                    ->with('warning', '⚠️ Tindak lanjut DITOLAK! Auditee akan diminta untuk melakukan perbaikan kembali.');
+            }
         } else {
             return redirect()->back()->with('error', 'Action tidak valid!');
         }

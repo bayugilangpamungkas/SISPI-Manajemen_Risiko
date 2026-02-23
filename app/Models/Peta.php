@@ -309,7 +309,7 @@ class Peta extends Model
         // 1. Auditor set status = Not Completed
         // 2. Auditee sudah submit tindak lanjut (status_konfirmasi_auditee = Completed/Not Completed)
         return $this->status_konfirmasi_auditor === 'Not Completed' &&
-               in_array($this->status_konfirmasi_auditee, ['Completed', 'Not Completed']);
+            in_array($this->status_konfirmasi_auditee, ['Completed', 'Not Completed']);
     }
 
     /**

@@ -63,40 +63,97 @@
                 <div class="alert alert-primary border-left-primary mb-4">
                     <div class="d-flex align-items-center">
                         <div>
-                            <strong class="text-white">Status Pemeriksaan:</strong> <span
-                                class="badge {{ $statusBadge }} p-2">{{ $statusLabel }}</span>
+                            <strong class="text-white">Status Pemeriksaan:</strong>
+                            @php
+                                // ✅ SINKRONISASI STATUS PEMERIKSAAN BERDASARKAN WORKFLOW TINDAK LANJUT
+                                $statusPemeriksaanLabel = '';
+                                $statusPemeriksaanBadge = 'badge-secondary';
+                                $statusPemeriksaanGuide = '';
+
+                                // 1. CEK STATUS FINAL
+                                if ($statusAudit === 'final') {
+                                    $statusPemeriksaanLabel = 'Pemeriksaan Selesai';
+                                    $statusPemeriksaanBadge = 'badge-dark';
+                                    $statusPemeriksaanGuide =
+                                        '✅ Pemeriksaan telah selesai dan data telah difinalisasi secara resmi.';
+                                }
+                                // 2. CEK STATUS DISETUJUI AUDITEE (MENUNGGU FINALISASI AUDITOR)
+                                elseif ($statusAudit === 'disetujui_auditee') {
+                                    $statusPemeriksaanLabel = 'Menunggu Finalisasi Auditor';
+                                    $statusPemeriksaanBadge = 'badge-info';
+                                    if ($isAuditor) {
+                                        $statusPemeriksaanGuide =
+                                            '<strong class="text-white">→ AUDITOR:</strong> Unit Kerja sudah konfirmasi. Silakan finalisasi pemeriksaan untuk menyelesaikan proses.';
+                                    } else {
+                                        $statusPemeriksaanGuide =
+                                            '<strong class="text-white">→ UNIT KERJA:</strong> Menunggu Auditor untuk melakukan finalisasi pemeriksaan.';
+                                    }
+                                }
+                                // 3. CEK WORKFLOW TINDAK LANJUT (NEW)
+                                elseif ($peta->status_konfirmasi_auditor === 'Not Completed') {
+                                    // 3a. JIKA AUDITEE SUDAH SUBMIT TINDAK LANJUT
+                                    if ($peta->status_konfirmasi_auditee) {
+                                        $statusPemeriksaanLabel = 'Menunggu ACC Auditor';
+                                        $statusPemeriksaanBadge = 'badge-warning';
+                                        if ($isAuditor) {
+                                            $statusPemeriksaanGuide =
+                                                '<strong class="text-white">→ AUDITOR:</strong> Auditee telah mengirim tindak lanjut. Silakan review dan berikan ACC atau minta revisi ulang.';
+                                        } else {
+                                            $statusPemeriksaanGuide =
+                                                '<strong class="text-white">→ UNIT KERJA:</strong> Tindak lanjut Anda sudah dikirim. Menunggu ACC dari Auditor.';
+                                        }
+                                    }
+                                    // 3b. JIKA AUDITEE BELUM SUBMIT TINDAK LANJUT
+                                    else {
+                                        $statusPemeriksaanLabel = 'Menunggu Revisi Auditee';
+                                        $statusPemeriksaanBadge = 'badge-danger';
+                                        if ($isAuditee) {
+                                            $statusPemeriksaanGuide =
+                                                '<strong class="text-white">→ UNIT KERJA:</strong> Auditor meminta tindak lanjut. Silakan lakukan perbaikan dan submit hasil revisi Anda.';
+                                        } else {
+                                            $statusPemeriksaanGuide =
+                                                '<strong class="text-white">→ AUDITOR:</strong> Menunggu Auditee mengirim hasil tindak lanjut / revisi.';
+                                        }
+                                    }
+                                }
+                                // 4. CEK AUDITOR SUDAH SUBMIT (COMPLETED) TAPI AUDITEE BELUM KONFIRMASI
+                                elseif (
+                                    $peta->status_konfirmasi_auditor === 'Completed' &&
+                                    !$peta->status_konfirmasi_auditee
+                                ) {
+                                    $statusPemeriksaanLabel = 'Menunggu Konfirmasi Auditee';
+                                    $statusPemeriksaanBadge = 'badge-success';
+                                    if ($isAuditee) {
+                                        $statusPemeriksaanGuide =
+                                            '<strong class="text-white">→ UNIT KERJA:</strong> Auditor telah menyelesaikan pemeriksaan. Silakan konfirmasi hasil audit.';
+                                    } else {
+                                        $statusPemeriksaanGuide =
+                                            '<strong class="text-white">→ AUDITOR:</strong> Menunggu konfirmasi akhir dari Unit Kerja.';
+                                    }
+                                }
+                                // 5. AUDITOR SUDAH DITUGASKAN TAPI BELUM INPUT HASIL AUDIT
+                                elseif ($peta->auditor_id && !$peta->status_konfirmasi_auditor) {
+                                    $statusPemeriksaanLabel = 'Menunggu Pemeriksaan Auditor';
+                                    $statusPemeriksaanBadge = 'badge-info';
+                                    if ($isAuditor) {
+                                        $statusPemeriksaanGuide =
+                                            '<strong class="text-white">→ AUDITOR:</strong> Silakan lakukan pemeriksaan dan input hasil audit untuk Unit Kerja.';
+                                    } else {
+                                        $statusPemeriksaanGuide =
+                                            '<strong class="text-white">→ UNIT KERJA:</strong> Menunggu Auditor melakukan pemeriksaan terhadap risiko ini.';
+                                    }
+                                }
+                                // 6. BELUM ADA AUDITOR
+                                else {
+                                    $statusPemeriksaanLabel = 'Belum Ditugaskan';
+                                    $statusPemeriksaanBadge = 'badge-secondary';
+                                    $statusPemeriksaanGuide = 'Belum ada auditor yang ditugaskan untuk risiko ini.';
+                                }
+                            @endphp
+                            <span class="badge {{ $statusPemeriksaanBadge }} p-2">{{ $statusPemeriksaanLabel }}</span>
                             <br>
                             <small class="text-white">
-                                @if ($statusAudit === 'belum_ditugaskan')
-                                    Belum ada auditor yang ditugaskan untuk risiko ini.
-                                @elseif($statusAudit === 'menunggu_wawancara')
-                                    <strong class="text-white">→ AUDITOR:</strong> Silakan input daftar pertanyaan
-                                    pemeriksaan untuk Unit
-                                    Kerja.
-                                @elseif($statusAudit === 'menunggu_jawaban')
-                                    <strong class="text-white">→ UNIT KERJA:</strong> Silakan jawab pertanyaan pemeriksaan
-                                    dari Auditor.
-                                @elseif($statusAudit === 'menunggu_review')
-                                    <strong class="text-white">→ AUDITOR:</strong> Silakan verifikasi jawaban dari Unit
-                                    Kerja dan berikan
-                                    penilaian.
-                                @elseif($statusAudit === 'perlu_revisi')
-                                    <strong class="text-white">→ UNIT KERJA:</strong> Auditor meminta Anda melakukan
-                                    perbaikan terhadap
-                                    jawaban.
-                                @elseif($statusAudit === 'menunggu_konfirmasi_auditor')
-                                    <strong class="text-white">→ AUDITOR:</strong> Silakan konfirmasi hasil perbaikan dari
-                                    Unit Kerja.
-                                @elseif($statusAudit === 'menunggu_konfirmasi_auditee')
-                                    <strong class="text-white">→ UNIT KERJA:</strong> Silakan konfirmasi hasil verifikasi
-                                    dari Auditor.
-                                @elseif($statusAudit === 'disetujui_auditee')
-                                    <strong class="text-white">→ AUDITOR:</strong> Unit Kerja sudah konfirmasi. Silakan
-                                    finalisasi pemeriksaan
-                                    untuk menyelesaikan proses.
-                                @elseif($statusAudit === 'final')
-                                    ✅ Pemeriksaan telah selesai dan data telah difinalisasi secara resmi.
-                                @endif
+                                {!! $statusPemeriksaanGuide !!}
                             </small>
                         </div>
                     </div>
@@ -296,7 +353,7 @@
                         </div>
                     </div>
 
-                {{-- ========================================
+                    {{-- ========================================
                      ✅ NEW SECTION: AUDITOR REVIEW FOLLOW-UP FROM AUDITEE
                      (SETELAH AUDITEE SUBMIT TINDAK LANJUT)
                 ======================================== --}}
@@ -362,7 +419,8 @@
                                             <label class="font-weight-bold text-primary">
                                                 <i class="fas fa-edit"></i> Catatan Tindak Lanjut dari Auditee
                                             </label>
-                                            <div class="p-4 bg-white border rounded shadow-sm" style="min-height: 150px; line-height: 1.8;">
+                                            <div class="p-4 bg-white border rounded shadow-sm"
+                                                style="min-height: 150px; line-height: 1.8;">
                                                 {!! nl2br(e($revisionNotes['catatan_tindak_lanjut'])) !!}
                                             </div>
                                         </div>
@@ -372,11 +430,15 @@
                                                 <label class="font-weight-bold">Status Auditee</label>
                                                 <div class="mt-2">
                                                     @php
-                                                        $statusAuditee = $revisionNotes['status_auditee'] ?? $peta->status_konfirmasi_auditee;
-                                                        $badgeAuditee = $statusAuditee === 'Completed' ? 'success' : 'warning';
+                                                        $statusAuditee =
+                                                            $revisionNotes['status_auditee'] ??
+                                                            $peta->status_konfirmasi_auditee;
+                                                        $badgeAuditee =
+                                                            $statusAuditee === 'Completed' ? 'success' : 'warning';
                                                     @endphp
-                                                    <span class="badge badge-{{ $badgeAuditee }} p-2" style="font-size: 14px;">
-                                                        @if($statusAuditee === 'Completed')
+                                                    <span class="badge badge-{{ $badgeAuditee }} p-2"
+                                                        style="font-size: 14px;">
+                                                        @if ($statusAuditee === 'Completed')
                                                             ✅ Completed (Tindak Lanjut Selesai)
                                                         @else
                                                             ⏳ Not Completed (Masih Dalam Proses)
@@ -418,7 +480,8 @@
 
                                         <div class="alert alert-primary">
                                             <i class="fas fa-info-circle"></i>
-                                            <strong>Instruksi:</strong> Setelah meninjau hasil tindak lanjut dari Auditee, silakan pilih keputusan Anda:
+                                            <strong>Instruksi:</strong> Setelah meninjau hasil tindak lanjut dari Auditee,
+                                            silakan pilih keputusan Anda:
                                             <ul class="mb-0 mt-2">
                                                 <li><strong>APPROVE</strong> = Tindak lanjut diterima, audit selesai</li>
                                                 <li><strong>REJECT</strong> = Auditee perlu melakukan perbaikan ulang</li>
@@ -429,7 +492,8 @@
                                             <label class="font-weight-bold">
                                                 Keputusan <span class="text-danger">*</span>
                                             </label>
-                                            <select name="keputusan_auditor" class="form-control" required id="selectKeputusanAuditor">
+                                            <select name="keputusan_auditor" class="form-control" required
+                                                id="selectKeputusanAuditor">
                                                 <option value="">-- Pilih Keputusan --</option>
                                                 <option value="approve">✅ APPROVE (Setujui & Selesai)</option>
                                                 <option value="reject">❌ REJECT (Minta Perbaikan Ulang)</option>
@@ -449,16 +513,20 @@
 
                                         <div class="alert alert-success" id="alertApprove" style="display: none;">
                                             <i class="fas fa-check-circle"></i>
-                                            <strong>APPROVE:</strong> Dengan memilih APPROVE, status audit akan berubah menjadi <strong>SELESAI</strong>, dan Auditee dapat melakukan konfirmasi akhir untuk finalisasi.
+                                            <strong>APPROVE:</strong> Dengan memilih APPROVE, status audit akan berubah
+                                            menjadi <strong>SELESAI</strong>, dan Auditee dapat melakukan konfirmasi akhir
+                                            untuk finalisasi.
                                         </div>
 
                                         <div class="alert alert-danger" id="alertReject" style="display: none;">
                                             <i class="fas fa-times-circle"></i>
-                                            <strong>REJECT:</strong> Dengan memilih REJECT, Auditee akan diminta untuk melakukan perbaikan ulang terhadap tindak lanjut mereka.
+                                            <strong>REJECT:</strong> Dengan memilih REJECT, Auditee akan diminta untuk
+                                            melakukan perbaikan ulang terhadap tindak lanjut mereka.
                                         </div>
 
                                         <div class="text-center mt-4">
-                                            <button type="submit" class="btn btn-success btn-lg px-5" id="btnSubmitKeputusan">
+                                            <button type="submit" class="btn btn-success btn-lg px-5"
+                                                id="btnSubmitKeputusan">
                                                 <i class="fas fa-check"></i> Submit Keputusan
                                             </button>
                                             <a href="{{ route('manajemen-risiko.auditor.index') }}"
@@ -1217,8 +1285,8 @@
         }
 
         /* ========================================
-                                                                       TIMELINE STYLES - RIWAYAT AKTIVITAS
-                                                                    ======================================== */
+                                                                               TIMELINE STYLES - RIWAYAT AKTIVITAS
+                                                                            ======================================== */
         .timeline-wrapper {
             position: relative;
             padding: 20px 0;

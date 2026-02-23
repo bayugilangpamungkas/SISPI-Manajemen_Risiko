@@ -404,7 +404,7 @@
 
                             {{-- HASIL TINDAK LANJUT DARI AUDITEE --}}
                             <div class="card border-info mb-4">
-                                <div class="card-header bg-info text-white">
+                                <div class="card-header bg-primary text-white">
                                     <h6 class="mb-0">
                                         <i class="fas fa-reply"></i> Tindak Lanjut dari Auditee
                                     </h6>
@@ -424,6 +424,40 @@
                                                 {!! nl2br(e($revisionNotes['catatan_tindak_lanjut'])) !!}
                                             </div>
                                         </div>
+
+                                        {{-- ✅ TAMPILAN LINK DATA DUKUNG (READ-ONLY) --}}
+                                        @if (isset($revisionNotes['link_data_dukung']) && !empty($revisionNotes['link_data_dukung']))
+                                            <div class="mb-3">
+                                                <label class="font-weight-bold text-primary">
+                                                    <i class="fas fa-link"></i> Link Data Dukung
+                                                </label>
+                                                <div class="p-3 bg-light border rounded">
+                                                    <a href="{{ $revisionNotes['link_data_dukung'] }}" target="_blank"
+                                                        rel="noopener noreferrer" class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-external-link-alt mr-1"></i> Buka Link Data Dukung
+                                                    </a>
+                                                    <div class="mt-2">
+                                                        <small class="text-muted d-block">
+                                                            <i class="fas fa-info-circle mr-1"></i>
+                                                            URL: <code
+                                                                class="bg-white p-1">{{ Str::limit($revisionNotes['link_data_dukung'], 60) }}</code>
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="mb-3">
+                                                <label class="font-weight-bold text-muted">
+                                                    <i class="fas fa-link"></i> Link Data Dukung
+                                                </label>
+                                                <div class="p-3 bg-light border rounded">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-info-circle mr-1"></i>
+                                                        Auditee tidak melampirkan link data dukung
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        @endif
 
                                         <div class="row">
                                             <div class="col-md-6">
@@ -466,11 +500,11 @@
 
                             {{-- FORM KEPUTUSAN AUDITOR --}}
                             <div class="card border-success">
-                                <div class="card-header bg-success text-white">
+                                {{-- <div class="card-header bg-primary text-white">
                                     <h6 class="mb-0">
                                         <i class="fas fa-gavel"></i> Keputusan Auditor
                                     </h6>
-                                </div>
+                                </div> --}}
                                 <div class="card-body">
                                     <form action="{{ route('manajemen-risiko.auditor.update-template', $peta->id) }}"
                                         method="POST" id="formReviewFollowUp">
@@ -478,7 +512,7 @@
                                         @method('PUT')
                                         <input type="hidden" name="action" value="approve_follow_up">
 
-                                        <div class="alert alert-primary">
+                                        {{-- <div class="alert alert-primary text-white">
                                             <i class="fas fa-info-circle"></i>
                                             <strong>Instruksi:</strong> Setelah meninjau hasil tindak lanjut dari Auditee,
                                             silakan pilih keputusan Anda:
@@ -486,7 +520,7 @@
                                                 <li><strong>APPROVE</strong> = Tindak lanjut diterima, audit selesai</li>
                                                 <li><strong>REJECT</strong> = Auditee perlu melakukan perbaikan ulang</li>
                                             </ul>
-                                        </div>
+                                        </div> --}}
 
                                         <div class="form-group">
                                             <label class="font-weight-bold">
@@ -500,7 +534,7 @@
                                             </select>
                                         </div>
 
-                                        <div class="form-group">
+                                        {{-- <div class="form-group">
                                             <label class="font-weight-bold">
                                                 Catatan Auditor (Opsional)
                                             </label>
@@ -509,7 +543,7 @@
                                             <small class="form-text text-muted">
                                                 Catatan ini akan disampaikan kepada Auditee.
                                             </small>
-                                        </div>
+                                        </div> --}}
 
                                         <div class="alert alert-success" id="alertApprove" style="display: none;">
                                             <i class="fas fa-check-circle"></i>
@@ -747,13 +781,13 @@
                                 @elseif($peta->status_konfirmasi_auditor == 'Not Completed')
                                     {{-- ⚠️ AUDITOR = NOT COMPLETED: FORM TINDAK LANJUT --}}
                                     <div class="card border-warning">
-                                        <div class="card-header bg-warning text-dark">
+                                        <div class="card-header bg-primary text-white">
                                             <h6 class="mb-0">
                                                 <i class="fas fa-exclamation-triangle"></i> Tindak Lanjut Diperlukan
                                             </h6>
                                         </div>
                                         <div class="card-body">
-                                            <div class="alert alert-warning">
+                                            {{-- <div class="alert alert-warning">
                                                 <i class="fas fa-exclamation-triangle"></i>
                                                 <strong>Status Audit: BELUM SELESAI</strong>
                                                 <p class="mb-0 mt-2">
@@ -761,7 +795,7 @@
                                                     memerlukan <strong>tindak lanjut</strong> dari Unit Kerja.
                                                     Silakan lakukan perbaikan sesuai catatan Auditor di atas.
                                                 </p>
-                                            </div>
+                                            </div> --}}
 
                                             <form
                                                 action="{{ route('manajemen-risiko.auditee.submit-response', $peta->id) }}"
@@ -779,6 +813,21 @@
                                                     <small class="form-text text-muted">
                                                         <i class="fas fa-info-circle"></i> Jelaskan secara detail langkah
                                                         perbaikan Anda.
+                                                    </small>
+                                                </div>
+
+                                                {{-- ✅ INPUT BARU: LINK DATA DUKUNG --}}
+                                                <div class="form-group">
+                                                    <label class="font-weight-bold">
+                                                        <i class="fas fa-link text-primary"></i> Link Data Dukung
+                                                    </label>
+                                                    <input type="url" name="link_data_dukung" class="form-control"
+                                                        placeholder="https://drive.google.com/... atau URL lainnya">
+                                                    <small class="form-text text-muted">
+                                                        <i class="fas fa-info-circle"></i> Lampirkan link bukti pendukung
+                                                        (Google Drive, OneDrive, dll).
+                                                        <strong>Tidak wajib</strong>, tetapi dapat membantu proses
+                                                        verifikasi Auditor.
                                                     </small>
                                                 </div>
 
@@ -1280,8 +1329,8 @@
         }
 
         /* ========================================
-                                                                                                                   TIMELINE STYLES - RIWAYAT AKTIVITAS
-                                                                                                                ======================================== */
+                                                                                                                           TIMELINE STYLES - RIWAYAT AKTIVITAS
+                                                                                                                        ======================================== */
         .timeline-wrapper {
             position: relative;
             padding: 20px 0;

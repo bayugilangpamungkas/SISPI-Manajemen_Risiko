@@ -715,13 +715,14 @@ class AuditeeController extends Controller
 
             $request->validate([
                 'catatan_tindak_lanjut' => 'required|string',
+                'link_data_dukung' => 'nullable|url',  // ✅ VALIDASI LINK (OPSIONAL)
                 'status_konfirmasi_auditee' => 'required|in:Completed,Not Completed',
             ]);
 
-            // Simpan catatan tindak lanjut ke field yang sesuai
-            // Bisa menggunakan field baru atau field existing seperti auditee_response
+            // ✅ Simpan catatan tindak lanjut DAN link data dukung
             $tindakLanjutData = [
                 'catatan_tindak_lanjut' => $request->catatan_tindak_lanjut,
+                'link_data_dukung' => $request->link_data_dukung,  // ✅ SIMPAN LINK
                 'status_auditee' => $request->status_konfirmasi_auditee,
                 'submitted_at' => now()->toDateTimeString(),
                 'submitted_by' => $user->name,
@@ -733,14 +734,20 @@ class AuditeeController extends Controller
                 'catatan_revisi' => json_encode($tindakLanjutData), // Simpan di catatan_revisi sebagai JSON
             ]);
 
-            // Log activity
+            // ✅ Log activity dengan informasi link
+            $commentText = 'Auditee telah mengirim tindak lanjut. Status: ' . $request->status_konfirmasi_auditee .
+                '. Catatan: ' . substr($request->catatan_tindak_lanjut, 0, 100) .
+                (strlen($request->catatan_tindak_lanjut) > 100 ? '...' : '');
+
+            if ($request->link_data_dukung) {
+                $commentText .= ' | Link data dukung: ' . $request->link_data_dukung;
+            }
+
             CommentPr::create([
                 'peta_id' => $peta->id,
                 'user_id' => $user->id,
                 'jenis' => 'analisis',
-                'comment' => 'Auditee telah mengirim tindak lanjut. Status: ' . $request->status_konfirmasi_auditee .
-                    '. Catatan: ' . substr($request->catatan_tindak_lanjut, 0, 100) .
-                    (strlen($request->catatan_tindak_lanjut) > 100 ? '...' : ''),
+                'comment' => $commentText,
             ]);
 
             $successMessage = $request->status_konfirmasi_auditee === 'Completed'

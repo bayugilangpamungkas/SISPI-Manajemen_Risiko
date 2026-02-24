@@ -282,41 +282,6 @@
                     </div>
                 </div>
 
-                {{-- ========== ACTION BUTTONS ========== --}}
-                {{-- <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6 mb-3 mb-lg-0">
-                                <h6 class="font-weight-bold text-dark mb-2">
-                                    <i class="fas fa-info-circle text-primary mr-2"></i>Petunjuk Penggunaan
-                                </h6>
-                                <div class="text-muted" style="font-size: 0.875rem;">
-                                    <p class="mb-1 d-flex align-items-start">
-                                        <i class="fas fa-check text-success mr-2 mt-1"></i>
-                                        <span>Centang data yang akan ditampilkan di halaman <strong>Manajemen
-                                                Risiko</strong></span>
-                                    </p>
-                                    <p class="mb-0 d-flex align-items-start">
-                                        <i class="fas fa-check text-success mr-2 mt-1"></i>
-                                        <span>Klik tombol "Pilih Kegiatan" untuk memilih kegiatan per unit kerja</span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-6">
-                                <div class="d-grid gap-2">
-                                    <button type="button" class="btn btn-primary btn-lg" onclick="showSelectedData()">
-                                        <i class="fas fa-paper-plane mr-2"></i> Submit ke Manajemen Risiko
-                                    </button>
-                                    <a href="{{ route('manajemen-risiko.index') }}" class="btn btn-dark btn-lg">
-                                        <i class="fas fa-arrow-right mr-2"></i> Lihat Halaman Manajemen Risiko
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
-
                 {{-- ========== DATA TABLE ========== --}}
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-primary text-white py-3">
@@ -327,219 +292,198 @@
                     </div>
 
                     <div class="card-body p-0">
-                        <form id="selectionForm" method="POST">
-                            @csrf
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th width="50" class="text-center border-0">
-                                                <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
-                                            </th>
-                                            <th width="60" class="text-center border-0">No</th>
-                                            <th class="border-0">Unit Kerja</th>
-                                            <th width="120" class="text-center border-0">Kode Kegiatan</th>
-                                            <th width="130" class="text-center border-0">Kegiatan</th>
-                                            <th width="120" class="text-center border-0">Kategori</th>
-                                            <th class="text-center border-0">Judul Risiko</th>
-                                            <th width="90" class="text-center border-0">Skor</th>
-                                            <th width="100" class="text-center border-0">Tingkat</th>
-                                            <th width="150" class="text-center border-0">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 table-bordered">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th width="50" class="text-center align-middle">No</th>
+                                        <th width="180" class="text-center align-middle">Unit Kerja</th>
+                                        <th width="140" class="text-center align-middle">Kode Kegiatan</th>
+                                        <th width="120" class="text-center align-middle">Kegiatan</th>
+                                        <th width="140" class="text-center align-middle">Kategori</th>
+                                        <th width="280" class="text-center align-middle">Judul Risiko</th>
+                                        <th width="80" class="text-center align-middle">Skor</th>
+                                        <th width="110" class="text-center align-middle">Tingkat</th>
+                                        <th width="100" class="text-center align-middle">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-center">
+                                    @php
+                                        $no = ($petas->currentPage() - 1) * $petas->perPage() + 1;
+                                        // Cache untuk menghindari query berulang
+                                        $uniqueUnits = collect();
+                                        foreach ($petas as $peta) {
+                                            if ($peta->jenis && !$uniqueUnits->contains($peta->jenis)) {
+                                                $uniqueUnits->push($peta->jenis);
+                                            }
+                                        }
+                                        $kegiatanTampilPerUnit = [];
+                                        foreach ($uniqueUnits as $unitName) {
+                                            $unitModel = \App\Models\UnitKerja::where(
+                                                'nama_unit_kerja',
+                                                $unitName,
+                                            )->first();
+                                            if ($unitModel) {
+                                                $jumlahKegiatanTampil = \App\Models\Kegiatan::hitungKegiatanTampil(
+                                                    $unitModel->id,
+                                                    $tahun,
+                                                );
+                                                $kegiatanTampilPerUnit[$unitName] = $jumlahKegiatanTampil;
+                                            }
+                                        }
+                                    @endphp
+
+                                    @forelse($petas as $peta)
                                         @php
-                                            $no = ($petas->currentPage() - 1) * $petas->perPage() + 1;
-                                            $uniqueUnits = collect();
-                                            foreach ($petas as $peta) {
-                                                if ($peta->jenis && !$uniqueUnits->contains($peta->jenis)) {
-                                                    $uniqueUnits->push($peta->jenis);
+                                            $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
+
+                                            if ($skorTotal >= 20) {
+                                                $badge = 'danger';
+                                                $label = 'Extreme';
+                                            } elseif ($skorTotal >= 15) {
+                                                $badge = 'warning';
+                                                $label = 'High';
+                                            } elseif ($skorTotal >= 10) {
+                                                $badge = 'info';
+                                                $label = 'Moderate';
+                                            } else {
+                                                $badge = 'success';
+                                                $label = 'Low';
+                                            }
+
+                                            $unitKerjaModel = \App\Models\UnitKerja::where(
+                                                'nama_unit_kerja',
+                                                $peta->jenis,
+                                            )->first();
+
+                                            $kodeUnit = '-';
+                                            if ($peta->kegiatan) {
+                                                if (!empty($peta->kegiatan->id_kegiatan)) {
+                                                    $kodeUnit = $peta->kegiatan->id_kegiatan;
+                                                } elseif (!empty($peta->kegiatan->kode)) {
+                                                    $kodeUnit = $peta->kegiatan->kode;
+                                                } elseif (!empty($peta->kegiatan->id)) {
+                                                    $kodeUnit = $peta->kegiatan->id;
                                                 }
                                             }
-                                            $kegiatanTampilPerUnit = [];
-                                            foreach ($uniqueUnits as $unitName) {
-                                                $unitModel = \App\Models\UnitKerja::where(
-                                                    'nama_unit_kerja',
-                                                    $unitName,
-                                                )->first();
-                                                if ($unitModel) {
-                                                    $jumlahKegiatanTampil = \App\Models\Kegiatan::hitungKegiatanTampil(
-                                                        $unitModel->id,
-                                                        $tahun,
-                                                    );
-                                                    $kegiatanTampilPerUnit[$unitName] = $jumlahKegiatanTampil;
+
+                                            $jumlahRisikoUnit = 0;
+                                            $jumlahRisikoTerpilih = 0;
+                                            if ($peta->jenis) {
+                                                static $risikoCountCache = [];
+                                                static $risikoTerpilihCache = [];
+
+                                                if (!isset($risikoCountCache[$peta->jenis])) {
+                                                    $risikoCountCache[$peta->jenis] = \App\Models\Peta::where(
+                                                        'jenis',
+                                                        $peta->jenis,
+                                                    )
+                                                        ->whereYear('created_at', $tahun)
+                                                        ->count();
                                                 }
+                                                $jumlahRisikoUnit = $risikoCountCache[$peta->jenis];
+
+                                                if (!isset($risikoTerpilihCache[$peta->jenis])) {
+                                                    $risikoTerpilihCache[$peta->jenis] = \App\Models\Peta::where(
+                                                        'jenis',
+                                                        $peta->jenis,
+                                                    )
+                                                        ->whereYear('created_at', $tahun)
+                                                        ->where('tampil_manajemen_risiko', 1)
+                                                        ->count();
+                                                }
+                                                $jumlahRisikoTerpilih = $risikoTerpilihCache[$peta->jenis];
                                             }
                                         @endphp
 
-                                        @forelse($petas as $peta)
-                                            @php
-                                                $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
-
-                                                if ($skorTotal >= 20) {
-                                                    $badge = 'danger';
-                                                    $label = 'Extreme';
-                                                } elseif ($skorTotal >= 15) {
-                                                    $badge = 'warning';
-                                                    $label = 'High';
-                                                } elseif ($skorTotal >= 10) {
-                                                    $badge = 'info';
-                                                    $label = 'Moderate';
-                                                } else {
-                                                    $badge = 'success';
-                                                    $label = 'Low';
-                                                }
-
-                                                $unitKerjaModel = \App\Models\UnitKerja::where(
-                                                    'nama_unit_kerja',
-                                                    $peta->jenis,
-                                                )->first();
-
-                                                $kodeUnit = '-';
-                                                if ($peta->kegiatan) {
-                                                    if (!empty($peta->kegiatan->id_kegiatan)) {
-                                                        $kodeUnit = $peta->kegiatan->id_kegiatan;
-                                                    } elseif (!empty($peta->kegiatan->kode)) {
-                                                        $kodeUnit = $peta->kegiatan->kode;
-                                                    } elseif (!empty($peta->kegiatan->id)) {
-                                                        $kodeUnit = $peta->kegiatan->id;
-                                                    }
-                                                }
-
-                                                $jumlahKegiatanTampil = 0;
-                                                $totalKegiatanUnit = 0;
-
-                                                if ($unitKerjaModel) {
-                                                    $jumlahKegiatanTampil = $kegiatanTampilPerUnit[$peta->jenis] ?? 0;
-
-                                                    if (
-                                                        $jumlahKegiatanTampil == 0 &&
-                                                        isset($kegiatanTampilPerUnit[$peta->jenis])
-                                                    ) {
-                                                        $jumlahKegiatanTampil = \App\Models\Kegiatan::hitungKegiatanTampil(
-                                                            $unitKerjaModel->id,
-                                                            $tahun,
-                                                        );
-                                                    }
-
-                                                    $totalKegiatanUnit = \App\Models\Kegiatan::where(
-                                                        'id_unit_kerja',
-                                                        $unitKerjaModel->id,
-                                                    )->count();
-                                                }
-
-                                                $jumlahRisikoUnit = 0;
-                                                $jumlahRisikoTerpilih = 0;
-                                                if ($peta->jenis) {
-                                                    static $risikoCountCache = [];
-                                                    static $risikoTerpilihCache = [];
-
-                                                    if (!isset($risikoCountCache[$peta->jenis])) {
-                                                        $risikoCountCache[$peta->jenis] = \App\Models\Peta::where(
-                                                            'jenis',
-                                                            $peta->jenis,
-                                                        )
-                                                            ->whereYear('created_at', $tahun)
-                                                            ->count();
-                                                    }
-                                                    $jumlahRisikoUnit = $risikoCountCache[$peta->jenis];
-
-                                                    if (!isset($risikoTerpilihCache[$peta->jenis])) {
-                                                        $risikoTerpilihCache[$peta->jenis] = \App\Models\Peta::where(
-                                                            'jenis',
-                                                            $peta->jenis,
-                                                        )
-                                                            ->whereYear('created_at', $tahun)
-                                                            ->where('tampil_manajemen_risiko', 1)
-                                                            ->count();
-                                                    }
-                                                    $jumlahRisikoTerpilih = $risikoTerpilihCache[$peta->jenis];
-                                                }
-                                            @endphp
-
-                                            <tr>
-                                                <td class="text-center align-middle">
-                                                    <input type="checkbox" name="selected_ids[]"
-                                                        value="{{ $peta->id }}" class="data-checkbox">
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <span class="badge badge-light border">{{ $no++ }}</span>
-                                                </td>
-                                                <td class="align-middle">
-                                                    <div class="font-weight-bold text-dark">{{ $peta->jenis }}</div>
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <span class="badge badge-secondary">{{ $kodeUnit }}</span>
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <div class="d-flex flex-column align-items-center">
-                                                        <span class="badge badge-success" style="font-size: 0.95rem;">
-                                                            <i class="fas fa-check-circle mr-1"></i>
-                                                            {{ $jumlahRisikoTerpilih }}
-                                                            @if ($jumlahRisikoUnit > 0)
-                                                                <small>/{{ $jumlahRisikoUnit }}</small>
-                                                            @endif
-                                                        </span>
-                                                        <small class="text-muted mt-1" style="font-size: 0.75rem;">
-                                                            Kegiatan
-                                                        </small>
-                                                    </div>
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <span class="badge badge-light border">{{ $peta->kategori }}</span>
-                                                </td>
-                                                <td class="align-middle">
-                                                    <div class="text-dark" style="line-height: 1.4;">
-                                                        {{ Str::limit($peta->judul, 60) }}
-                                                        @if (strlen($peta->judul) > 60)
-                                                            <i class="fas fa-info-circle text-info ml-1"
-                                                                data-toggle="tooltip" title="{{ $peta->judul }}"></i>
+                                        <tr>
+                                            <td class="text-center align-middle">
+                                                <span
+                                                    class="badge badge-light border px-2 py-1">{{ $no++ }}</span>
+                                            </td>
+                                            <td class="align-middle px-3">
+                                                <div class="font-weight-bold text-dark" style="font-size: 0.9rem;">
+                                                    {{ $peta->jenis }}
+                                                </div>
+                                            </td>
+                                            <td class="text-center align-middle px-2">
+                                                <span class="badge badge-secondary px-2 py-1" style="font-size: 0.85rem;">
+                                                    {{ $kodeUnit }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center align-middle px-2">
+                                                <div class="d-flex flex-column align-items-center justify-content-center">
+                                                    <span class="badge badge-success px-2 py-1"
+                                                        style="font-size: 0.9rem;">
+                                                        <i class="fas fa-check-circle mr-1"></i>
+                                                        {{ $jumlahRisikoTerpilih }}
+                                                        @if ($jumlahRisikoUnit > 0)
+                                                            <small>/{{ $jumlahRisikoUnit }}</small>
                                                         @endif
-                                                    </div>
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <div class="font-weight-bold text-dark" style="font-size: 1.1rem;">
-                                                        {{ $skorTotal }}
-                                                    </div>
-                                                    <small class="text-muted" style="font-size: 0.75rem;">
-                                                        {{ $peta->skor_kemungkinan }}×{{ $peta->skor_dampak }}
-                                                    </small>
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <span class="badge badge-{{ $badge }} p-2"
-                                                        style="font-size: 0.85rem;">
-                                                        {{ $label }}
                                                     </span>
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    <a href="{{ route('manajemen-risiko.detail-unit', ['unitKerja' => $peta->jenis, 'tahun' => $tahun]) }}"
-                                                        class="btn btn-sm btn-primary">
-                                                        <i class="fas fa-list-ul mr-1"></i> Pilih Kegiatan
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="10" class="text-center py-5">
-                                                    <div class="text-muted">
-                                                        <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                                        <h6>Tidak Ada Data</h6>
-                                                        <p class="mb-0">Data Peta Risiko tidak tersedia untuk filter yang
-                                                            dipilih</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
+                                                    <small class="text-muted mt-1" style="font-size: 0.7rem;">
+                                                        Kegiatan
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td class="text-center align-middle px-2">
+                                                <span class="badge badge-light border px-2 py-1"
+                                                    style="font-size: 0.85rem;">
+                                                    {{ $peta->kategori }}
+                                                </span>
+                                            </td>
+                                            <td class="align-middle px-3">
+                                                <div class="text-dark" style="line-height: 1.5; font-size: 0.9rem;">
+                                                    {{ Str::limit($peta->judul, 50) }}
+                                                    @if (strlen($peta->judul) > 50)
+                                                        <i class="fas fa-info-circle text-info ml-1" data-toggle="tooltip"
+                                                            data-placement="top" title="{{ $peta->judul }}"></i>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="text-center align-middle px-2">
+                                                <div class="font-weight-bold text-dark" style="font-size: 1.1rem;">
+                                                    {{ $skorTotal }}
+                                                </div>
+                                                <small class="text-muted d-block" style="font-size: 0.7rem;">
+                                                    {{ $peta->skor_kemungkinan }}×{{ $peta->skor_dampak }}
+                                                </small>
+                                            </td>
+                                            <td class="text-center align-middle px-2">
+                                                <span class="badge badge-{{ $badge }} px-2 py-1"
+                                                    style="font-size: 0.85rem; min-width: 80px; display: inline-block;">
+                                                    {{ $label }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center align-middle px-2">
+                                                <a href="{{ route('manajemen-risiko.detail-unit', ['unitKerja' => $peta->jenis, 'tahun' => $tahun]) }}"
+                                                    class="btn btn-sm btn-primary px-3" data-toggle="tooltip"
+                                                    data-placement="top" title="Pilih Kegiatan">
+                                                    <i class="fas fa-list-ul"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="9" class="text-center py-5">
+                                                <div class="text-muted">
+                                                    <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                                    <h6>Tidak Ada Data</h6>
+                                                    <p class="mb-0">Data Peta Risiko tidak tersedia untuk filter yang
+                                                        dipilih</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
 
-                            @if ($petas->hasPages())
-                                <div class="card-footer bg-white border-top-0">
-                                    {{ $petas->appends(request()->query())->links('pagination::bootstrap-4') }}
-                                </div>
-                            @endif
-                        </form>
+                        @if ($petas->hasPages())
+                            <div class="card-footer bg-white border-top-0">
+                                {{ $petas->appends(request()->query())->links('pagination::bootstrap-4') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -661,13 +605,6 @@
                     $label.removeClass('selected').html('Pilih file Excel...');
                     $('#btnUpload').prop('disabled', true);
                 }
-            });
-
-            $('.data-checkbox').on('change', function() {
-                const totalCheckboxes = $('.data-checkbox').length;
-                const checkedCheckboxes = $('.data-checkbox:checked').length;
-
-                $('#selectAll').prop('checked', totalCheckboxes === checkedCheckboxes);
             });
         });
 
@@ -897,95 +834,6 @@
                 $('html, body').animate({
                     scrollTop: $('.card:last').offset().top - 100
                 }, 500);
-            });
-        }
-
-        function toggleSelectAll(source) {
-            $('.data-checkbox').prop('checked', source.checked);
-        }
-
-        function selectAll() {
-            $('.data-checkbox').prop('checked', true);
-            $('#selectAll').prop('checked', true);
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil',
-                text: 'Semua data telah dipilih',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 1500
-            });
-        }
-
-        function deselectAll() {
-            $('.data-checkbox').prop('checked', false);
-            $('#selectAll').prop('checked', false);
-
-            Swal.fire({
-                icon: 'info',
-                title: 'Berhasil',
-                text: 'Semua pilihan telah dibatalkan',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 1500
-            });
-        }
-
-        function showSelectedData() {
-            const selectedCount = $('.data-checkbox:checked').length;
-
-            if (selectedCount === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Tidak ada data dipilih',
-                    text: 'Silakan pilih minimal 1 data untuk ditampilkan di Manajemen Risiko!',
-                    confirmButtonColor: '#6777ef',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
-
-            Swal.fire({
-                title: 'Konfirmasi Submit Manajemen Risiko',
-                html: `
-                <div class="text-center">
-                    <div class="alert alert-light mb-3">
-                        <i class="fas fa-paper-plane fa-2x text-primary mb-2"></i>
-                        <h5 class="mb-1">Submit ${selectedCount} Data ke Manajemen Risiko</h5>
-                        <small class="text-muted">Data yang dipilih akan ditampilkan di halaman Manajemen Risiko dan Anda akan diarahkan ke sana</small>
-                    </div>
-                    <p class="text-muted small">Apakah Anda yakin ingin melanjutkan?</p>
-                </div>
-            `,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#6777ef',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '<i class="fas fa-check mr-1"></i> Ya, Submit & Redirect',
-                cancelButtonText: 'Batal',
-                width: '500px'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.getElementById('selectionForm');
-                    form.action = '{{ route('manajemen-risiko.update-tampil') }}';
-                    form.method = 'POST';
-
-                    Swal.fire({
-                        title: 'Memproses...',
-                        html: 'Mohon tunggu, sedang menyimpan data...',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        showConfirmButton: false,
-                        willOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    form.submit();
-                }
             });
         }
     </script>

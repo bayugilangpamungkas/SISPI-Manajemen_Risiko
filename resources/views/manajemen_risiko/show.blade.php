@@ -608,7 +608,7 @@
                     @if (!$auditorHasSubmitted)
                         {{-- ❌ AUDITOR BELUM SUBMIT: HANYA TAMPILKAN INFORMASI --}}
                         <div class="card mb-4 border-info">
-                            <div class="card-header bg-info text-white">
+                            <div class="card-header bg-primary text-white">
                                 <h5 class="mb-0">
                                     <i class="fas fa-hourglass-half"></i> Status Pemeriksaan Audit
                                 </h5>
@@ -768,13 +768,22 @@
                                                 @method('PUT')
                                                 <input type="hidden" name="action" value="final_approval">
 
-                                                <div class="text-center mt-4">
-                                                    <button type="submit" class="btn btn-success shadow-sm px-5"
-                                                        id="btnFinalApproval"
-                                                        style="border-radius: 50px; padding-top: 10px; padding-bottom: 10px; font-weight: 600; letter-spacing: 0.5px;">
-                                                        <i class="fas fa-check-double mr-2"></i> SUBMIT
-                                                    </button>
-                                                </div>
+                                                {{-- ✅ TOMBOL SUBMIT HANYA MUNCUL JIKA STATUS BUKAN "PEMERIKSAAN SELESAI" --}}
+                                                @if ($statusAudit !== 'final')
+                                                    <div class="text-center mt-4">
+                                                        <button type="submit" class="btn btn-success shadow-sm px-5"
+                                                            id="btnFinalApproval"
+                                                            style="border-radius: 50px; padding-top: 10px; padding-bottom: 10px; font-weight: 600; letter-spacing: 0.5px;">
+                                                            <i class="fas fa-check-double mr-2"></i> SUBMIT
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <div class="alert alert-success text-center">
+                                                        <i class="fas fa-check-circle"></i>
+                                                        <strong>Pemeriksaan Selesai!</strong>
+                                                        Anda telah menyelesaikan konfirmasi untuk audit ini.
+                                                    </div>
+                                                @endif
                                             </form>
                                         </div>
                                     </div>
@@ -1329,8 +1338,8 @@
         }
 
         /* ========================================
-                                                                                                                           TIMELINE STYLES - RIWAYAT AKTIVITAS
-                                                                                                                        ======================================== */
+                                                                                                                               TIMELINE STYLES - RIWAYAT AKTIVITAS
+                                                                                                                            ======================================== */
         .timeline-wrapper {
             position: relative;
             padding: 20px 0;

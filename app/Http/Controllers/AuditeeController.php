@@ -705,6 +705,54 @@ class AuditeeController extends Controller
             return redirect()
                 ->route('manajemen-risiko.auditee.show-detail', $peta->id)
                 ->with('success', '✅ Approval berhasil! Hasil audit telah Anda setujui. Menunggu finalisasi dari Auditor.');
+        
+        } elseif ($action === 'reject_audit') {
+            // ✅✅ MODE BARU: AUDITEE TOLAK HASIL AUDIT (KETIKA AUDITOR STATUS = COMPLETED)
+            // TOMBOL TOLAK: Auditee meminta Auditor untuk memperbaiki hasil audit per-item
+
+            // Validasi: Auditor harus sudah set status = Completed
+            if ($peta->status_konfirmasi_auditor !== 'Completed') {
+                return redirect()->back()->with('error', 'Auditor belum menyelesaikan audit! Anda tidak dapat melakukan penolakan.');
+            }
+
+            $request->validate([
+                'catatan_penolakan' => 'required|string|min:10',
+            ], [
+                'catatan_penolakan.required' => 'Catatan penolakan wajib diisi!',
+                'catatan_penolakan.min' => 'Catatan penolakan minimal 10 karakter untuk menjelaskan alasan penolakan.',
+            ]);
+
+            // ✅ SIMPAN DATA PENOLAKAN
+            $rejectionData = [
+                'catatan_penolakan' => $request->catatan_penolakan,
+                'rejected_by' => $user->name,
+                'rejected_at' => now()->toDateTimeString(),
+                'status' => 'rejected_by_auditee',
+            ];
+
+            // ✅ UPDATE STATUS AUDIT:
+            // - Reset status konfirmasi Auditor agar bisa edit ulang
+            // - Simpan catatan penolakan
+            $peta->update([
+                'status_konfirmasi_auditor' => null, // ✅ RESET agar Auditor bisa edit ulang
+                'status_konfirmasi_auditee' => null, // ✅ RESET status Auditee
+                'catatan_revisi' => json_encode($rejectionData), // ✅ Simpan catatan penolakan
+            ]);
+
+            // ✅ Log activity
+            CommentPr::create([
+                'peta_id' => $peta->id,
+                'user_id' => $user->id,
+                'jenis' => 'analisis',
+                'comment' => '❌ Auditee MENOLAK hasil audit. Alasan: ' . substr($request->catatan_penolakan, 0, 150) .
+                    (strlen($request->catatan_penolakan) > 150 ? '...' : '') .
+                    ' | Menunggu perbaikan dari Auditor.',
+            ]);
+
+            return redirect()
+                ->route('manajemen-risiko.auditee.show-detail', $peta->id)
+                ->with('warning', '⚠️ Hasil audit telah ditolak. Auditor akan menerima notifikasi untuk melakukan perbaikan per-item sesuai catatan Anda.');
+        
         } elseif ($action === 'submit_follow_up') {
             // ✅ MODE BARU 2: AUDITEE SUBMIT TINDAK LANJUT (KETIKA AUDITOR STATUS = NOT COMPLETED)
 
@@ -877,6 +925,120 @@ class AuditeeController extends Controller
                 ->with('success', 'Revisi berhasil dikirim! Menunggu konfirmasi dari Auditor.');
         } else {
             return redirect()->back()->with('error', 'Action tidak valid!');
+        }
+    }
+
+    /**
+     * ✅ REJECT AUDIT - Auditee menolak hasil audit dan meminta perbaikan dari Auditor
+     * Route: PUT /auditee/manajemen-risiko/{id}/reject-audit
+     * 
+     * WORKFLOW:
+     * 1. Auditee memberikan catatan penolakan (alasan spesifik)
+     * 2. Status konfirmasi Auditor di-RESET agar bisa edit ulang
+     * 3. Auditor akan melihat catatan penolakan di halaman detail
+     * 4. Auditor dapat mengedit ulang hasil audit per-item
+     */
+    public function rejectAudit(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        // 1. CEK: Pastikan user memiliki unit kerja
+        if (!$user->unitKerja || !$user->unitKerja->nama_unit_kerja) {
+            return redirect()->route('dashboard')->with(
+                'error',
+                'Anda belum terdaftar di unit kerja manapun!'
+            );
+        }
+
+        $unitKerjaUser = $user->unitKerja->nama_unit_kerja;
+
+        // 2. Cari risiko berdasarkan ID (hanya milik unit kerja user)
+        $peta = Peta::where('jenis', $unitKerjaUser)->findOrFail($id);
+
+        // 3. VALIDASI: Auditor harus sudah set status = Completed
+        if ($peta->status_konfirmasi_auditor !== 'Completed') {
+            return redirect()->back()->with(
+                'error', 
+                'Auditor belum menyelesaikan audit! Anda tidak dapat melakukan penolakan.'
+            );
+        }
+
+        // 4. VALIDASI: Pastikan audit belum final
+        if ($peta->isAuditFinal()) {
+            return redirect()->back()->with(
+                'error', 
+                'Audit sudah final! Anda tidak dapat melakukan penolakan.'
+            );
+        }
+
+        // 5. VALIDASI INPUT: Catatan penolakan wajib diisi (minimal 10 karakter)
+        $request->validate([
+            'catatan_penolakan' => 'required|string|min:10|max:2000',
+        ], [
+            'catatan_penolakan.required' => 'Catatan penolakan wajib diisi!',
+            'catatan_penolakan.min' => 'Catatan penolakan minimal 10 karakter untuk menjelaskan alasan penolakan secara detail.',
+            'catatan_penolakan.max' => 'Catatan penolakan maksimal 2000 karakter.',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // 6. ✅ SIMPAN DATA PENOLAKAN ke field catatan_revisi (JSON format)
+            $rejectionData = [
+                'status' => 'rejected_by_auditee',
+                'catatan_penolakan' => trim($request->catatan_penolakan),
+                'rejected_by' => $user->name,
+                'rejected_by_id' => $user->id,
+                'rejected_at' => now()->toDateTimeString(),
+            ];
+
+            // 7. ✅ UPDATE STATUS AUDIT:
+            //    - Reset status_konfirmasi_auditor = NULL (agar Auditor bisa edit ulang)
+            //    - Reset status_konfirmasi_auditee = NULL
+            //    - Simpan catatan penolakan
+            $peta->update([
+                'status_konfirmasi_auditor' => null, // ✅ RESET agar Auditor bisa INPUT ULANG
+                'status_konfirmasi_auditee' => null, // ✅ RESET status Auditee
+                'catatan_revisi' => json_encode($rejectionData), // ✅ Simpan catatan penolakan
+            ]);
+
+            // 8. ✅ LOG ACTIVITY ke comment_prs table
+            $commentText = '❌ AUDIT DITOLAK oleh Auditee (' . $user->name . ')' . PHP_EOL . PHP_EOL;
+            $commentText .= 'Alasan penolakan:' . PHP_EOL;
+            $commentText .= substr($request->catatan_penolakan, 0, 200);
+            
+            if (strlen($request->catatan_penolakan) > 200) {
+                $commentText .= '... (lihat detail lengkap di halaman audit)';
+            }
+
+            $commentText .= PHP_EOL . PHP_EOL;
+            $commentText .= '→ Status audit kembali ke: MENUNGGU PERBAIKAN AUDITOR';
+            $commentText .= PHP_EOL;
+            $commentText .= '→ Auditor dapat mengedit ulang hasil audit sesuai catatan penolakan.';
+
+            CommentPr::create([
+                'peta_id' => $peta->id,
+                'user_id' => $user->id,
+                'jenis' => 'analisis',
+                'comment' => $commentText,
+            ]);
+
+            DB::commit();
+
+            // 9. ✅ REDIRECT dengan pesan sukses
+            return redirect()
+                ->route('manajemen-risiko.auditee.show-detail', $peta->id)
+                ->with('warning', '⚠️ Hasil audit telah ditolak. Auditor akan menerima notifikasi dan dapat melakukan perbaikan per-item sesuai catatan Anda.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Error saat reject audit: ' . $e->getMessage());
+            
+            return redirect()->back()->with(
+                'error', 
+                'Terjadi kesalahan saat memproses penolakan audit. Silakan coba lagi.'
+            );
         }
     }
 }

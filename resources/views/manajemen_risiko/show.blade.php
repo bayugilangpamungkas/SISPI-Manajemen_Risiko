@@ -797,7 +797,7 @@
 
                                 {{-- CONDITIONAL AUDITEE ACTION BASED ON AUDITOR STATUS --}}
                                 @if ($peta->status_konfirmasi_auditor == 'Completed')
-                                    {{-- ✅ AUDITOR = COMPLETED: HANYA APPROVAL --}}
+                                    {{-- ✅ AUDITOR = COMPLETED: ACC + TOLAK --}}
                                     <div class="card border-success shadow-sm">
                                         <div class="card-header bg-white py-3">
                                             <h6 class="mb-0 font-weight-bold text-dark">
@@ -810,34 +810,107 @@
                                                 <i class="fas fa-info-circle mr-2"></i>
                                                 <strong>Status:</strong> Auditor telah menyatakan bahwa audit
                                                 <strong>SELESAI</strong> dan tidak memerlukan tindak lanjut.
-                                                Silakan klik tombol Submit di bawah untuk konfirmasi akhir dari Unit Kerja.
+                                                Silakan pilih salah satu opsi di bawah:
                                             </div>
 
-                                            <form
-                                                action="{{ route('manajemen-risiko.auditee.submit-response', $peta->id) }}"
-                                                method="POST">
-                                                @csrf
-                                                @method('PUT')
-                                                <input type="hidden" name="action" value="final_approval">
+                                            @php
+                                                // ✅ CEK APAKAH ADA CATATAN PENOLAKAN SEBELUMNYA
+                                                $hasRejectionNote = false;
+                                                $rejectionData = null;
+                                                if ($peta->catatan_revisi) {
+                                                    try {
+                                                        $revisionNotes = json_decode($peta->catatan_revisi, true);
+                                                        if (isset($revisionNotes['status']) && $revisionNotes['status'] === 'rejected_by_auditee') {
+                                                            $hasRejectionNote = true;
+                                                            $rejectionData = $revisionNotes;
+                                                        }
+                                                    } catch (\Exception $e) {
+                                                        // Ignore error
+                                                    }
+                                                }
+                                            @endphp
 
-                                                {{-- ✅ TOMBOL SUBMIT HANYA MUNCUL JIKA STATUS BUKAN "PEMERIKSAAN SELESAI" --}}
-                                                @if ($statusAudit !== 'final')
-                                                    <div class="text-right">
-                                                        <button type="submit"
-                                                            class="btn btn-success btn-lg px-5 shadow-sm"
-                                                            id="btnFinalApproval">
-                                                            <i class="fas fa-check-double mr-2"></i> SUBMIT KONFIRMASI
-                                                        </button>
+                                            {{-- ✅ TAMPILKAN CATATAN PENOLAKAN JIKA ADA --}}
+                                            @if($hasRejectionNote && $rejectionData)
+                                                <div class="alert alert-danger border-0 shadow-sm mb-4">
+                                                    <h6 class="font-weight-bold text-danger mb-2">
+                                                        <i class="fas fa-times-circle mr-1"></i> Riwayat Penolakan Sebelumnya
+                                                    </h6>
+                                                    <div class="mb-2">
+                                                        <strong>Ditolak oleh:</strong> {{ $rejectionData['rejected_by'] ?? '-' }}
                                                     </div>
-                                                @else
-                                                    <div class="alert alert-success text-center border-0 shadow-sm">
-                                                        <i class="fas fa-check-circle fa-2x mb-2 d-block"></i>
-                                                        <strong>Pemeriksaan Selesai!</strong>
-                                                        <p class="mb-0 mt-2">Anda telah menyelesaikan konfirmasi untuk
-                                                            audit ini.</p>
+                                                    <div class="mb-2">
+                                                        <strong>Waktu penolakan:</strong> 
+                                                        {{ isset($rejectionData['rejected_at']) ? date('d M Y, H:i', strtotime($rejectionData['rejected_at'])) : '-' }}
                                                     </div>
-                                                @endif
-                                            </form>
+                                                    <div>
+                                                        <strong>Alasan penolakan:</strong>
+                                                        <div class="p-2 bg-white rounded mt-1" style="line-height: 1.6;">
+                                                            {{ $rejectionData['catatan_penolakan'] ?? '-' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            {{-- ✅ TOMBOL SUBMIT HANYA MUNCUL JIKA STATUS BUKAN "PEMERIKSAAN SELESAI" --}}
+                                            @if ($statusAudit !== 'final')
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <div class="card border-success h-100">
+                                                            <div class="card-body text-center">
+                                                                <i class="fas fa-check-double text-success mb-3" style="font-size: 3rem;"></i>
+                                                                <h5 class="card-title text-success font-weight-bold">ACC / SETUJU</h5>
+                                                                <p class="card-text text-muted mb-4">
+                                                                    Setujui hasil pemeriksaan audit dan lanjutkan ke finalisasi
+                                                                </p>
+                                                                <form action="{{ route('manajemen-risiko.auditee.submit-response', $peta->id) }}" 
+                                                                      method="POST" 
+                                                                      onsubmit="return confirm('✅ Apakah Anda yakin ingin MENYETUJUI hasil audit ini?\n\nDengan mengklik OK, Anda menyatakan bahwa hasil audit sudah sesuai dan siap untuk difinalisasi oleh Auditor.')">
+                                                                    @csrf
+                                                                    @method('PUT')
+                                                                    <input type="hidden" name="action" value="final_approval">
+                                                                    <button type="submit" class="btn btn-success btn-lg btn-block shadow-sm">
+                                                                        <i class="fas fa-check-double mr-2"></i> SUBMIT ACC
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6 mb-3">
+                                                        <div class="card border-danger h-100">
+                                                            <div class="card-body text-center">
+                                                                <i class="fas fa-times-circle text-danger mb-3" style="font-size: 3rem;"></i>
+                                                                <h5 class="card-title text-danger font-weight-bold">TOLAK</h5>
+                                                                <p class="card-text text-muted mb-4">
+                                                                    Minta Auditor untuk memperbaiki hasil audit per-item
+                                                                </p>
+                                                                <button type="button" 
+                                                                        class="btn btn-danger btn-lg btn-block shadow-sm" 
+                                                                        data-toggle="modal" 
+                                                                        data-target="#modalTolakAudit">
+                                                                    <i class="fas fa-times-circle mr-2"></i> TOLAK AUDIT
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="alert alert-warning border-0 mt-3">
+                                                    <i class="fas fa-info-circle mr-2"></i>
+                                                    <strong>Catatan Penting:</strong>
+                                                    <ul class="mb-0 mt-2">
+                                                        <li><strong>ACC:</strong> Audit selesai dan akan dilanjutkan ke finalisasi oleh Auditor.</li>
+                                                        <li><strong>TOLAK:</strong> Meminta Auditor untuk memperbaiki hasil audit. Auditor akan mengedit ulang data audit sesuai catatan Anda.</li>
+                                                    </ul>
+                                                </div>
+                                            @else
+                                                <div class="alert alert-success text-center border-0 shadow-sm">
+                                                    <i class="fas fa-check-circle fa-2x mb-2 d-block"></i>
+                                                    <strong>Pemeriksaan Selesai!</strong>
+                                                    <p class="mb-0 mt-2">Anda telah menyelesaikan konfirmasi untuk audit ini.</p>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @elseif($peta->status_konfirmasi_auditor == 'Not Completed')
@@ -1296,6 +1369,85 @@
                             <i class="fas fa-lock"></i> Ya, Finalisasi Sekarang
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ========================================
+         ✅ MODAL: TOLAK AUDIT (AUDITEE)
+         Modal untuk Auditee menolak hasil audit dan meminta perbaikan dari Auditor
+    ======================================== --}}
+    @if ($isAuditee && $peta->status_konfirmasi_auditor == 'Completed' && $statusAudit !== 'final')
+        <div class="modal fade" id="modalTolakAudit" tabindex="-1" role="dialog"
+            aria-labelledby="modalTolakAuditLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content border-danger">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title font-weight-bold" id="modalTolakAuditLabel">
+                            <i class="fas fa-times-circle mr-2"></i> TOLAK Hasil Audit
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form action="{{ route('manajemen-risiko.auditee.reject-audit', $peta->id) }}" method="POST" id="formTolakAudit">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-body">
+                            <div class="alert alert-danger border-0 shadow-sm mb-4">
+                                <h6 class="font-weight-bold mb-2">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i> Perhatian!
+                                </h6>
+                                <p class="mb-2">
+                                    Dengan menolak hasil audit ini, Anda meminta <strong>Auditor untuk memperbaiki hasil audit</strong> sesuai dengan catatan yang Anda berikan.
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Konsekuensi:</strong>
+                                </p>
+                                <ul class="mb-0 mt-1">
+                                    <li>Status audit akan kembali ke: <span class="badge badge-warning">Perlu Perbaikan Auditor</span></li>
+                                    <li>Auditor akan mengedit ulang data audit (pengendalian, mitigasi, komentar)</li>
+                                    <li>Anda akan diminta untuk review ulang setelah Auditor memperbaiki</li>
+                                </ul>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label class="font-weight-bold text-dark mb-2">
+                                    <i class="fas fa-comment-dots text-danger mr-1"></i>
+                                    Catatan Penolakan / Alasan Tolak <span class="text-danger">*</span>
+                                </label>
+                                <textarea name="catatan_penolakan" 
+                                          class="form-control" 
+                                          rows="6" 
+                                          required
+                                          placeholder="Contoh: Mohon perbaiki poin mitigasi risiko nomor 3. Strategi mitigasi yang diusulkan belum sesuai dengan kondisi di unit kami..."></textarea>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Jelaskan secara spesifik <strong>bagian mana yang perlu diperbaiki</strong> oleh Auditor. 
+                                    Semakin detail catatan Anda, semakin mudah Auditor melakukan perbaikan.
+                                </small>
+                            </div>
+
+                            <div class="alert alert-info border-0">
+                                <i class="fas fa-lightbulb mr-2"></i>
+                                <strong>Tips memberikan catatan penolakan:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Sebutkan <strong>item spesifik</strong> yang perlu diperbaiki (misal: "Pengendalian poin 2", "Komentar Auditor baris 3")</li>
+                                    <li>Jelaskan <strong>alasan</strong> mengapa perlu diperbaiki</li>
+                                    <li>Berikan <strong>saran perbaikan</strong> jika memungkinkan</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-lg" data-dismiss="modal">
+                                <i class="fas fa-arrow-left mr-2"></i> Batal
+                            </button>
+                            <button type="submit" class="btn btn-danger btn-lg" id="btnSubmitTolak">
+                                <i class="fas fa-times-circle mr-2"></i> TOLAK & Kirim ke Auditor
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

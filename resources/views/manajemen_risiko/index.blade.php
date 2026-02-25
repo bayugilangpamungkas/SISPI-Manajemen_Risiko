@@ -441,11 +441,10 @@
                                                                 <i class="fas fa-user-edit"></i>
                                                             </button>
                                                         @else
-                                                            <button class="btn btn-sm btn-warning" data-toggle="modal"
-                                                                data-target="#assignAuditorModal{{ $peta->id }}"
-                                                                title="Tugaskan Auditor">
-                                                                <i class="fas fa-user-plus"></i>
-                                                            </button>
+                                                            <span class="badge badge-warning p-2" data-toggle="tooltip"
+                                                                title="Belum Ditugaskan">
+                                                                <i class="fas fa-user-slash"></i> Belum Ditugaskan
+                                                            </span>
                                                         @endif
                                                     </div>
                                                 @elseif ($isAuditor)

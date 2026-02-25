@@ -492,6 +492,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/auditee/manajemen-risiko/{id}/detail', [App\Http\Controllers\AuditeeController::class, 'auditeeShowDetail'])->name('manajemen-risiko.auditee.show-detail')->middleware('auth');
     // Submit Response Auditee
     Route::put('/auditee/manajemen-risiko/{id}/submit-response', [App\Http\Controllers\AuditeeController::class, 'auditeeSubmitResponse'])->name('manajemen-risiko.auditee.submit-response')->middleware('auth');
+    // ✅ NEW ROUTE: TOLAK AUDIT (Auditee menolak hasil audit dan meminta perbaikan dari Auditor)
+    Route::put('/auditee/manajemen-risiko/{id}/reject-audit', [App\Http\Controllers\AuditeeController::class, 'rejectAudit'])->name('manajemen-risiko.auditee.reject-audit')->middleware('auth');
     Route::get('/auditee/manajemen-risiko/{id}', [App\Http\Controllers\AuditeeController::class, 'auditeeShow'])->name('manajemen-risiko.auditee.show')->middleware('auth');
 
     /* ======================

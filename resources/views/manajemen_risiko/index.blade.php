@@ -431,92 +431,105 @@
                                                 @endif
                                             </td>
                                             <td class="text-center align-middle">
-                                                <div class="btn-group-vertical btn-group-sm" role="group">
-                                                    @if ($isAdmin)
-                                                        {{-- Admin: Hanya tombol Ubah Auditor --}}
+                                                @if ($isAdmin)
+                                                    {{-- Admin: Hanya tombol Ubah Auditor --}}
+                                                    <div class="d-flex justify-content-center">
                                                         @if ($peta->auditor)
-                                                            <button class="btn btn-info" data-toggle="modal"
-                                                                data-target="#assignAuditorModal{{ $peta->id }}">
-                                                                <i class="fas fa-user-edit mr-1"></i> Ubah Auditor
+                                                            <button class="btn btn-sm btn-info" data-toggle="modal"
+                                                                data-target="#assignAuditorModal{{ $peta->id }}"
+                                                                title="Ubah Auditor">
+                                                                <i class="fas fa-user-edit"></i>
                                                             </button>
                                                         @else
-                                                            <span class="badge badge-secondary p-2">
-                                                                <i class="fas fa-user-slash"></i> Belum Ditugaskan
+                                                            <button class="btn btn-sm btn-warning" data-toggle="modal"
+                                                                data-target="#assignAuditorModal{{ $peta->id }}"
+                                                                title="Tugaskan Auditor">
+                                                                <i class="fas fa-user-plus"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                @elseif ($isAuditor)
+                                                    {{-- Auditor: Tombol Detail + Actions --}}
+                                                    <div class="d-flex justify-content-center flex-wrap"
+                                                        style="gap: 5px;">
+                                                        <a href="{{ route('manajemen-risiko.auditor.show-detail', $peta->id) }}"
+                                                            class="btn btn-sm btn-info" data-toggle="tooltip"
+                                                            title="Lihat Detail">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+
+                                                        @if ($peta->koreksiPr == 'submitted' && !$peta->status_telaah)
+                                                            <button class="btn btn-sm btn-success" data-toggle="modal"
+                                                                data-target="#approveModal{{ $peta->id }}"
+                                                                title="Setujui">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger" data-toggle="modal"
+                                                                data-target="#rejectModal{{ $peta->id }}"
+                                                                title="Minta Revisi">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                @elseif ($isAuditee)
+                                                    {{-- Auditee: Tombol Detail + Status Actions --}}
+                                                    <div class="d-flex justify-content-center flex-wrap"
+                                                        style="gap: 5px;">
+                                                        <a href="{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}"
+                                                            class="btn btn-sm btn-info" data-toggle="tooltip"
+                                                            title="Lihat Detail">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+
+                                                        @if (!$peta->auditor_id)
+                                                            {{-- Belum ada auditor yang ditugaskan --}}
+                                                            <span class="badge badge-secondary p-2" data-toggle="tooltip"
+                                                                title="Belum ada auditor yang ditugaskan">
+                                                                <i class="fas fa-user-slash"></i>
+                                                            </span>
+                                                        @elseif ($peta->koreksiPr == 'rejected')
+                                                            {{-- Auditor minta perbaikan (OLD WORKFLOW) --}}
+                                                            <a href="{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}"
+                                                                class="btn btn-sm btn-warning" data-toggle="tooltip"
+                                                                title="Lakukan Perbaikan">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                        @elseif ($peta->status_konfirmasi_auditor == 'Completed' && $peta->status_konfirmasi_auditee != 'Completed')
+                                                            {{-- ✅ NEW WORKFLOW: Auditor sudah selesai, auditee perlu approve --}}
+                                                            <a href="{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}"
+                                                                class="btn btn-sm btn-success" data-toggle="tooltip"
+                                                                title="Konfirmasi Hasil Audit">
+                                                                <i class="fas fa-check-double"></i>
+                                                            </a>
+                                                        @elseif ($peta->status_konfirmasi_auditor == 'Not Completed' && $peta->status_konfirmasi_auditee != 'Completed')
+                                                            {{-- ✅ NEW WORKFLOW: Auditor belum selesai, auditee perlu tindak lanjut --}}
+                                                            <a href="{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}"
+                                                                class="btn btn-sm btn-warning" data-toggle="tooltip"
+                                                                title="Submit Tindak Lanjut">
+                                                                <i class="fas fa-tasks"></i>
+                                                            </a>
+                                                        @elseif ($peta->status_konfirmasi_auditee == 'Completed')
+                                                            {{-- ✅ NEW WORKFLOW: Auditee sudah selesai konfirmasi --}}
+                                                            <span class="badge badge-success p-2" data-toggle="tooltip"
+                                                                title="Anda sudah konfirmasi">
+                                                                <i class="fas fa-check-circle"></i>
+                                                            </span>
+                                                        @elseif ($peta->pengendalian && $peta->mitigasi)
+                                                            {{-- ✅ NEW WORKFLOW: Auditor sudah input hasil audit --}}
+                                                            <a href="{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}"
+                                                                class="btn btn-sm btn-primary" data-toggle="tooltip"
+                                                                title="Lihat Proses Audit">
+                                                                <i class="fas fa-tasks"></i>
+                                                            </a>
+                                                        @else
+                                                            {{-- Menunggu input dari Auditor --}}
+                                                            <span class="badge badge-info p-2" data-toggle="tooltip"
+                                                                title="Menunggu Auditor melakukan pemeriksaan">
+                                                                <i class="fas fa-hourglass-half"></i>
                                                             </span>
                                                         @endif
-                                                    @else
-                                                        {{-- Auditor & Auditee: Tombol Detail tetap ada --}}
-                                                        <div class="d-flex justify-content-center">
-                                                            <a href="{{ $isAuditee ? route('manajemen-risiko.auditee.show-detail', $peta->id) : ($isAuditor ? route('manajemen-risiko.auditor.show-detail', $peta->id) : route('manajemen-risiko.show', $peta->id)) }}"
-                                                                class="btn btn-sm btn-info" data-toggle="tooltip"
-                                                                title="Lihat Detail">
-                                                                <i class="fas fa-eye"></i>
-                                                            </a>
-                                                        </div>
-
-                                                        @if ($isAuditor)
-                                                            {{-- Auditor actions --}}
-                                                            @if ($peta->koreksiPr == 'submitted' && !$peta->status_telaah)
-                                                                <button class="btn btn-success mt-1" data-toggle="modal"
-                                                                    data-target="#approveModal{{ $peta->id }}">
-                                                                    <i class="fas fa-check mr-1"></i> Setujui
-                                                                </button>
-                                                                <button class="btn btn-danger mt-1" data-toggle="modal"
-                                                                    data-target="#rejectModal{{ $peta->id }}">
-                                                                    <i class="fas fa-times mr-1"></i> Revisi
-                                                                </button>
-                                                            @endif
-                                                        @elseif ($isAuditee)
-                                                            {{-- Auditee actions --}}
-                                                            @if (!$peta->auditor_id)
-                                                                {{-- Belum ada auditor yang ditugaskan --}}
-                                                                <span class="badge badge-secondary shadow-sm"
-                                                                    style="padding: 0.5rem 0.7rem; border-radius: 50px; font-weight: 500;"
-                                                                    data-toggle="tooltip"
-                                                                    title="Status: Belum Ditugaskan">
-                                                                    <i class="fas fa-user-slash fa-sm"></i>
-                                                                </span>
-                                                            @elseif ($peta->koreksiPr == 'rejected')
-                                                                {{-- Auditor minta perbaikan (OLD WORKFLOW) --}}
-                                                                <button class="btn btn-warning mt-1"
-                                                                    onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'">
-                                                                    <i class="fas fa-edit mr-1"></i> Lakukan Perbaikan
-                                                                </button>
-                                                            @elseif ($peta->status_konfirmasi_auditor == 'Completed' && $peta->status_konfirmasi_auditee != 'Completed')
-                                                                {{-- ✅ NEW WORKFLOW: Auditor sudah selesai, auditee perlu approve --}}
-                                                                <button class="btn btn-success mt-1"
-                                                                    onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'">
-                                                                    <i class="fas fa-check-double mr-1"></i> Konfirmasi
-                                                                    Hasil
-                                                                </button>
-                                                            @elseif ($peta->status_konfirmasi_auditor == 'Not Completed' && $peta->status_konfirmasi_auditee != 'Completed')
-                                                                {{-- ✅ NEW WORKFLOW: Auditor belum selesai, auditee perlu tindak lanjut --}}
-                                                                <button class="btn btn-warning mt-1"
-                                                                    onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'">
-                                                                    <i class="fas fa-tasks mr-1"></i> Tindak Lanjut
-                                                                </button>
-                                                            @elseif ($peta->status_konfirmasi_auditee == 'Completed')
-                                                                {{-- ✅ NEW WORKFLOW: Auditee sudah selesai konfirmasi --}}
-                                                                <span class="badge badge-success p-2"
-                                                                    title="Status: Selesai">
-                                                                    <i class="fas fa-check-circle"></i>
-                                                                </span>
-                                                            @elseif ($peta->pengendalian && $peta->mitigasi)
-                                                                {{-- ✅ NEW WORKFLOW: Auditor sudah input hasil audit, auditee bisa proses --}}
-                                                                <button class="btn btn-sm btn-primary"
-                                                                    data-toggle="tooltip" title="Lihat Proses Audit"
-                                                                    onclick="window.location.href='{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}'">
-                                                                    <i class="fas fa-tasks"></i>
-                                                                </button>
-                                                            @else
-                                                                {{-- Menunggu input dari Auditor --}}
-                                                                <span class="badge badge-info p-2">
-                                                                    <i class="fas fa-hourglass-half"></i> Menunggu Auditor
-                                                                </span>
-                                                            @endif
-                                                        @endif
-                                                    @endif
-                                                </div>
+                                                    </div>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty

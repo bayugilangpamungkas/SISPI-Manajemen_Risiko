@@ -474,11 +474,6 @@
                                                     {{-- Auditee: Tombol Detail + Status Actions --}}
                                                     <div class="d-flex justify-content-center flex-wrap"
                                                         style="gap: 5px;">
-                                                        <a href="{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}"
-                                                            class="btn btn-sm btn-info" data-toggle="tooltip"
-                                                            title="Lihat Detail">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
 
                                                         @if (!$peta->auditor_id)
                                                             {{-- Belum ada auditor yang ditugaskan --}}
@@ -509,10 +504,11 @@
                                                             </a>
                                                         @elseif ($peta->status_konfirmasi_auditee == 'Completed')
                                                             {{-- ✅ NEW WORKFLOW: Auditee sudah selesai konfirmasi --}}
-                                                            <span class="badge badge-success p-2" data-toggle="tooltip"
+                                                            <a href="{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}"
+                                                                class="btn btn-sm btn-success" data-toggle="tooltip"
                                                                 title="Anda sudah konfirmasi">
                                                                 <i class="fas fa-check-circle"></i>
-                                                            </span>
+                                                            </a>
                                                         @elseif ($peta->pengendalian && $peta->mitigasi)
                                                             {{-- ✅ NEW WORKFLOW: Auditor sudah input hasil audit --}}
                                                             <a href="{{ route('manajemen-risiko.auditee.show-detail', $peta->id) }}"

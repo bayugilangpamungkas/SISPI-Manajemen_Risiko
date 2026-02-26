@@ -261,10 +261,12 @@ class AuditorController extends Controller
             }
 
             // ✅ UPDATE DATA PETA dengan hasil audit
+            // Juga clear catatan_revisi jika sebelumnya ditolak oleh Auditee
             $peta->update([
                 'pengendalian' => $request->pengendalian,
                 'mitigasi' => $request->mitigasi,
                 'status_konfirmasi_auditor' => $request->status_konfirmasi_auditor,
+                'catatan_revisi' => null, // ✅ Clear rejection note setelah Auditor submit ulang
             ]);
 
             // ✅ SIMPAN/UPDATE KE TABEL HASIL_AUDIT

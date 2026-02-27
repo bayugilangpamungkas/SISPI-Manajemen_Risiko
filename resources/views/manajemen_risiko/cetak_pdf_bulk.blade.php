@@ -380,7 +380,7 @@
                     <div class="signature-left">
                         <span class="text-underline">Unit.</span>
                         <div class="signature-space"></div>
-                        <span class="text-bold text-underline">{{ $peta->jenis }}</span><br>
+                        <span class="text-bold text-underline">{{ $namaUserUnitKerja ?? ($user->name ?? 'DATA KOSONG') }}</span><br>
                         @if ($hasilAudit && $hasilAudit->auditor)
                             <span>NIP. {{ $hasilAudit->auditor->nip ?? '-' }}</span>
                         @else

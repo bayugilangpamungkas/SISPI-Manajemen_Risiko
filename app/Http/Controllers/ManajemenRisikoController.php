@@ -1550,4 +1550,306 @@ class ManajemenRisikoController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan saat mencetak Excel: ' . $e->getMessage());
         }
     }
+
+    /**
+     * ✅ CETAK PDF BULK — Semua risiko final milik 1 Unit Kerja
+     * 1 halaman PDF per 1 risiko (page-break otomatis)
+     * Route: GET /manajemen-risiko/bulk/cetak-pdf?unit_kerja=...&tahun=...
+     */
+    public function cetakPDFBulk(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            // Validasi: hanya Admin
+            if (!$user->Level || !in_array($user->Level->name, ['Super Admin', 'Admin'])) {
+                return redirect()->back()->with('error', 'Hanya Admin yang memiliki akses untuk cetak dokumen!');
+            }
+
+            $unitKerja = $request->input('unit_kerja', 'all');
+            $tahun     = $request->input('tahun', date('Y'));
+
+            // Ambil semua risiko yang sudah FINAL (status_telaah = 1)
+            $query = Peta::with(['comment_prs.user', 'kegiatan', 'auditor'])
+                ->where('tampil_manajemen_risiko', 1)
+                ->where('status_telaah', 1)
+                ->whereYear('created_at', $tahun);
+
+            if ($unitKerja !== 'all') {
+                $query->where('jenis', $unitKerja);
+            }
+
+            $petas = $query->orderByRaw('(skor_kemungkinan * skor_dampak) DESC')->get();
+
+            if ($petas->isEmpty()) {
+                return redirect()->back()->with(
+                    'error',
+                    'Tidak ada data audit yang sudah FINAL untuk ' .
+                        ($unitKerja === 'all' ? 'semua unit kerja' : $unitKerja) .
+                        ' tahun ' . $tahun . '. Pastikan audit sudah difinalisasi terlebih dahulu.'
+                );
+            }
+
+            // Siapkan data per risiko (dengan hasilAudit & level)
+            $petaItems = [];
+            foreach ($petas as $peta) {
+                $hasilAudit = HasilAudit::where('peta_id', $peta->id)
+                    ->where('tahun_anggaran', $tahun)
+                    ->first();
+
+                $skorTotal = ($peta->skor_kemungkinan ?? 0) * ($peta->skor_dampak ?? 0);
+
+                if ($skorTotal >= 20) {
+                    $levelText = 'EXTREME';
+                    $residualText = 'Extreme';
+                } elseif ($skorTotal >= 15) {
+                    $levelText = 'HIGH';
+                    $residualText = 'High';
+                } elseif ($skorTotal >= 10) {
+                    $levelText = 'MODERATE';
+                    $residualText = 'Moderate';
+                } else {
+                    $levelText = 'LOW';
+                    $residualText = 'Low';
+                }
+
+                $petaItems[] = compact('peta', 'hasilAudit', 'skorTotal', 'levelText', 'residualText');
+            }
+
+            // Generate PDF multi-halaman menggunakan view baru
+            $pdf = Pdf::loadView('manajemen_risiko.cetak_pdf_bulk', compact(
+                'petaItems',
+                'user',
+                'unitKerja',
+                'tahun'
+            ));
+            $pdf->setPaper('A4', 'portrait');
+
+            $namaFile = 'unit_kerja_' === 'all'
+                ? 'Semua_Unit_Kerja'
+                : str_replace([' ', '/'], '_', $unitKerja);
+
+            $filename = 'Bulk_PDF_' . $namaFile . '_' . $tahun . '_' . date('Ymd') . '.pdf';
+
+            return $pdf->stream($filename);
+        } catch (\Exception $e) {
+            Log::error('Error cetakPDFBulk: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencetak PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ✅ CETAK EXCEL BULK — Semua risiko final milik 1 Unit Kerja
+     * Setiap baris = 1 risiko, dengan semua data audit
+     * Route: GET /manajemen-risiko/bulk/cetak-excel?unit_kerja=...&tahun=...
+     */
+    public function cetakExcelBulk(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            // Validasi: hanya Admin
+            if (!$user->Level || !in_array($user->Level->name, ['Super Admin', 'Admin'])) {
+                return redirect()->back()->with('error', 'Hanya Admin yang memiliki akses untuk cetak dokumen!');
+            }
+
+            $unitKerja = $request->input('unit_kerja', 'all');
+            $tahun     = $request->input('tahun', date('Y'));
+
+            // Ambil semua risiko yang sudah FINAL (status_telaah = 1)
+            $query = Peta::with(['comment_prs.user', 'kegiatan', 'auditor'])
+                ->where('tampil_manajemen_risiko', 1)
+                ->where('status_telaah', 1)
+                ->whereYear('created_at', $tahun);
+
+            if ($unitKerja !== 'all') {
+                $query->where('jenis', $unitKerja);
+            }
+
+            $petas = $query->orderByRaw('(skor_kemungkinan * skor_dampak) DESC')->get();
+
+            if ($petas->isEmpty()) {
+                return redirect()->back()->with(
+                    'error',
+                    'Tidak ada data audit yang sudah FINAL untuk ' .
+                        ($unitKerja === 'all' ? 'semua unit kerja' : $unitKerja) .
+                        ' tahun ' . $tahun . '. Pastikan audit sudah difinalisasi terlebih dahulu.'
+                );
+            }
+
+            // ── Coba load template Excel jika ada ──
+            $templatePath = public_path('templates/Buku template.xlsx');
+            if (file_exists($templatePath)) {
+                $spreadsheet = IOFactory::load($templatePath);
+                // Duplikat sheet per risiko jika template ada
+                $templateSheet = $spreadsheet->getActiveSheet();
+            } else {
+                $spreadsheet  = new Spreadsheet();
+                $templateSheet = null;
+            }
+
+            // Hapus semua sheet awal jika pakai template (akan dibuat ulang per risiko)
+            if ($templateSheet) {
+                // Kita buat sheet baru setelah sheet template
+                $spreadsheet->removeSheetByIndex(0);
+            }
+
+            $no = 1;
+            foreach ($petas as $index => $peta) {
+                $hasilAudit = HasilAudit::where('peta_id', $peta->id)
+                    ->where('tahun_anggaran', $tahun)
+                    ->first();
+
+                $skorTotal = ($peta->skor_kemungkinan ?? 0) * ($peta->skor_dampak ?? 0);
+
+                if ($skorTotal >= 20) {
+                    $levelText = 'EXTREME';
+                    $residualText = 'Extreme';
+                } elseif ($skorTotal >= 15) {
+                    $levelText = 'HIGH';
+                    $residualText = 'High';
+                } elseif ($skorTotal >= 10) {
+                    $levelText = 'MODERATE';
+                    $residualText = 'Moderate';
+                } else {
+                    $levelText = 'LOW';
+                    $residualText = 'Low';
+                }
+
+                // Buat sheet baru per risiko
+                $sheetName = 'Risiko ' . $no . ' - ' . \Illuminate\Support\Str::limit(
+                    preg_replace('/[^a-zA-Z0-9\s\-]/', '', $peta->jenis),
+                    15,
+                    ''
+                );
+
+                $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $sheetName);
+                $spreadsheet->addSheet($sheet);
+
+                // ── HEADER ──
+                $sheet->mergeCells('A1:F1');
+                $sheet->setCellValue('A1', 'LEMBAR MONITORING DAN EVALUASI MANAJEMEN RISIKO UNIT');
+                $sheet->getStyle('A1')->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF']],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1F3864']],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                ]);
+                $sheet->getRowDimension(1)->setRowHeight(22);
+
+                $sheet->mergeCells('A2:F2');
+                $sheet->setCellValue('A2', 'SATUAN PENGAWAS INTERNAL – POLITEKNIK NEGERI MALANG');
+                $sheet->getStyle('A2')->applyFromArray([
+                    'font'      => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2E75B6']],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+                $sheet->getRowDimension(2)->setRowHeight(16);
+
+                // ── INFO RISIKO ──
+                $infoRows = [
+                    ['UNIT KERJA',              $peta->jenis],
+                    ['KODE RISIKO',             $peta->kode_regist ?? '-'],
+                    ['KEGIATAN',                $peta->kegiatan->judul ?? $peta->judul ?? '-'],
+                    ['PERNYATAAN RISIKO',       $peta->pernyataan ?? '-'],
+                    ['SKOR KEMUNGKINAN',        $peta->skor_kemungkinan ?? 0],
+                    ['SKOR DAMPAK',             $peta->skor_dampak ?? 0],
+                    ['SKOR TOTAL',              $skorTotal],
+                    ['LEVEL RISIKO',            $levelText],
+                    ['RISIKO RESIDUAL',         $residualText],
+                    ['TAHUN ANGGARAN',          $tahun],
+                ];
+
+                $row = 4;
+                foreach ($infoRows as [$label, $value]) {
+                    $sheet->setCellValue('A' . $row, $label);
+                    $sheet->setCellValue('B' . $row, ':');
+                    $sheet->mergeCells('C' . $row . ':F' . $row);
+                    $sheet->setCellValue('C' . $row, $value);
+                    $sheet->getStyle('A' . $row)->applyFromArray([
+                        'font' => ['bold' => true],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'D9E1F2']],
+                    ]);
+                    $sheet->getStyle('A' . $row . ':F' . $row)->applyFromArray([
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    ]);
+                    $row++;
+                }
+
+                // ── HASIL AUDIT ──
+                $row++;
+                $sheet->mergeCells('A' . $row . ':F' . $row);
+                $sheet->setCellValue('A' . $row, 'HASIL AUDIT');
+                $sheet->getStyle('A' . $row)->applyFromArray([
+                    'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '375623']],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+                $row++;
+
+                $auditRows = [
+                    ['PENGENDALIAN RISIKO',     $hasilAudit->pengendalian ?? $peta->pengendalian ?? '-'],
+                    ['MITIGASI',                $hasilAudit->mitigasi     ?? $peta->mitigasi     ?? '-'],
+                    ['KOMENTAR AUDITOR',        $hasilAudit->komentar_1   ?? '-'],
+                    ['STATUS AUDITOR',          $peta->status_konfirmasi_auditor ?? '-'],
+                    ['STATUS AUDITEE',          $peta->status_konfirmasi_auditee ?? '-'],
+                    ['AUDITOR',                 $peta->auditor->name ?? ($hasilAudit->nama_pemonev ?? '-')],
+                    ['TANGGAL FINALISASI',      $peta->waktu_telaah_spi ? date('d/m/Y', strtotime($peta->waktu_telaah_spi)) : '-'],
+                ];
+
+                foreach ($auditRows as [$label, $value]) {
+                    $sheet->setCellValue('A' . $row, $label);
+                    $sheet->setCellValue('B' . $row, ':');
+                    $sheet->mergeCells('C' . $row . ':F' . $row);
+                    $sheet->setCellValue('C' . $row, $value);
+                    $sheet->getStyle('A' . $row)->applyFromArray([
+                        'font' => ['bold' => true],
+                        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E2EFDA']],
+                    ]);
+                    $sheet->getStyle('A' . $row . ':F' . $row)->applyFromArray([
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    ]);
+                    $sheet->getRowDimension($row)->setRowHeight(30);
+                    $sheet->getStyle('C' . $row)->getAlignment()->setWrapText(true);
+                    $row++;
+                }
+
+                // Lebar kolom
+                $sheet->getColumnDimension('A')->setWidth(28);
+                $sheet->getColumnDimension('B')->setWidth(3);
+                foreach (['C', 'D', 'E', 'F'] as $col) {
+                    $sheet->getColumnDimension($col)->setWidth(22);
+                }
+
+                $no++;
+            }
+
+            // Hapus sheet kosong pertama jika masih ada
+            if ($spreadsheet->getSheetCount() > count($petas)) {
+                try {
+                    $spreadsheet->removeSheetByIndex(0);
+                } catch (\Exception $e) {
+                }
+            }
+
+            // Set sheet pertama aktif
+            $spreadsheet->setActiveSheetIndex(0);
+
+            $namaFile = ($unitKerja === 'all')
+                ? 'Semua_Unit_Kerja'
+                : str_replace([' ', '/'], '_', $unitKerja);
+
+            $filename = 'Bulk_Excel_' . $namaFile . '_' . $tahun . '_' . date('Ymd') . '.xlsx';
+
+            $writer    = new Xlsx($spreadsheet);
+            $temp_file = tempnam(sys_get_temp_dir(), $filename);
+            $writer->save($temp_file);
+
+            return response()->download($temp_file, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error('Error cetakExcelBulk: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mencetak Excel: ' . $e->getMessage());
+        }
+    }
 }

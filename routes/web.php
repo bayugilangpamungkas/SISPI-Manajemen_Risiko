@@ -521,18 +521,27 @@ Route::middleware('auth')->group(function () {
      ====================== */
     // Route Manajemen Risiko - Admin (Super Admin, Admin)
     Route::get('/manajemen-risiko', [App\Http\Controllers\ManajemenRisikoController::class, 'index'])->name('manajemen-risiko.index')->middleware('auth');
-    // ✅ Detail Risiko (Admin View) - Route yang hilang
-    Route::get('/manajemen-risiko/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'show'])->name('manajemen-risiko.show')->middleware('auth');
-    // ✅ Route Cetak PDF & Excel (ADMIN ONLY)
-    Route::get('/manajemen-risiko/{id}/cetak-pdf', [App\Http\Controllers\ManajemenRisikoController::class, 'cetakPDF'])->name('manajemen-risiko.cetak-pdf')->middleware('auth');
-    Route::get('/manajemen-risiko/{id}/cetak-excel', [App\Http\Controllers\ManajemenRisikoController::class, 'cetakExcel'])->name('manajemen-risiko.cetak-excel')->middleware('auth');
+
+    // ⚠️ PENTING: Semua route dengan path LITERAL harus didaftarkan SEBELUM route {id} wildcard.
+    // Jika {id} didaftarkan lebih dulu, Laravel akan mencocokkan string "bulk", "generate",
+    // "export" dsb. sebagai nilai {id}, lalu findOrFail("bulk") → ModelNotFoundException.
+
+    // ✅ Cetak PDF & Excel BULK (path literal "bulk") — WAJIB sebelum /{id}
+    Route::get('/manajemen-risiko/bulk/cetak-pdf', [App\Http\Controllers\ManajemenRisikoController::class, 'cetakPDFBulk'])->name('manajemen-risiko.cetak-pdf-bulk')->middleware('auth');
+    Route::get('/manajemen-risiko/bulk/cetak-excel', [App\Http\Controllers\ManajemenRisikoController::class, 'cetakExcelBulk'])->name('manajemen-risiko.cetak-excel-bulk')->middleware('auth');
+
+    // ✅ Generate Report & Export Excel (path literal) — WAJIB sebelum /{id}
     Route::get('/manajemen-risiko/generate/report', [App\Http\Controllers\ManajemenRisikoController::class, 'generateReport'])->name('manajemen-risiko.generate-report')->middleware('auth');
     Route::get('/manajemen-risiko/export/excel', [App\Http\Controllers\ManajemenRisikoController::class, 'export'])->name('manajemen-risiko.export')->middleware('auth');
+
+    // ✅ Route dengan {id} wildcard — didaftarkan SETELAH semua route literal di atas
+    Route::get('/manajemen-risiko/{id}', [App\Http\Controllers\ManajemenRisikoController::class, 'show'])->name('manajemen-risiko.show')->middleware('auth');
+    Route::get('/manajemen-risiko/{id}/cetak-pdf', [App\Http\Controllers\ManajemenRisikoController::class, 'cetakPDF'])->name('manajemen-risiko.cetak-pdf')->middleware('auth');
+    Route::get('/manajemen-risiko/{id}/cetak-excel', [App\Http\Controllers\ManajemenRisikoController::class, 'cetakExcel'])->name('manajemen-risiko.cetak-excel')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/comment', [App\Http\Controllers\ManajemenRisikoController::class, 'comment'])->name('manajemen-risiko.comment')->middleware('auth');
     Route::put('/manajemen-risiko/{id}/update-status', [App\Http\Controllers\ManajemenRisikoController::class, 'updateStatus'])->name('manajemen-risiko.update-status')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/assign-auditor', [App\Http\Controllers\ManajemenRisikoController::class, 'assignAuditor'])->name('manajemen-risiko.assign-auditor')->middleware('auth');
     Route::post('/manajemen-risiko/{id}/upload-report', [App\Http\Controllers\ManajemenRisikoController::class, 'uploadReport'])->name('manajemen-risiko.upload-report')->middleware('auth');
-    // ✅ Route Finalisasi Audit
     Route::post('/manajemen-risiko/{id}/finalisasi', [App\Http\Controllers\ManajemenRisikoController::class, 'finalizeAudit'])->name('manajemen-risiko.finalisasi')->middleware('auth');
 
     // Hasil Audit Routes (Admin)

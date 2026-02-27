@@ -230,6 +230,55 @@
                                 @endif
                             </div>
                         </form>
+
+                        {{-- ✅ TOMBOL CETAK — HANYA TAMPIL UNTUK ADMIN --}}
+                        @if ($isAdmin)
+                            <div class="row mt-3 pt-3 border-top">
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                                        <span class="font-weight-bold text-dark" style="font-size: 0.875rem;">
+                                            <i class="fas fa-print mr-1 text-primary"></i> CETAK LAPORAN:
+                                        </span>
+
+                                        {{-- Tombol Cetak PDF --}}
+                                        <button type="button" class="btn btn-danger btn-sm shadow-sm"
+                                            data-toggle="modal" data-target="#modalCetakPDF"
+                                            title="Cetak PDF semua risiko final per Unit Kerja">
+                                            <i class="fas fa-file-pdf mr-1"></i>
+                                            Cetak PDF
+                                            @if ($unitKerja !== 'all')
+                                                <span
+                                                    class="badge badge-light text-danger ml-1">{{ $unitKerja }}</span>
+                                            @endif
+                                        </button>
+
+                                        {{-- Tombol Cetak Excel --}}
+                                        <button type="button" class="btn btn-success btn-sm shadow-sm"
+                                            data-toggle="modal" data-target="#modalCetakExcel"
+                                            title="Cetak Excel semua risiko final per Unit Kerja">
+                                            <i class="fas fa-file-excel mr-1"></i>
+                                            Cetak Excel
+                                            @if ($unitKerja !== 'all')
+                                                <span
+                                                    class="badge badge-light text-success ml-1">{{ $unitKerja }}</span>
+                                            @endif
+                                        </button>
+
+                                        {{-- Info hint --}}
+                                        <small class="text-muted" style="font-size: 0.78rem;">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Hanya risiko yang sudah <strong>difinalisasi</strong> yang akan dicetak.
+                                            @if ($unitKerja === 'all')
+                                                Pilih Unit Kerja terlebih dahulu untuk cetak per unit.
+                                            @else
+                                                Unit: <strong>{{ $unitKerja }}</strong> | Tahun:
+                                                <strong>{{ $tahun }}</strong>
+                                            @endif
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -721,6 +770,140 @@
             </div>
         @endif
     @endforeach
+
+    {{-- ✅ MODAL CETAK PDF BULK (Admin Only) --}}
+    @if ($isAdmin)
+        <div class="modal fade" id="modalCetakPDF" tabindex="-1" role="dialog" aria-labelledby="modalCetakPDFLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="modalCetakPDFLabel">
+                            <i class="fas fa-file-pdf mr-2"></i>Cetak PDF Laporan Manajemen Risiko
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info border-0 mb-3">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <strong>Informasi:</strong> PDF akan berisi <strong>1 halaman per risiko</strong>
+                            yang sudah <strong>difinalisasi</strong> (audit selesai).
+                        </div>
+
+                        <form id="formCetakPDF" method="GET" action="{{ route('manajemen-risiko.cetak-pdf-bulk') }}"
+                            target="_blank">
+                            <div class="form-group">
+                                <label class="font-weight-bold"><i class="fas fa-building mr-1"></i> Unit Kerja</label>
+                                <select name="unit_kerja" class="form-control">
+                                    <option value="all" {{ $unitKerja == 'all' ? 'selected' : '' }}>— Semua Unit Kerja
+                                        —</option>
+                                    @foreach ($unitKerjas as $uk)
+                                        <option value="{{ $uk->nama_unit_kerja }}"
+                                            {{ $unitKerja == $uk->nama_unit_kerja ? 'selected' : '' }}>
+                                            {{ $uk->nama_unit_kerja }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small class="form-text text-muted">Pilih unit kerja tertentu atau cetak semua
+                                    sekaligus.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold"><i class="fas fa-calendar-alt mr-1"></i> Tahun</label>
+                                <select name="tahun" class="form-control">
+                                    @foreach ($years as $year)
+                                        <option value="{{ $year }}" {{ $tahun == $year ? 'selected' : '' }}>
+                                            {{ $year }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="alert alert-warning border-0 mb-0">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                <small>PDF akan terbuka di tab baru. Pastikan popup tidak diblokir browser Anda.</small>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i> Batal
+                        </button>
+                        <button type="submit" form="formCetakPDF" class="btn btn-danger">
+                            <i class="fas fa-file-pdf mr-1"></i> Cetak PDF Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ✅ MODAL CETAK EXCEL BULK (Admin Only) --}}
+        <div class="modal fade" id="modalCetakExcel" tabindex="-1" role="dialog"
+            aria-labelledby="modalCetakExcelLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="modalCetakExcelLabel">
+                            <i class="fas fa-file-excel mr-2"></i>Cetak Excel Laporan Manajemen Risiko
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info border-0 mb-3">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <strong>Informasi:</strong> Excel akan berisi <strong>1 sheet per risiko</strong>
+                            yang sudah <strong>difinalisasi</strong>. Setiap sheet memuat lengkap data audit.
+                        </div>
+
+                        <form id="formCetakExcel" method="GET"
+                            action="{{ route('manajemen-risiko.cetak-excel-bulk') }}">
+                            <div class="form-group">
+                                <label class="font-weight-bold"><i class="fas fa-building mr-1"></i> Unit Kerja</label>
+                                <select name="unit_kerja" class="form-control">
+                                    <option value="all" {{ $unitKerja == 'all' ? 'selected' : '' }}>— Semua Unit Kerja
+                                        —</option>
+                                    @foreach ($unitKerjas as $uk)
+                                        <option value="{{ $uk->nama_unit_kerja }}"
+                                            {{ $unitKerja == $uk->nama_unit_kerja ? 'selected' : '' }}>
+                                            {{ $uk->nama_unit_kerja }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small class="form-text text-muted">Pilih unit kerja tertentu atau unduh semua
+                                    sekaligus.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="font-weight-bold"><i class="fas fa-calendar-alt mr-1"></i> Tahun</label>
+                                <select name="tahun" class="form-control">
+                                    @foreach ($years as $year)
+                                        <option value="{{ $year }}" {{ $tahun == $year ? 'selected' : '' }}>
+                                            {{ $year }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="alert alert-warning border-0 mb-0">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                <small>File Excel akan langsung terunduh ke perangkat Anda.</small>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i> Batal
+                        </button>
+                        <button type="submit" form="formCetakExcel" class="btn btn-success">
+                            <i class="fas fa-file-excel mr-1"></i> Unduh Excel Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
 @endsection
 

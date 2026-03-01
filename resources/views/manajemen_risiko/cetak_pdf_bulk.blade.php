@@ -49,10 +49,17 @@
             margin-bottom: 0;
         }
 
+        /*
+         * ✅ PERBAIKAN LOGO:
+         * vertical-align: top  → logo rata atas (tidak melayang tengah)
+         * padding-top: 0       → logo lebih ke atas
+         */
         .kop-table td {
             border: none;
-            padding: 2px 4px;
-            vertical-align: middle;
+            padding: 0 4px;
+            /* ← 0 di atas, bukan 2px */
+            vertical-align: top;
+            /* ← top, bukan middle */
         }
 
         .kop-logo {
@@ -63,6 +70,8 @@
         .kop-logo img {
             width: 68px;
             height: auto;
+            margin-top: 0;
+            /* ← tidak ada offset atas */
         }
 
         .kop-teks {
@@ -166,7 +175,7 @@
 
         .tbl-identitas .mid-gap {
             width: 3%;
-            border: none;
+            border: 1px solid #555;
             background-color: #fff;
             padding: 0;
         }
@@ -432,7 +441,7 @@
                 <tr>
                     <td class="lbl">Pernyataan Risiko</td>
                     <td class="sep">:</td>
-                    <td class="val" colspan="4">{{ $peta->pernyataan ?? '-' }}</td>
+                    <td class="val" colspan="5">{{ $peta->pernyataan ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td class="lbl">Level Risiko</td>

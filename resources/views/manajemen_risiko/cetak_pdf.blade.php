@@ -47,10 +47,17 @@
             padding-bottom: 4px;
         }
 
+        /*
+         * ✅ PERBAIKAN LOGO:
+         * Ubah vertical-align dari 'middle' → 'top'
+         * dan padding-top: 0 agar logo rata atas dengan teks kop
+         */
         .kop-table td {
             border: none;
-            padding: 2px 4px;
-            vertical-align: middle;
+            padding: 0 4px;
+            /* ← padding-top 0, bukan 2px */
+            vertical-align: top;
+            /* ← top, bukan middle */
         }
 
         .kop-logo {
@@ -61,6 +68,8 @@
         .kop-logo img {
             width: 68px;
             height: auto;
+            margin-top: 0;
+            /* ← pastikan tidak ada offset atas */
         }
 
         .kop-teks {
@@ -155,7 +164,8 @@
         /* pemisah tengah antara kiri–kanan */
         .tbl-identitas .mid-gap {
             width: 3%;
-            border: none;
+            border: 1px solid #555;
+            /* Tambahkan border agar garis tidak terputus */
             background-color: #fff;
             padding: 0;
         }
@@ -404,7 +414,7 @@
         <tr>
             <td class="lbl">Pernyataan Risiko</td>
             <td class="sep">:</td>
-            <td class="val" colspan="4">{{ $peta->pernyataan ?? '-' }}</td>
+            <td class="val" colspan="5">{{ $peta->pernyataan ?? '-' }}</td>
         </tr>
         <tr>
             <td class="lbl">Level Risiko</td>
@@ -420,13 +430,13 @@
             </td>
         </tr>
         <tr>
-            <td class="lbl">Pemonev / Auditor</td>
+            <td class="lbl">Pemonev</td>
             <td class="sep">:</td>
             <td class="val">{{ $hasilAudit->nama_pemonev ?? ($user->name ?? '-') }}</td>
             <td class="mid-gap"></td>
-            <td class="lbl">Tanggal Cetak</td>
-            <td class="sep">:</td>
-            <td class="val">{{ now()->translatedFormat('d F Y') }}</td>
+            <td></td>
+            <td></td>
+            <td></td>
         </tr>
     </table>
 
@@ -509,15 +519,6 @@
                     <p class="ttd-nama">{{ $namaUserUnitKerja ?? ($user->name ?? 'DATA KOSONG') }}</p>
                     <p class="ttd-nip">NIP.{{ $hasilAudit->auditor->nip ?? '-' }}</p>
                 </td>
-
-                {{-- Tengah: Mengetahui (kosong untuk cap instansi) --}}
-                {{-- <td>
-                    <p class="ttd-jabatan">Mengetahui,</p>
-                    <p class="ttd-kota">Kepala SPI Polinema</p>
-                    <div class="ttd-ruang"></div>
-                    <p class="ttd-nama">___________________________</p>
-                    <p class="ttd-nip">NIP. ______________________</p>
-                </td> --}}
 
                 {{-- Kanan: Auditor / Pemonev --}}
                 <td>

@@ -137,6 +137,8 @@
 
         /* ============================================================
          |  TABEL IDENTITAS AUDIT
+         Struktur tiap baris: lbl | sep | val | mid-gap | lbl | sep | val
+         Baris full-width   : lbl | sep | val[colspan=5]
          ============================================================ */
         .tbl-identitas {
             width: 100%;
@@ -411,38 +413,51 @@
          JUDUL DOKUMEN
          ================================================================ --}}
             <div class="judul-dokumen">
-                <h2>Lembar Monitoring dan Evaluasi Manajemen Risiko Unit</h2>
+                <h2>Lembar Monitoring dan Evaluasi Manajemen Risiko</h2>
                 <p>Laporan Hasil Audit – Tahun Anggaran {{ $hasilAudit->tahun_anggaran ?? $tahun }}</p>
             </div>
 
             {{-- ================================================================
          IDENTITAS AUDIT
+         Struktur tiap baris: lbl | sep | val | mid-gap | lbl | sep | val
+         Baris full-width   : lbl | sep | val[colspan=5]
          ================================================================ --}}
             <table class="tbl-identitas">
+                {{-- Baris 1: Unit Kerja | Pemonev --}}
                 <tr>
                     <td class="lbl">Unit Kerja</td>
                     <td class="sep">:</td>
                     <td class="val">{{ $peta->jenis }}</td>
                     <td class="mid-gap"></td>
+                    <td class="lbl">Pemonev</td>
+                    <td class="sep">:</td>
+                    <td class="val">{{ $hasilAudit->nama_pemonev ?? ($user->name ?? '-') }}</td>
+                </tr>
+                {{-- Baris 2: Kode Risiko | Tahun Anggaran --}}
+                <tr>
                     <td class="lbl">Kode Risiko</td>
                     <td class="sep">:</td>
                     <td class="val">{{ $peta->kode_regist ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td class="lbl">Kegiatan</td>
-                    <td class="sep">:</td>
-                    <td class="val">{{ $hasilAudit->kegiatan ?? ($peta->kegiatan->judul ?? ($peta->judul ?? '-')) }}
-                    </td>
                     <td class="mid-gap"></td>
                     <td class="lbl">Tahun Anggaran</td>
                     <td class="sep">:</td>
                     <td class="val">{{ $hasilAudit->tahun_anggaran ?? $tahun }}</td>
                 </tr>
+                {{-- Baris 3: Pernyataan Risiko — full width colspan=5 --}}
                 <tr>
                     <td class="lbl">Pernyataan Risiko</td>
                     <td class="sep">:</td>
                     <td class="val" colspan="5">{{ $peta->pernyataan ?? '-' }}</td>
                 </tr>
+                {{-- Baris 4: Kegiatan — full width colspan=5 ✅ PERBAIKAN --}}
+                <tr>
+                    <td class="lbl">Kegiatan</td>
+                    <td class="sep">:</td>
+                    <td class="val" colspan="5">
+                        {{ $hasilAudit->kegiatan ?? ($peta->kegiatan->judul ?? ($peta->judul ?? '-')) }}
+                    </td>
+                </tr>
+                {{-- Baris 5: Level Risiko | Risiko Residual --}}
                 <tr>
                     <td class="lbl">Level Risiko</td>
                     <td class="sep">:</td>
@@ -455,15 +470,6 @@
                     <td class="val">
                         <span class="badge-risiko {{ $rvlClass }}">{{ $residualValue }}</span>
                     </td>
-                </tr>
-                <tr>
-                    <td class="lbl">Pemonev / Auditor</td>
-                    <td class="sep">:</td>
-                    <td class="val">{{ $hasilAudit->nama_pemonev ?? ($user->name ?? '-') }}</td>
-                    <td class="mid-gap"></td>
-                    <td class="lbl">Tanggal Cetak</td>
-                    <td class="sep">:</td>
-                    <td class="val">{{ now()->translatedFormat('d F Y') }}</td>
                 </tr>
             </table>
 
@@ -500,15 +506,15 @@
                             </td>
                             <td class="col-komentar" style="min-height:130px;">
                                 @if ($hasilAudit->komentar_1)
-                                    <strong>1. Sentralisasi Repositori Bukti</strong><br>
+                                    {{-- <strong>1. Sentralisasi Repositori Bukti</strong><br> --}}
                                     {{ $hasilAudit->komentar_1 }}<br><br>
                                 @endif
                                 @if ($hasilAudit->komentar_2)
-                                    <strong>2. Finalisasi LKPS &amp; Cross-Check</strong><br>
+                                    {{-- <strong>2. Finalisasi LKPS &amp; Cross-Check</strong><br> --}}
                                     {{ $hasilAudit->komentar_2 }}<br><br>
                                 @endif
                                 @if ($hasilAudit->komentar_3)
-                                    <strong>3. Koordinasi Khusus Keuangan</strong><br>
+                                    {{-- <strong>3. Koordinasi Khusus Keuangan</strong><br> --}}
                                     {{ $hasilAudit->komentar_3 }}
                                 @endif
                                 @if (!$hasilAudit->komentar_1 && !$hasilAudit->komentar_2 && !$hasilAudit->komentar_3)
@@ -539,13 +545,6 @@
                             <p class="ttd-nama">{{ $namaUserUnitKerja ?? ($user->name ?? 'DATA KOSONG') }}</p>
                             <p class="ttd-nip">NIP.{{ $hasilAudit->auditor->nip ?? '-' }}</p>
                         </td>
-                        {{-- <td>
-                            <p class="ttd-jabatan">Mengetahui,</p>
-                            <p class="ttd-kota">Kepala SPI Polinema</p>
-                            <div class="ttd-ruang"></div>
-                            <p class="ttd-nama">___________________________</p>
-                            <p class="ttd-nip">NIP. ______________________</p>
-                        </td> --}}
                         <td>
                             <p class="ttd-kota">Malang, {{ now()->translatedFormat('d F Y') }}</p>
                             <p class="ttd-jabatan">Pemonev</p>

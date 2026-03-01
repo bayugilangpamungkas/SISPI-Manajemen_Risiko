@@ -390,32 +390,46 @@
     </div>
 
     {{-- ================================================================
-     IDENTITAS AUDIT — 2 panel berdampingan (6 kolom tabel)
+     IDENTITAS AUDIT — 2 panel berdampingan (7 kolom tabel)
+     Struktur tiap baris: lbl | sep | val | mid-gap | lbl | sep | val
+     Baris full-width   : lbl | sep | val[colspan=5]
      ================================================================ --}}
     <table class="tbl-identitas">
+        {{-- Baris 1: Unit Kerja | Pemonev --}}
         <tr>
             <td class="lbl">Unit Kerja</td>
             <td class="sep">:</td>
             <td class="val">{{ $peta->jenis }}</td>
             <td class="mid-gap"></td>
+            <td class="lbl">Pemonev</td>
+            <td class="sep">:</td>
+            <td class="val">{{ $hasilAudit->nama_pemonev ?? ($user->name ?? '-') }}</td>
+        </tr>
+        {{-- Baris 2: Kode Risiko | Tahun Anggaran --}}
+        <tr>
             <td class="lbl">Kode Risiko</td>
             <td class="sep">:</td>
             <td class="val">{{ $peta->kode_regist ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="lbl">Kegiatan</td>
-            <td class="sep">:</td>
-            <td class="val">{{ $hasilAudit->kegiatan ?? ($peta->kegiatan->judul ?? ($peta->judul ?? '-')) }}</td>
             <td class="mid-gap"></td>
             <td class="lbl">Tahun Anggaran</td>
             <td class="sep">:</td>
             <td class="val">{{ $hasilAudit->tahun_anggaran ?? date('Y') }}</td>
         </tr>
+        {{-- Baris 3: Pernyataan Risiko — full width (colspan=5 menutupi mid-gap+lbl+sep+val) --}}
         <tr>
             <td class="lbl">Pernyataan Risiko</td>
             <td class="sep">:</td>
             <td class="val" colspan="5">{{ $peta->pernyataan ?? '-' }}</td>
         </tr>
+        {{-- Baris 4: Kegiatan — full width (colspan=5) --}}
+        <tr>
+            <td class="lbl">Kegiatan</td>
+            <td class="sep">:</td>
+            <td class="val" colspan="5">
+                {{ $hasilAudit->kegiatan ?? ($peta->kegiatan->judul ?? ($peta->judul ?? '-')) }}
+            </td>
+        </tr>
+        {{-- Baris 5: Level Risiko | Risiko Residual --}}
         <tr>
             <td class="lbl">Level Risiko</td>
             <td class="sep">:</td>
@@ -428,15 +442,6 @@
             <td class="val">
                 <span class="badge-risiko {{ $rvlClass }}">{{ $residualValue }}</span>
             </td>
-        </tr>
-        <tr>
-            <td class="lbl">Pemonev</td>
-            <td class="sep">:</td>
-            <td class="val">{{ $hasilAudit->nama_pemonev ?? ($user->name ?? '-') }}</td>
-            <td class="mid-gap"></td>
-            <td></td>
-            <td></td>
-            <td></td>
         </tr>
     </table>
 

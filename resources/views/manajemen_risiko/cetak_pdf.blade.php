@@ -66,10 +66,11 @@
         }
 
         .kop-logo img {
-            width: 68px;
+            width: 80px;
             height: auto;
             margin-top: 0;
             /* ← pastikan tidak ada offset atas */
+
         }
 
         .kop-teks {
@@ -137,7 +138,7 @@
             padding: 3.5px 7px;
             font-size: 8.5pt;
             vertical-align: top;
-            border: 1px solid #555;
+            border: 1px solid #000;
             line-height: 1.3;
         }
 
@@ -145,7 +146,7 @@
             font-weight: bold;
             white-space: nowrap;
             width: 13%;
-            background-color: #f0f0f0;
+            background-color: #fff;
         }
 
         .tbl-identitas .sep {
@@ -154,7 +155,7 @@
             padding: 3.5px 2px;
             border-left: none;
             border-right: none;
-            background-color: #f0f0f0;
+            background-color: #fff;
         }
 
         .tbl-identitas .val {
@@ -164,8 +165,7 @@
         /* pemisah tengah antara kiri–kanan */
         .tbl-identitas .mid-gap {
             width: 3%;
-            border: 1px solid #555;
-            /* Tambahkan border agar garis tidak terputus */
+            border: 1px solid #000;
             background-color: #fff;
             padding: 0;
         }
@@ -180,26 +180,28 @@
             padding: 2px 14px;
             border-radius: 2px;
             letter-spacing: 0.5px;
+            background-color: #fff;
+            color: #000;
         }
 
         .lvl-extreme {
-            background-color: #C00000;
-            color: #fff;
+            background-color: #fff;
+            color: #000;
         }
 
         .lvl-high {
-            background-color: #FF6600;
-            color: #fff;
+            background-color: #fff;
+            color: #000;
         }
 
         .lvl-moderate {
-            background-color: #FFD700;
+            background-color: #fff;
             color: #000;
         }
 
         .lvl-low {
-            background-color: #70AD47;
-            color: #fff;
+            background-color: #fff;
+            color: #000;
         }
 
         /* ============================================================
@@ -213,13 +215,13 @@
         }
 
         .tbl-audit th {
-            background-color: #1F3864;
-            color: #fff;
+            background-color: #fff;
+            color: #000;
             font-size: 8.5pt;
             font-weight: bold;
             text-align: center;
             padding: 5px 7px;
-            border: 1px solid #3A5A9B;
+            border: 1px solid #000;
             letter-spacing: 0.3px;
         }
 
@@ -227,21 +229,22 @@
             padding: 6px 8px;
             font-size: 8.5pt;
             vertical-align: top;
-            border: 1px solid #555;
+            border: 1px solid #000;
             line-height: 1.45;
+            background-color: #fff;
+            color: #000;
         }
 
-        /* zebra ringan pada sel konten */
         .tbl-audit td.col-pengendalian {
-            background-color: #FAFBFF;
+            background-color: #fff;
         }
 
         .tbl-audit td.col-mitigasi {
-            background-color: #FFFEFA;
+            background-color: #fff;
         }
 
         .tbl-audit td.col-komentar {
-            background-color: #FFFBF0;
+            background-color: #fff;
         }
 
         .col-width-35 {
@@ -258,14 +261,14 @@
 
         .isi-label {
             font-weight: bold;
-            color: #C00000;
+            color: #000;
             display: block;
             margin-bottom: 3px;
         }
 
         .isi-kosong {
             text-align: center;
-            color: #888;
+            color: #000;
             font-style: italic;
             padding: 30px 0;
         }
@@ -279,7 +282,7 @@
 
         .komentar-no {
             font-weight: bold;
-            color: #1F3864;
+            color: #000;
             margin-right: 3px;
         }
 
@@ -288,15 +291,15 @@
             display: block;
             margin-top: 6px;
             padding: 4px 6px;
-            background-color: #f5f5f5;
-            border-left: 3px solid #888;
+            background-color: #fff;
+            border-left: 3px solid #000;
             font-size: 8pt;
             line-height: 1.4;
         }
 
         .mitigasi-kepada-label {
             font-weight: bold;
-            color: #555;
+            color: #000;
         }
 
         /* ============================================================
@@ -314,11 +317,20 @@
 
         .ttd-table td {
             border: none;
-            padding: 0 10px;
-            width: 33.33%;
-            text-align: center;
+            padding: 0 0 0 0;
+            width: 50%;
             vertical-align: top;
             font-size: 8.5pt;
+        }
+
+        /* Kolom kiri → rata kiri */
+        .ttd-table td.ttd-kiri {
+            text-align: center;
+        }
+
+        /* Kolom kanan → rata kanan */
+        .ttd-table td.ttd-kanan {
+            text-align: center;
         }
 
         .ttd-kota {
@@ -361,7 +373,6 @@
         /* ── Kolom Mitigasi ── */
         .mitigasi-strategi {
             display: block;
-            font-weight: bold;
             font-size: 9pt;
             text-align: center;
             margin-bottom: 8px;
@@ -460,7 +471,7 @@
      JUDUL DOKUMEN
      ================================================================ --}}
     <div class="judul-dokumen">
-        <h2>Lembar Monitoring dan Evaluasi Manajemen Risiko Unit</h2>
+        <h2>Lembar Monitoring dan Evaluasi Manajemen Risiko</h2>
         <p>Laporan Hasil Audit – Tahun Anggaran {{ $hasilAudit->tahun_anggaran ?? date('Y') }}</p>
     </div>
 
@@ -637,25 +648,22 @@
         <table class="ttd-table">
             <tr>
                 {{-- Kiri: Unit Kerja / Auditee --}}
-                <td>
+                <td class="ttd-kiri">
                     <p class="ttd-jabatan">Unit Kerja</p>
                     <p class="ttd-kota">{{ $peta->jenis }}</p>
                     <div class="ttd-ruang"></div>
                     <p class="ttd-nama">{{ $namaUserUnitKerja ?? ($user->name ?? 'DATA KOSONG') }}</p>
-                    <p class="ttd-nip">NIP.{{ $hasilAudit->auditor->nip ?? '-' }}</p>
+                    <p class="ttd-nip">NIP. {{ $hasilAudit->auditor->nip ?? '-' }}</p>
                 </td>
 
                 {{-- Kanan: Auditor / Pemonev --}}
-                <td>
+                <td class="ttd-kanan">
                     <p class="ttd-kota">Malang, {{ now()->translatedFormat('d F Y') }}</p>
                     <p class="ttd-jabatan">Pemonev</p>
                     <div class="ttd-ruang"></div>
                     <p class="ttd-nama">
-                        {{ $hasilAudit->nama_pemonev ?? ($user->name ?? 'Usman Nurhasan, S.Kom., M.T.') }}
-                    </p>
-                    <p class="ttd-nip">
-                        NIP. {{ $hasilAudit->nip_pemonev ?? ($user->nip ?? '–') }}
-                    </p>
+                        {{ $hasilAudit->nama_pemonev ?? ($user->name ?? 'Usman Nurhasan, S.Kom., M.T.') }}</p>
+                    <p class="ttd-nip">NIP. {{ $hasilAudit->nip_pemonev ?? ($user->nip ?? '–') }}</p>
                 </td>
             </tr>
         </table>

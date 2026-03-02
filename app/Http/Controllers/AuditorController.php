@@ -222,21 +222,48 @@ class AuditorController extends Controller
         // Pastikan auditor hanya update data miliknya
         $peta = Peta::where('auditor_id', $user->id)->with('kegiatan')->findOrFail($id);
 
-        // ✅ CEK: Tentukan mode action (input pertanyaan atau review jawaban)
-        $action = $request->input('action'); // 'input_questions', 'review_answers', atau 'confirm_revision'
+        $action = $request->input('action');
 
         if ($action === 'input_audit_result') {
-            // ✅ MODE BARU: AUDITOR INPUT HASIL AUDIT LANGSUNG (SESUAI REQUIREMENT DOSEN)
 
-            // Validasi input
-            $request->validate([
-                'pengendalian' => 'required|string|max:5000',
-                'mitigasi' => 'required|in:Accept Risk,Share Risk,Transfer Risk',
-                'komentar_auditor' => 'required|string|max:5000',
-                'status_konfirmasi_auditor' => 'required|in:Completed,Not Completed',
+            // ── Validasi dasar ──────────────────────────────────────────
+            $rules = [
+                'pengendalian'               => 'required|string|max:5000',
+                'mitigasi'                   => 'required|in:Accept Risk,Share Risk,Transfer Risk',
+                'komentar_auditor'           => 'required|string|max:5000',
+                'status_konfirmasi_auditor'  => 'required|in:Completed,Not Completed',
+            ];
+
+            // ── Validasi kondisional: Share Risk & Transfer Risk ────────
+            $mitigasiPilihan = $request->input('mitigasi');
+            if (in_array($mitigasiPilihan, ['Share Risk', 'Transfer Risk'])) {
+                $labelKepada = $mitigasiPilihan === 'Share Risk'
+                    ? 'Risiko dibagikan kepada'
+                    : 'Risiko ditransfer kepada';
+
+                $rules['mitigasi_kepada']   = 'required|string|max:500';
+                $rules['mitigasi_kategori'] = 'required|string|max:100';
+            }
+
+            $request->validate($rules, [
+                'mitigasi_kepada.required'   => 'Mohon isi pihak yang menerima risiko.',
+                'mitigasi_kategori.required' => 'Mohon pilih kategori pihak yang menerima risiko.',
             ]);
 
-            // Calculate score and level
+            // ── Bangun nilai mitigasi yang akan disimpan ────────────────
+            // Jika Share/Transfer Risk → simpan sebagai JSON
+            // Jika Accept Risk         → simpan string biasa
+            if (in_array($mitigasiPilihan, ['Share Risk', 'Transfer Risk'])) {
+                $mitigasiValue = json_encode([
+                    'strategi'  => $mitigasiPilihan,
+                    'kepada'    => trim($request->input('mitigasi_kepada')),
+                    'kategori'  => trim($request->input('mitigasi_kategori')),
+                ]);
+            } else {
+                $mitigasiValue = $mitigasiPilihan; // "Accept Risk" — simpan string biasa
+            }
+
+            // ── Hitung skor & level ────────────────────────────────────
             $skorTotal = $peta->skor_kemungkinan * $peta->skor_dampak;
 
             if ($skorTotal >= 20) {
@@ -249,7 +276,6 @@ class AuditorController extends Controller
                 $levelText = 'LOW';
             }
 
-            // Calculate residual risk
             if ($skorTotal >= 20) {
                 $residualText = 'Extreme';
             } elseif ($skorTotal >= 15) {
@@ -260,48 +286,58 @@ class AuditorController extends Controller
                 $residualText = 'Low';
             }
 
-            // ✅ UPDATE DATA PETA dengan hasil audit
-            // Juga clear catatan_revisi jika sebelumnya ditolak oleh Auditee
+            // ── Update tabel petas ─────────────────────────────────────
             $peta->update([
-                'pengendalian' => $request->pengendalian,
-                'mitigasi' => $request->mitigasi,
+                'pengendalian'              => $request->pengendalian,
+                'mitigasi'                  => $mitigasiValue,        // ✅ JSON atau string biasa
                 'status_konfirmasi_auditor' => $request->status_konfirmasi_auditor,
-                'catatan_revisi' => null, // ✅ Clear rejection note setelah Auditor submit ulang
+                'catatan_revisi'            => null,
             ]);
 
-            // ✅ SIMPAN/UPDATE KE TABEL HASIL_AUDIT
-            $hasilAudit = HasilAudit::updateOrCreate(
+            // ── Update / create tabel hasil_audit ─────────────────────
+            // Simpan label mitigasi yang mudah dibaca manusia
+            $mitigasiLabel = $mitigasiPilihan;
+            if (in_array($mitigasiPilihan, ['Share Risk', 'Transfer Risk'])) {
+                $mitigasiLabel .= ' → ' . $request->input('mitigasi_kepada')
+                    . ' (' . $request->input('mitigasi_kategori') . ')';
+            }
+
+            HasilAudit::updateOrCreate(
                 [
-                    'peta_id' => $peta->id,
-                    'auditor_id' => $user->id,
+                    'peta_id'        => $peta->id,
+                    'auditor_id'     => $user->id,
                     'tahun_anggaran' => date('Y'),
                 ],
                 [
-                    'pengendalian' => $request->pengendalian,
-                    'mitigasi' => $request->mitigasi,
-                    'komentar_1' => $request->komentar_auditor,
-                    'komentar_2' => '-', // ✅ PERBAIKAN: Set default value untuk komentar_2
-                    'komentar_3' => '-',
-                    'komentar_4' => '-', // ✅ PERBAIKAN: Set default value untuk komentar_3
-                    'unit_kerja' => $peta->jenis,
-                    'kode_risiko' => $peta->kode_regist,
-                    'kegiatan' => $peta->kegiatan->judul ?? $peta->judul,
-                    'level_risiko' => $levelText,
+                    'pengendalian'  => $request->pengendalian,
+                    'mitigasi'      => $mitigasiLabel,   // ✅ Teks deskriptif untuk laporan
+                    'komentar_1'    => $request->komentar_auditor,
+                    'komentar_2'    => '-',
+                    'komentar_3'    => '-',
+                    'komentar_4'    => '-',
+                    'unit_kerja'    => $peta->jenis,
+                    'kode_risiko'   => $peta->kode_regist,
+                    'kegiatan'      => $peta->kegiatan->judul ?? $peta->judul,
+                    'level_risiko'  => $levelText,
                     'risiko_residual' => $residualText,
-                    'skor_total' => $skorTotal,
-                    'nama_pemonev' => $user->name,
-                    'nip_pemonev' => $user->nip ?? '-',
+                    'skor_total'    => $skorTotal,
+                    'nama_pemonev'  => $user->name,
+                    'nip_pemonev'   => $user->nip ?? '-',
                 ]
             );
 
-            // ✅ LOG ACTIVITY
-            $statusLabel = $request->status_konfirmasi_auditor == 'Completed' ? 'Audit Selesai' : 'Audit Belum Selesai (Perlu Tindak Lanjut Auditee)';
+            // ── Log aktivitas ──────────────────────────────────────────
+            $statusLabel = $request->status_konfirmasi_auditor === 'Completed'
+                ? 'Audit Selesai'
+                : 'Audit Belum Selesai (Perlu Tindak Lanjut Auditee)';
+
+            $logKeterangan = "Auditor telah menginput hasil audit. Status: {$statusLabel}. Mitigasi: {$mitigasiLabel}.";
 
             CommentPr::create([
-                'peta_id' => $peta->id,
-                'user_id' => $user->id,
-                'jenis' => 'analisis',
-                'comment' => "Auditor telah menginput hasil audit. Status: {$statusLabel}. Mitigasi: {$request->mitigasi}.",
+                'peta_id'  => $peta->id,
+                'user_id'  => $user->id,
+                'jenis'    => 'analisis',
+                'comment'  => $logKeterangan,
             ]);
 
             return redirect()

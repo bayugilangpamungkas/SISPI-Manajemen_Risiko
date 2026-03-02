@@ -203,6 +203,35 @@
         .red-text {
             color: #FF0000;
         }
+
+        /* ── Komentar bernomor ── */
+        .komentar-item {
+            display: block;
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        .komentar-no {
+            font-weight: bold;
+            color: #1F3864;
+            margin-right: 3px;
+        }
+
+        /* ── Mitigasi kepada ── */
+        .mitigasi-kepada {
+            display: block;
+            margin-top: 5px;
+            padding: 3px 5px;
+            background-color: #f5f5f5;
+            border-left: 2px solid #888;
+            font-size: 6.5px;
+            line-height: 1.4;
+        }
+
+        .mitigasi-kepada-label {
+            font-weight: bold;
+            color: #555;
+        }
     </style>
 </head>
 
@@ -292,8 +321,18 @@
                     {{ $hasilAudit->pengendalian ?? '-' }}
                 </td>
                 <td colspan="2" class="table-content" style="height: 180px; vertical-align: top;">
-                    <strong class="red-text">Menerima Risiko</strong><br><br>
-                    {{ $hasilAudit->mitigasi ?? '-' }}
+                    @php
+                        $mitigasiLabel = $hasilAudit->mitigasi_label ?? '-';
+                        $mitigasiKepada = $hasilAudit->mitigasi_kepada ?? null;
+                    @endphp
+                    <strong class="red-text">{{ $mitigasiLabel }}</strong>
+
+                    @if ($mitigasiKepada)
+                        <span class="mitigasi-kepada">
+                            <span class="mitigasi-kepada-label">Kepada:</span>
+                            {{ $mitigasiKepada }}
+                        </span>
+                    @endif
 
                     @if ($hasilAudit->status_konfirmasi_auditee || $hasilAudit->status_konfirmasi_auditor)
                         <br><br>
@@ -307,19 +346,15 @@
                     @endif
                 </td>
                 <td class="table-content" style="height: 180px; vertical-align: top;">
-                    @if ($hasilAudit->komentar_1)
-                        <strong>1. Sentralisasi Repositori Bukti:</strong><br>
-                        {{ $hasilAudit->komentar_1 }}<br><br>
-                    @endif
-
-                    @if ($hasilAudit->komentar_2)
-                        <strong>2. Finalisasi LKPS & Cross-Check:</strong><br>
-                        {{ $hasilAudit->komentar_2 }}<br><br>
-                    @endif
-
-                    @if ($hasilAudit->komentar_3)
-                        <strong>3. Koordinasi Khusus Keuangan:</strong><br>
-                        {{ $hasilAudit->komentar_3 }}
+                    @foreach ([$hasilAudit->komentar_1, $hasilAudit->komentar_2, $hasilAudit->komentar_3] as $index => $komentar)
+                        @if ($komentar)
+                            <span class="komentar-item">
+                                <span class="komentar-no">{{ $index + 1 }}.</span>{{ $komentar }}
+                            </span>
+                        @endif
+                    @endforeach
+                    @if (!$hasilAudit->komentar_1 && !$hasilAudit->komentar_2 && !$hasilAudit->komentar_3)
+                        <span style="color:#888; font-style:italic;">— Tidak ada komentar —</span>
                     @endif
                 </td>
             </tr>

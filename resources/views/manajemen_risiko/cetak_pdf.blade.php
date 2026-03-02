@@ -270,6 +270,35 @@
             padding: 30px 0;
         }
 
+        /* ── Komentar bernomor ── */
+        .komentar-item {
+            display: block;
+            margin-bottom: 6px;
+            line-height: 1.5;
+        }
+
+        .komentar-no {
+            font-weight: bold;
+            color: #1F3864;
+            margin-right: 3px;
+        }
+
+        /* ── Mitigasi kepada ── */
+        .mitigasi-kepada {
+            display: block;
+            margin-top: 6px;
+            padding: 4px 6px;
+            background-color: #f5f5f5;
+            border-left: 3px solid #888;
+            font-size: 8pt;
+            line-height: 1.4;
+        }
+
+        .mitigasi-kepada-label {
+            font-weight: bold;
+            color: #555;
+        }
+
         /* ============================================================
          |  BAGIAN TANDA TANGAN
          ============================================================ */
@@ -327,6 +356,52 @@
             font-size: 7.5pt;
             color: #555;
             text-align: center;
+        }
+
+        /* ── Kolom Mitigasi ── */
+        .mitigasi-strategi {
+            display: block;
+            font-weight: bold;
+            font-size: 9pt;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .mitigasi-divider {
+            border: none;
+            border-top: 1px solid #ccc;
+            margin: 6px 0;
+        }
+
+        .status-konfirmasi-label {
+            display: block;
+            font-weight: bold;
+            font-size: 8.5pt;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .status-konfirmasi-row {
+            display: block;
+            text-align: center;
+            font-size: 8.5pt;
+            line-height: 1.8;
+        }
+
+        /* ── Komentar: nomor bold + judul bold + teks biasa justify ── */
+        .komentar-item {
+            display: block;
+            margin-bottom: 5px;
+            line-height: 1.55;
+            text-align: justify;
+        }
+
+        .komentar-no {
+            font-weight: bold;
+        }
+
+        .komentar-judul {
+            font-weight: bold;
         }
     </style>
 </head>
@@ -392,7 +467,7 @@
     {{-- ================================================================
      IDENTITAS AUDIT — 2 panel berdampingan (7 kolom tabel)
      Struktur tiap baris: lbl | sep | val | mid-gap | lbl | sep | val
-     Baris full-width   : lbl | sep | val[colspan=5]
+     Baris full-width   : lbl | sep | val[colspan=5 menutupi mid-gap+lbl+sep+val)
      ================================================================ --}}
     <table class="tbl-identitas">
         {{-- Baris 1: Unit Kerja | Pemonev --}}
@@ -417,17 +492,17 @@
         </tr>
         {{-- Baris 3: Pernyataan Risiko — full width (colspan=5 menutupi mid-gap+lbl+sep+val) --}}
         <tr>
-            <td class="lbl">Pernyataan Risiko</td>
-            <td class="sep">:</td>
-            <td class="val" colspan="5">{{ $peta->pernyataan ?? '-' }}</td>
-        </tr>
-        {{-- Baris 4: Kegiatan — full width (colspan=5) --}}
-        <tr>
             <td class="lbl">Kegiatan</td>
             <td class="sep">:</td>
             <td class="val" colspan="5">
                 {{ $hasilAudit->kegiatan ?? ($peta->kegiatan->judul ?? ($peta->judul ?? '-')) }}
             </td>
+        </tr>
+        {{-- Baris 4: Kegiatan — full width (colspan=5) --}}
+        <tr>
+            <td class="lbl">Pernyataan Risiko</td>
+            <td class="sep">:</td>
+            <td class="val" colspan="5">{{ $peta->pernyataan ?? '-' }}</td>
         </tr>
         {{-- Baris 5: Level Risiko | Risiko Residual --}}
         <tr>
@@ -465,37 +540,82 @@
                     </td>
 
                     {{-- Kolom 2: Mitigasi --}}
-                    <td class="col-mitigasi" style="min-height:130px;">
-                        <span class="isi-label">Menerima Risiko</span>
-                        {{ $hasilAudit->mitigasi ?? '-' }}
+                    <td class="col-mitigasi" style="min-height:130px; text-align:center; vertical-align:middle;">
+                        @php
+                            $mitigasiRaw = $hasilAudit->mitigasi_label ?? ($hasilAudit->mitigasi ?? '-');
+                            $mitigasiLabel = match ($mitigasiRaw) {
+                                'Accept Risk' => 'Menerima Risiko',
+                                'Share Risk' => 'Membagi Risiko',
+                                'Transfer Risk' => 'Melimpahkan Risiko',
+                                default => $mitigasiRaw,
+                            };
 
-                        @if ($peta->status_konfirmasi_auditee || $peta->status_konfirmasi_auditor)
-                            <br><br>
-                            <strong>Status Konfirmasi:</strong><br>
-                            @if ($peta->status_konfirmasi_auditee)
-                                Auditee &nbsp;: {{ $peta->status_konfirmasi_auditee }}<br>
+                            $stAuditor = $peta->status_konfirmasi_auditor ?? null;
+                            $stAuditee = $peta->status_konfirmasi_auditee ?? null;
+
+                            $stAuditorLabel = match ($stAuditor) {
+                                'Completed' => 'Sudah',
+                                'Not Completed' => 'Belum',
+                                default => $stAuditor,
+                            };
+                            $stAuditeeLabel = match ($stAuditee) {
+                                'Completed' => 'Sudah',
+                                'Not Completed' => 'Belum',
+                                default => $stAuditee,
+                            };
+                        @endphp
+                        <span class="mitigasi-strategi">{{ $mitigasiLabel }}</span>
+
+                        @if ($stAuditee || $stAuditor)
+                            <hr class="mitigasi-divider">
+                            <span class="status-konfirmasi-label">Status Konfirmasi</span>
+                            @if ($stAuditor)
+                                <span class="status-konfirmasi-row">Auditor: {{ $stAuditorLabel }}</span>
                             @endif
-                            @if ($peta->status_konfirmasi_auditor)
-                                Auditor &nbsp;: {{ $peta->status_konfirmasi_auditor }}
+                            @if ($stAuditee)
+                                <span class="status-konfirmasi-row">Auditee: {{ $stAuditeeLabel }}</span>
                             @endif
                         @endif
                     </td>
 
                     {{-- Kolom 3: Komentar --}}
                     <td class="col-komentar" style="min-height:130px;">
-                        @if ($hasilAudit->komentar_1)
-                            <strong>1. Sentralisasi Repositori Bukti</strong><br>
-                            {{ $hasilAudit->komentar_1 }}<br><br>
-                        @endif
-                        @if ($hasilAudit->komentar_2)
-                            <strong>2. Finalisasi LKPS &amp; Cross-Check</strong><br>
-                            {{ $hasilAudit->komentar_2 }}<br><br>
-                        @endif
-                        @if ($hasilAudit->komentar_3)
-                            <strong>3. Koordinasi Khusus Keuangan</strong><br>
-                            {{ $hasilAudit->komentar_3 }}
-                        @endif
-                        @if (!$hasilAudit->komentar_1 && !$hasilAudit->komentar_2 && !$hasilAudit->komentar_3)
+                        @php
+                            $rawKomentar = $hasilAudit->komentar_1 ?? '';
+                            $baris = array_filter(
+                                array_map('trim', preg_split('/\r\n|\r|\n/', $rawKomentar)),
+                                fn($b) => $b !== '' && $b !== '-',
+                            );
+                            $baris = array_values($baris);
+                        @endphp
+                        @if (count($baris) > 0)
+                            @foreach ($baris as $b)
+                                @php
+                                    $noStr = '';
+                                    $judulStr = '';
+                                    $sisaStr = $b;
+                                    if (preg_match('/^(\d+\.\s*)(.+)$/', $b, $m)) {
+                                        $noStr = rtrim($m[1]);
+                                        $konten = $m[2];
+                                        if (preg_match('/^([^:]{3,60}):\s*(.+)$/', $konten, $m2)) {
+                                            $judulStr = $m2[1];
+                                            $sisaStr = $m2[2];
+                                        } else {
+                                            $sisaStr = $konten;
+                                        }
+                                    }
+                                @endphp
+                                <span class="komentar-item">
+                                    @if ($noStr)
+                                        <span class="komentar-no">{{ $noStr }}</span>
+                                    @endif
+                                    @if ($judulStr)
+                                        <span class="komentar-judul">{{ $judulStr }}:</span>
+                                    @endif
+                                    {{ $sisaStr }}
+                                </span>
+                            @endforeach
+                        @else
                             <span style="color:#888; font-style:italic;">— Tidak ada komentar —</span>
                         @endif
                     </td>

@@ -31,6 +31,28 @@
         $questions = $questions ?? [];
         $responses = $responses ?? [];
         $penilaianAuditor = $penilaianAuditor ?? [];
+
+        // ✅ Decode mitigasi_kepada dari field mitigasi jika tersimpan sebagai JSON
+        $mitigasiKepada = '';
+        $mitigasiKategori = '';
+        $mitigasiUtama = $peta->mitigasi ?? '';
+        if ($peta->mitigasi && str_starts_with($peta->mitigasi, '{')) {
+            try {
+                $mitigasiDecoded = json_decode($peta->mitigasi, true);
+                $mitigasiUtama = $mitigasiDecoded['strategi'] ?? $peta->mitigasi;
+                $mitigasiKepada = $mitigasiDecoded['kepada'] ?? '';
+                $mitigasiKategori = $mitigasiDecoded['kategori'] ?? '';
+            } catch (\Exception $e) {
+            }
+        }
+
+        // Terjemahan label mitigasi untuk tampilan
+        $mitigasiLabel = match ($mitigasiUtama) {
+            'Accept Risk' => 'Menerima Risiko',
+            'Share Risk' => 'Membagi Risiko',
+            'Transfer Risk' => 'Melimpahkan Risiko',
+            default => $mitigasiUtama,
+        };
     @endphp
 
     <div class="main-content">
@@ -287,7 +309,8 @@
                                     <small class="d-block mb-1">
                                         <strong>Ditolak oleh:</strong> {{ $auditorRejectionNote['rejected_by'] ?? '-' }}
                                         &nbsp;|&nbsp;
-                                        <strong>Waktu:</strong> {{ isset($auditorRejectionNote['rejected_at']) ? date('d M Y, H:i', strtotime($auditorRejectionNote['rejected_at'])) : '-' }}
+                                        <strong>Waktu:</strong>
+                                        {{ isset($auditorRejectionNote['rejected_at']) ? date('d M Y, H:i', strtotime($auditorRejectionNote['rejected_at'])) : '-' }}
                                     </small>
                                     <div class="mt-2 p-2 bg-white border rounded text-dark" style="font-size:0.9rem;">
                                         {!! nl2br(e($auditorRejectionNote['catatan_penolakan'] ?? '-')) !!}
@@ -314,25 +337,148 @@
                                         <textarea name="pengendalian" class="form-control" rows="5" required
                                             placeholder="Deskripsi pengendalian risiko...">{{ old('pengendalian', $peta->pengendalian) }}</textarea>
                                     </div>
+
+                                    {{-- ✅ KOLOM MITIGASI (dengan input kondisional) --}}
                                     <div class="col-md-6 mb-4">
                                         <label class="font-weight-bold text-dark mb-2">
                                             <i class="fas fa-chart-line text-primary mr-1"></i>Strategi Mitigasi <span
                                                 class="text-danger">*</span>
                                         </label>
-                                        <select name="mitigasi" class="form-control" required>
+                                        <select name="mitigasi" class="form-control" required id="selectMitigasi">
                                             <option value="">-- Pilih Strategi Mitigasi --</option>
                                             <option value="Accept Risk"
-                                                {{ old('mitigasi', $peta->mitigasi) == 'Accept Risk' ? 'selected' : '' }}>
-                                                Terima Risiko</option>
+                                                {{ old('mitigasi', $mitigasiUtama) == 'Accept Risk' ? 'selected' : '' }}>
+                                                ✅ Terima Risiko</option>
                                             <option value="Share Risk"
-                                                {{ old('mitigasi', $peta->mitigasi) == 'Share Risk' ? 'selected' : '' }}>
-                                                Bagikan Risiko</option>
+                                                {{ old('mitigasi', $mitigasiUtama) == 'Share Risk' ? 'selected' : '' }}>
+                                                🤝 Bagikan Risiko</option>
                                             <option value="Transfer Risk"
-                                                {{ old('mitigasi', $peta->mitigasi) == 'Transfer Risk' ? 'selected' : '' }}>
-                                                Transfer Risiko</option>
+                                                {{ old('mitigasi', $mitigasiUtama) == 'Transfer Risk' ? 'selected' : '' }}>
+                                                🔁 Transfer Risiko</option>
                                         </select>
-                                    </div>
-                                </div>
+
+                                        {{-- ✅ PANEL KONDISIONAL: Share Risk --}}
+                                        <div id="panelShareRisk" class="mt-3" style="display:none;">
+                                            <div class="card border-info shadow-sm">
+                                                <div class="card-header bg-info text-white py-2">
+                                                    <small class="font-weight-bold">
+                                                        <i class="fas fa-share-alt mr-1"></i>
+                                                        Detail Pembagian Risiko
+                                                    </small>
+                                                </div>
+                                                <div class="card-body p-3">
+                                                    <div class="form-group mb-3">
+                                                        <label class="font-weight-bold text-dark"
+                                                            style="font-size:0.88rem;">
+                                                            Kategori Pihak yang Menerima Risiko
+                                                            <span class="text-danger">*</span>
+                                                        </label>
+                                                        <select name="mitigasi_kategori" id="selectKategoriShare"
+                                                            class="form-control form-control-sm">
+                                                            <option value="">-- Pilih Kategori --</option>
+                                                            <option value="Unit Kerja Lain"
+                                                                {{ old('mitigasi_kategori', $mitigasiKategori) == 'Unit Kerja Lain' ? 'selected' : '' }}>
+                                                                🏢 Unit Kerja Lain</option>
+                                                            <option value="Auditor Lainnya"
+                                                                {{ old('mitigasi_kategori', $mitigasiKategori) == 'Auditor Lainnya' ? 'selected' : '' }}>
+                                                                👤 Auditor Lainnya</option>
+                                                            <option value="Pihak Ketiga"
+                                                                {{ old('mitigasi_kategori', $mitigasiKategori) == 'Pihak Ketiga' ? 'selected' : '' }}>
+                                                                🏦 Pihak Ketiga</option>
+                                                            <option value="Mitra / Vendor"
+                                                                {{ old('mitigasi_kategori', $mitigasiKategori) == 'Mitra / Vendor' ? 'selected' : '' }}>
+                                                                🤝 Mitra / Vendor</option>
+                                                            <option value="Stakeholder Terkait"
+                                                                {{ old('mitigasi_kategori', $mitigasiKategori) == 'Stakeholder Terkait' ? 'selected' : '' }}>
+                                                                🌐 Stakeholder Terkait</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group mb-0">
+                                                        <label class="font-weight-bold text-dark"
+                                                            style="font-size:0.88rem;">
+                                                            Risiko Dibagikan Kepada <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="text" name="mitigasi_kepada" id="inputShareKepada"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Contoh: Bagian Keuangan, Vendor PT. ABC..."
+                                                            value="{{ old('mitigasi_kepada', $mitigasiUtama == 'Share Risk' ? $mitigasiKepada : '') }}">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-info-circle mr-1"></i>
+                                                            Sebutkan nama unit / pihak secara spesifik sesuai SOP SPI.
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- ✅ PANEL KONDISIONAL: Transfer Risk --}}
+                                        <div id="panelTransferRisk" class="mt-3" style="display:none;">
+                                            <div class="card border-warning shadow-sm">
+                                                <div class="card-header bg-warning text-dark py-2">
+                                                    <small class="font-weight-bold">
+                                                        <i class="fas fa-exchange-alt mr-1"></i>
+                                                        Detail Transfer Risiko
+                                                    </small>
+                                                </div>
+                                                <div class="card-body p-3">
+                                                    <div class="form-group mb-3">
+                                                        <label class="font-weight-bold text-dark"
+                                                            style="font-size:0.88rem;">
+                                                            Kategori Pihak yang Menerima Transfer
+                                                            <span class="text-danger">*</span>
+                                                        </label>
+                                                        <select name="mitigasi_kategori" id="selectKategoriTransfer"
+                                                            class="form-control form-control-sm">
+                                                            <option value="">-- Pilih Kategori --</option>
+                                                            <option value="Unit Kerja Lain"
+                                                                {{ old('mitigasi_kategori', $mitigasiKategori) == 'Unit Kerja Lain' ? 'selected' : '' }}>
+                                                                🏢 Unit Kerja Lain</option>
+                                                            <option value="Auditor Lainnya"
+                                                                {{ old('mitigasi_kategori', $mitigasiKategori) == 'Auditor Lainnya' ? 'selected' : '' }}>
+                                                                👤 Auditor Lainnya</option>
+                                                            <option value="Pihak Ketiga"
+                                                                {{ old('mitigasi_kategori', $mitigasiKategori) == 'Pihak Ketiga' ? 'selected' : '' }}>
+                                                                🏦 Pihak Ketiga</option>
+                                                            <option value="Mitra / Vendor"
+                                                                {{ old('mitigasi_kategori', $mitigasiKategori) == 'Mitra / Vendor' ? 'selected' : '' }}>
+                                                                🤝 Mitra / Vendor</option>
+                                                            <option value="Stakeholder Terkait"
+                                                                {{ old('mitigasi_kategori', $mitigasiKategori) == 'Stakeholder Terkait' ? 'selected' : '' }}>
+                                                                🌐 Stakeholder Terkait</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group mb-0">
+                                                        <label class="font-weight-bold text-dark"
+                                                            style="font-size:0.88rem;">
+                                                            Risiko Ditransfer Kepada <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="text" name="mitigasi_kepada"
+                                                            id="inputTransferKepada" class="form-control form-control-sm"
+                                                            placeholder="Contoh: Perusahaan Asuransi, Lembaga XYZ..."
+                                                            value="{{ old('mitigasi_kepada', $mitigasiUtama == 'Transfer Risk' ? $mitigasiKepada : '') }}">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-info-circle mr-1"></i>
+                                                            Sebutkan nama pihak penerima transfer secara spesifik sesuai SOP
+                                                            SPI.
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- ✅ INFO: Accept Risk --}}
+                                        <div id="panelAcceptRisk" class="mt-3" style="display:none;">
+                                            <div class="alert alert-success border-0 py-2 mb-0">
+                                                <small>
+                                                    <i class="fas fa-check-circle mr-1"></i>
+                                                    <strong>Terima Risiko:</strong> Risiko diterima tanpa tindakan transfer
+                                                    atau pembagian. Cukup tetapkan pengendalian yang memadai.
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                    </div>{{-- /col mitigasi --}}
+                                </div>{{-- /row --}}
 
                                 <div class="form-group mb-4">
                                     <label class="font-weight-bold text-dark mb-2">
@@ -353,17 +499,17 @@
                                         <option value="">-- Pilih Status Konfirmasi --</option>
                                         <option value="Completed"
                                             {{ old('status_konfirmasi_auditor', $peta->status_konfirmasi_auditor) == 'Completed' ? 'selected' : '' }}>
-                                            ✅ Selesai (Audit Selesai)</option>
+                                            ✅ Sudah (Audit Selesai)</option>
                                         <option value="Not Completed"
                                             {{ old('status_konfirmasi_auditor', $peta->status_konfirmasi_auditor) == 'Not Completed' ? 'selected' : '' }}>
-                                            ⚠️ Tindak Lanjut (Perlu Revisi)</option>
+                                            ⚠️ Belum (Perlu Revisi)</option>
                                     </select>
                                 </div>
 
                                 <div class="alert alert-warning border-0 shadow-sm" id="alertNotCompleted"
                                     style="display:none;">
                                     <i class="fas fa-exclamation-triangle mr-2"></i>
-                                    <strong>PERHATIAN:</strong> Jika Anda memilih <strong>Tindak Lanjut</strong>, Auditee
+                                    <strong>PERHATIAN:</strong> Jika Anda memilih <strong>Belum</strong>, Auditee
                                     akan diminta melakukan revisi.
                                 </div>
 
@@ -372,7 +518,7 @@
                                         class="btn btn-secondary btn-lg px-5 mr-2">
                                         <i class="fas fa-arrow-left mr-2"></i> Kembali
                                     </a>
-                                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                                    <button type="submit" class="btn btn-primary btn-lg px-5" id="btnSubmitAudit">
                                         <i class="fas fa-save mr-2"></i> Simpan Hasil Audit
                                     </button>
                                 </div>
@@ -413,7 +559,19 @@
                                                 Risiko</label>
                                             <div class="p-3 bg-white border rounded">
                                                 <span class="badge badge-info p-2"
-                                                    style="font-size:14px;">{{ $peta->mitigasi ?? '-' }}</span>
+                                                    style="font-size:14px;">{{ $mitigasiLabel }}</span>
+                                                {{-- ✅ Tampilkan info mitigasi_kepada jika ada (read-only) --}}
+                                                @if ($mitigasiKepada)
+                                                    <div class="mt-2 p-2 bg-light border rounded"
+                                                        style="font-size:0.85rem;">
+                                                        <i class="fas fa-arrow-right text-info mr-1"></i>
+                                                        <strong>Kepada:</strong> {{ $mitigasiKepada }}
+                                                        @if ($mitigasiKategori)
+                                                            <span
+                                                                class="badge badge-light border ml-1">{{ $mitigasiKategori }}</span>
+                                                        @endif
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -424,7 +582,7 @@
                                             {!! nl2br(e($hasilAudit->komentar_1 ?? '-')) !!}</div>
                                     </div>
                                     <label class="font-weight-bold text-dark mb-2">Status Konfirmasi Auditor</label>
-                                    <div><span class="badge badge-warning p-2" style="font-size:14px;">⚠️ Not Completed
+                                    <div><span class="badge badge-warning p-2" style="font-size:14px;">⚠️ Belum
                                             (Perlu Tindak Lanjut)</span></div>
                                 </div>
                             </div>
@@ -479,7 +637,7 @@
                                                 <label class="font-weight-bold text-dark mb-2">Status Auditee</label>
                                                 <div><span class="badge badge-{{ $badgeAuditee }} p-2"
                                                         style="font-size:14px;">
-                                                        {{ $statusAuditee === 'Completed' ? '✅ Completed' : '⏳ Not Completed' }}
+                                                        {{ $statusAuditee === 'Completed' ? '✅ Sudah' : '⏳ Belum' }}
                                                     </span></div>
                                             </div>
                                             <div class="col-md-6">
@@ -592,10 +750,6 @@
 
                                 {{-- Ringkasan hasil audit (read-only) --}}
                                 <div class="card bg-light mb-4 border-0">
-                                    <div class="card-header bg-secondary text-white py-3">
-                                        <h6 class="mb-0 font-weight-bold"><i class="fas fa-file-alt mr-2"></i>Ringkasan
-                                            Hasil Audit</h6>
-                                    </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
@@ -608,12 +762,11 @@
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label class="font-weight-bold text-dark mb-2"><i
-                                                        class="fas fa-chart-line text-secondary mr-1"></i>Mitigasi
-                                                    Risiko</label>
+                                                        class="fas fa-chart-line text-secondary mr-1"></i>Strategi
+                                                    Mitigasi</label>
                                                 <div class="p-3 bg-white border rounded">
                                                     @php
-                                                        $mitigasi = $peta->mitigasi ?? ($hasilAudit->mitigasi ?? '-');
-                                                        $mitigasiBadge = match ($mitigasi) {
+                                                        $mitigasiBadge = match ($mitigasiUtama) {
                                                             'Accept Risk' => 'success',
                                                             'Share Risk' => 'info',
                                                             'Transfer Risk' => 'warning',
@@ -621,7 +774,25 @@
                                                         };
                                                     @endphp
                                                     <span class="badge badge-{{ $mitigasiBadge }} p-2"
-                                                        style="font-size:14px;">{{ $mitigasi }}</span>
+                                                        style="font-size:14px;">{{ $mitigasiLabel }}</span>
+
+                                                    {{-- ✅ Auditee: tampilkan info kepada siapa (READ-ONLY) --}}
+                                                    @if ($mitigasiKepada)
+                                                        <div class="mt-2 p-3 bg-light border rounded">
+                                                            <small class="font-weight-bold text-dark d-block mb-1">
+                                                                <i
+                                                                    class="fas fa-arrow-right text-{{ $mitigasiBadge }} mr-1"></i>
+                                                                {{ $mitigasiUtama === 'Share Risk' ? 'Risiko Dibagikan Kepada:' : 'Risiko Ditransfer Kepada:' }}
+                                                            </small>
+                                                            <span class="text-dark" style="font-size:0.95rem;">
+                                                                {{ $mitigasiKepada }}
+                                                            </span>
+                                                            @if ($mitigasiKategori)
+                                                                <br><span
+                                                                    class="badge badge-{{ $mitigasiBadge }} mt-1">{{ $mitigasiKategori }}</span>
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -646,9 +817,9 @@
                                                 <div class="mt-2"><span class="badge badge-{{ $stAudBadge }} p-2"
                                                         style="font-size:14px;">
                                                         @if ($stAud == 'Completed')
-                                                            ✅ Completed
+                                                            ✅ Sudah
                                                         @elseif($stAud == 'Not Completed')
-                                                            ⚠️ Not Completed
+                                                            ⚠️ Belum
                                                         @else
                                                             {{ $stAud }}
                                                         @endif
@@ -757,9 +928,9 @@
                                                     <select name="status_konfirmasi_auditee" class="form-control"
                                                         required>
                                                         <option value="">-- Pilih Status --</option>
-                                                        <option value="Completed">✅ Completed (Tindak Lanjut Selesai)
+                                                        <option value="Completed">✅ Sudah (Tindak Lanjut Selesai)
                                                         </option>
-                                                        <option value="Not Completed">⏳ Not Completed (Masih Dalam Proses)
+                                                        <option value="Not Completed">⏳ Belum (Masih Dalam Proses)
                                                         </option>
                                                     </select>
                                                 </div>
@@ -800,9 +971,33 @@
                                                     {{ $peta->pengendalian ?? ($hasilAudit->pengendalian ?? '-') }}</div>
                                             </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="font-weight-bold">Mitigasi Risiko</label>
+                                                <label class="font-weight-bold">Strategi Mitigasi</label>
                                                 <div class="p-3 bg-white border rounded">
-                                                    {{ $peta->mitigasi ?? ($hasilAudit->mitigasi ?? '-') }}</div>
+                                                    @php
+                                                        $mitigasiBadgeAdmin = match ($mitigasiUtama) {
+                                                            'Accept Risk' => 'success',
+                                                            'Share Risk' => 'info',
+                                                            'Transfer Risk' => 'warning',
+                                                            default => 'secondary',
+                                                        };
+                                                    @endphp
+                                                    <span
+                                                        class="badge badge-{{ $mitigasiBadgeAdmin }} p-2">{{ $mitigasiLabel }}</span>
+                                                    {{-- ✅ Admin: tampilkan info kepada siapa (READ-ONLY) --}}
+                                                    @if ($mitigasiKepada)
+                                                        <div class="mt-2 p-2 bg-light border rounded"
+                                                            style="font-size:0.85rem;">
+                                                            <i
+                                                                class="fas fa-arrow-right text-{{ $mitigasiBadgeAdmin }} mr-1"></i>
+                                                            <strong>{{ $mitigasiUtama === 'Share Risk' ? 'Dibagikan kepada:' : 'Ditransfer kepada:' }}</strong>
+                                                            {{ $mitigasiKepada }}
+                                                            @if ($mitigasiKategori)
+                                                                <span
+                                                                    class="badge badge-secondary ml-1">{{ $mitigasiKategori }}</span>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="mb-3">
@@ -813,14 +1008,40 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <label class="font-weight-bold">Status Auditor</label>
+                                                @php
+                                                    $stAudAdmin = $peta->status_konfirmasi_auditor ?? '-';
+                                                    $stAudAdminBadge = match ($stAudAdmin) {
+                                                        'Completed' => 'success',
+                                                        'Not Completed' => 'warning',
+                                                        default => 'secondary',
+                                                    };
+                                                    $stAudAdminLabel = match ($stAudAdmin) {
+                                                        'Completed' => '✅ Sudah',
+                                                        'Not Completed' => '⚠️ Belum',
+                                                        default => $stAudAdmin,
+                                                    };
+                                                @endphp
                                                 <div class="mt-2"><span
-                                                        class="badge badge-secondary p-2">{{ $peta->status_konfirmasi_auditor ?? '-' }}</span>
+                                                        class="badge badge-{{ $stAudAdminBadge }} p-2">{{ $stAudAdminLabel }}</span>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="font-weight-bold">Status Auditee</label>
+                                                @php
+                                                    $stAuditeeAdmin = $peta->status_konfirmasi_auditee ?? '-';
+                                                    $stAuditeeAdminBadge = match ($stAuditeeAdmin) {
+                                                        'Completed' => 'success',
+                                                        'Not Completed' => 'warning',
+                                                        default => 'secondary',
+                                                    };
+                                                    $stAuditeeAdminLabel = match ($stAuditeeAdmin) {
+                                                        'Completed' => '✅ Sudah',
+                                                        'Not Completed' => '⚠️ Belum',
+                                                        default => $stAuditeeAdmin,
+                                                    };
+                                                @endphp
                                                 <div class="mt-2"><span
-                                                        class="badge badge-secondary p-2">{{ $peta->status_konfirmasi_auditee ?? '-' }}</span>
+                                                        class="badge badge-{{ $stAuditeeAdminBadge }} p-2">{{ $stAuditeeAdminLabel }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1090,7 +1311,83 @@
 
 @push('scripts')
     <script>
+        // ====================================================
+        // ✅ MITIGASI KONDISIONAL — Share Risk & Transfer Risk
+        // ====================================================
+        const selectMitigasi = document.getElementById('selectMitigasi');
+        const panelShare = document.getElementById('panelShareRisk');
+        const panelTransfer = document.getElementById('panelTransferRisk');
+        const panelAccept = document.getElementById('panelAcceptRisk');
+        const inputShareKepada = document.getElementById('inputShareKepada');
+        const inputTransferKepada = document.getElementById('inputTransferKepada');
+        const selectKategoriShare = document.getElementById('selectKategoriShare');
+        const selectKategoriTransfer = document.getElementById('selectKategoriTransfer');
+
+        function toggleMitigasiPanel(value) {
+            // Sembunyikan semua panel dulu
+            if (panelShare) panelShare.style.display = 'none';
+            if (panelTransfer) panelTransfer.style.display = 'none';
+            if (panelAccept) panelAccept.style.display = 'none';
+
+            // Hapus required dari semua field kondisional
+            if (inputShareKepada) {
+                inputShareKepada.required = false;
+                inputShareKepada.value = '';
+            }
+            if (inputTransferKepada) {
+                inputTransferKepada.required = false;
+                inputTransferKepada.value = '';
+            }
+            if (selectKategoriShare) {
+                selectKategoriShare.required = false;
+                selectKategoriShare.value = '';
+            }
+            if (selectKategoriTransfer) {
+                selectKategoriTransfer.required = false;
+                selectKategoriTransfer.value = '';
+            }
+
+            if (value === 'Share Risk') {
+                if (panelShare) panelShare.style.display = 'block';
+                if (inputShareKepada) inputShareKepada.required = true;
+                if (selectKategoriShare) selectKategoriShare.required = true;
+            } else if (value === 'Transfer Risk') {
+                if (panelTransfer) panelTransfer.style.display = 'block';
+                if (inputTransferKepada) inputTransferKepada.required = true;
+                if (selectKategoriTransfer) selectKategoriTransfer.required = true;
+            } else if (value === 'Accept Risk') {
+                if (panelAccept) panelAccept.style.display = 'block';
+            }
+        }
+
+        if (selectMitigasi) {
+            selectMitigasi.addEventListener('change', function() {
+                toggleMitigasiPanel(this.value);
+            });
+
+            // ✅ Saat halaman load, tampilkan panel sesuai nilai saat ini (untuk edit / old value)
+            toggleMitigasiPanel(selectMitigasi.value);
+
+            // ✅ Restore nilai lama jika ada (saat submit gagal, old value diperlukan)
+            @php
+                $oldMitigasiKepada = old('mitigasi_kepada', $mitigasiKepada);
+                $oldMitigasiKategori = old('mitigasi_kategori', $mitigasiKategori);
+            @endphp
+            const oldKepada = @json($oldMitigasiKepada);
+            const oldKategori = @json($oldMitigasiKategori);
+
+            if (selectMitigasi.value === 'Share Risk') {
+                if (inputShareKepada && oldKepada) inputShareKepada.value = oldKepada;
+                if (selectKategoriShare && oldKategori) selectKategoriShare.value = oldKategori;
+            } else if (selectMitigasi.value === 'Transfer Risk') {
+                if (inputTransferKepada && oldKepada) inputTransferKepada.value = oldKepada;
+                if (selectKategoriTransfer && oldKategori) selectKategoriTransfer.value = oldKategori;
+            }
+        }
+
+        // ====================================================
         // Toggle alert Not Completed
+        // ====================================================
         $('#selectStatusAuditor').on('change', function() {
             $(this).val() === 'Not Completed' ?
                 $('#alertNotCompleted').slideDown() :
@@ -1226,6 +1523,12 @@
             .timeline-body {
                 padding: 0 15px 12px;
             }
+        }
+
+        /* Panel mitigasi kondisional */
+        #panelShareRisk,
+        #panelTransferRisk {
+            transition: all .25s ease;
         }
     </style>
 @endpush

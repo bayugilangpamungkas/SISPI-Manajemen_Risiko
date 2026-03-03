@@ -61,7 +61,7 @@
         }
 
         .kop-logo img {
-            width: 100px;
+            width: 120px;
             height: auto;
             margin-top: 0;
         }

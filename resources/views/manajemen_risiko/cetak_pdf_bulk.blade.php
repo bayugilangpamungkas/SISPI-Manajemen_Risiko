@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Laporan Manajemen Risiko – {{ $unitKerja === 'all' ? 'Semua Unit Kerja' : $unitKerja }} – {{ $tahun }}
+    <title>Lembar Monitoring Manajemen Risiko – {{ $unitKerja === 'all' ? 'Semua Unit Kerja' : $unitKerja }} –
+        {{ $tahun }}
     </title>
     <style>
         /* ============================================================
@@ -71,7 +72,7 @@
         }
 
         .kop-logo img {
-            width: 100px;
+            width: 120px;
             height: auto;
             margin-top: 0;
         }

@@ -37,6 +37,10 @@
                                         target="_blank">
                                         <i class="fas fa-file-pdf mr-2"></i> Download PDF
                                     </a>
+                                    <a href="{{ route('surat.print', $surat->id) }}" class="btn btn-primary btn-lg"
+                                        target="_blank">
+                                        <i class="fas fa-print mr-2"></i> Cetak
+                                    </a>
                                 @endif
                                 @if ($surat->status == 'Draft')
                                     <a href="{{ route('surat.edit', $surat->id) }}" class="btn btn-warning btn-lg">
@@ -170,9 +174,10 @@
                             <label class="font-weight-bold text-dark mb-2" style="font-size: 0.875rem;">
                                 <i class="fas fa-align-left mr-1 text-primary"></i> ISI SURAT
                             </label>
-                            <div class="p-4 bg-light rounded border"
-                                style="white-space: pre-wrap; line-height: 1.8; text-align: justify;">
-                                {{ trim($surat->isi_surat) }}</div>
+                            <div class="p-4 bg-light rounded border isi-surat-preview"
+                                style="font-family: 'Times New Roman', Times, serif; font-size: 14px; line-height: 1.9; text-align: justify; min-height: 120px;">
+                                {!! $surat->isi_surat !!}
+                            </div>
                         </div>
                     </div>
                 </div>

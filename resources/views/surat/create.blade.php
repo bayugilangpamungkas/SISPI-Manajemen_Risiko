@@ -1,6 +1,80 @@
 @extends('layout.app')
 @section('title', 'Buat Surat Baru')
 
+@push('style')
+    <link rel="stylesheet" href="{{ asset('plugins/summernote/summernote-bs4.min.css') }}">
+    <style>
+        /* ── Wrapper Summernote: border & radius konsisten dengan form lain ── */
+        .note-editor.note-frame {
+            border: 1px solid #e4e6fc;
+            border-radius: .25rem;
+        }
+
+        .note-editor.note-frame.focus {
+            border-color: #95a0f4;
+            box-shadow: 0 0 0 .2rem rgba(109, 110, 243, .15);
+        }
+
+        /* ── Toolbar: font standar surat resmi ── */
+        .note-toolbar {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e4e6fc;
+        }
+
+        /* ── Area tulis: font Times New Roman, tinggi nyaman ── */
+        .note-editable {
+            font-family: 'Times New Roman', Times, serif !important;
+            font-size: 13pt !important;
+            line-height: 1.9 !important;
+            min-height: 320px !important;
+            text-align: justify;
+            color: #000;
+        }
+
+        /* ── Placeholder teks ── */
+        .note-placeholder {
+            font-family: 'Times New Roman', Times, serif !important;
+            font-size: 13pt !important;
+            color: #aaa;
+        }
+
+        /* ── Sembunyikan status bar bawah (tidak diperlukan) ── */
+        .note-statusbar {
+            display: none !important;
+        }
+
+        /* ── Validasi: border merah jika kosong saat submit ── */
+        .isi-surat-invalid .note-editor.note-frame {
+            border-color: #dc3545 !important;
+        }
+
+        /* Select2 */
+        select.select2 {
+            display: none;
+        }
+
+        .select2-container {
+            width: 100% !important;
+            display: block;
+        }
+
+        .select2-container--default .select2-selection--single {
+            border: 1px solid #e4e6fc;
+            height: calc(2.25rem + 2px);
+            padding: .375rem .75rem;
+            border-radius: .25rem;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #95a0f4;
+        }
+
+        .select2-search--dropdown {
+            display: none !important;
+        }
+    </style>
+@endpush
+
 @section('main')
     <div class="main-content">
         <section class="section">
@@ -12,10 +86,6 @@
                     </a>
                     <div>
                         <h1>Buat Surat Baru</h1>
-                        {{-- <div class="section-header-breadcrumb d-none d-sm-block">
-                            <div class="breadcrumb-item active"><a href="#">Surat</a></div>
-                            <div class="breadcrumb-item">Tambah Baru</div>
-                        </div> --}}
                     </div>
                 </div>
             </div>
@@ -38,10 +108,11 @@
 
                 <div class="row">
                     <div class="col-12">
-                        <form action="{{ route('surat.store') }}" method="POST">
+                        <form id="formSurat" action="{{ route('surat.store') }}" method="POST">
                             @csrf
                             <div class="card card-primary shadow-sm">
                                 <div class="card-body">
+
                                     {{-- INFORMASI UTAMA --}}
                                     <div class="row">
                                         <div class="col-md-6">
@@ -65,7 +136,7 @@
                                                     class="form-control selectric @error('jenis_surat') is-invalid @enderror"
                                                     required>
                                                     <option value="">-- Pilih --</option>
-                                                    @foreach (['Pemberitahuan', 'Undangan', 'Permohonan', 'Lainnya'] as $jenis)
+                                                    @foreach (['Surat Tugas', 'Surat Pemberitahuan Audit', 'Surat Permintaan Data', 'Nota Dinas', 'Undangan', 'Laporan Hasil Audit', 'Berita Acara', 'Permohonan', 'Lainnya'] as $jenis)
                                                         <option value="{{ $jenis }}"
                                                             {{ old('jenis_surat') == $jenis ? 'selected' : '' }}>
                                                             {{ $jenis }}</option>
@@ -103,10 +174,28 @@
                                             value="{{ old('perihal') }}" placeholder="Tuliskan perihal surat" required>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label class="font-weight-600">Isi Surat <span class="text-danger">*</span></label>
-                                        <textarea name="isi_surat" class="form-control" rows="8" placeholder="Tulis pesan surat secara lengkap..."
-                                            style="min-height: 200px" required>{{ old('isi_surat') }}</textarea>
+                                    {{-- ═══════════════════════════════════════════
+                                         ISI SURAT — Summernote WYSIWYG Editor
+                                    ════════════════════════════════════════════ --}}
+                                    <div class="form-group" id="wrapperIsiSurat">
+                                        <label class="font-weight-600">
+                                            Isi Surat <span class="text-black">*</span>
+                                        </label>
+
+                                        {{-- Textarea hidden — nilai dikirim ke server --}}
+                                        <textarea id="isiSurat" name="isi_surat">{{ old('isi_surat') }}</textarea>
+
+                                        @error('isi_surat')
+                                            <div class="text-danger mt-1" style="font-size: 0.875rem;">
+                                                <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
+                                            </div>
+                                        @enderror
+
+                                        {{-- <small class="form-text text-muted mt-1">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Gunakan <kbd>Enter</kbd> untuk paragraf baru.
+                                            Paragraf akan tampil terpisah pada hasil cetak PDF.
+                                        </small> --}}
                                     </div>
 
                                     {{-- REFERENSI (OPSIONAL) --}}
@@ -148,44 +237,22 @@
                                                         style="width: 100%">
                                                         <option value="">-- Pilih --</option>
                                                         @foreach ($hasilAudits as $audit)
-                                                            <option value="{{ $audit->id }}">@php
-                                                                // ✅ PERBAIKAN: Ambil kode kegiatan dengan format KEG-TAHUN-XXX
-                                                                $kodeKegiatan = '-';
-                                                                if ($peta->kegiatan) {
-                                                                    if (!empty($peta->kegiatan->kode_regist)) {
-                                                                        $kodeKegiatan = $peta->kegiatan->kode_regist;
-                                                                    } elseif (!empty($peta->kegiatan->id_kegiatan)) {
-                                                                        $kodeKegiatan = $peta->kegiatan->id_kegiatan;
-                                                                    } elseif (!empty($peta->kegiatan->kode)) {
-                                                                        $kodeKegiatan = $peta->kegiatan->kode;
-                                                                    } else {
-                                                                        // Fallback: buat format KEG-TAHUN-ID
-                                                                        $kodeKegiatan =
-                                                                            'KEG-' .
-                                                                            date('Y') .
-                                                                            '-' .
-                                                                            str_pad($peta->kegiatan->id, 3, '0', STR_PAD_LEFT);
-                                                                    }
-                                                                } elseif ($peta->id_kegiatan) {
-                                                                    $kegiatan = \App\Models\Kegiatan::find($peta->id_kegiatan);
-                                                                    if ($kegiatan) {
-                                                                        $kodeKegiatan =
-                                                                            $kegiatan->kode_regist ??
-                                                                            'KEG-' .
-                                                                                date('Y') .
-                                                                                '-' .
-                                                                                str_pad($kegiatan->id, 3, '0', STR_PAD_LEFT);
-                                                                    }
-                                                                }
-                                                            @endphp
-                                                            {{ $kodeKegiatan }}
-                                                                - {{ $audit->kegiatan }}</option>
+                                                            <option value="{{ $audit->id }}">
+                                                                {{ $audit->kode_risiko ?? 'Audit #' . $audit->id }}
+                                                                @if ($audit->kegiatan)
+                                                                    - {{ $audit->kegiatan }}
+                                                                @endif
+                                                                @if ($audit->unit_kerja)
+                                                                    ({{ $audit->unit_kerja }})
+                                                                @endif
+                                                            </option>
                                                         @endforeach
                                                     </select>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
                                 <div class="card-footer bg-whitesmoke text-right">
                                     <a href="{{ route('surat.index') }}" class="btn btn-secondary mr-2">Batal</a>
@@ -203,55 +270,87 @@
 @endsection
 
 @push('scripts')
-    <style>
-        /* Menghilangkan elemen select asli agar tidak memakan ruang */
-        select.select2 {
-            display: none;
-        }
-
-        /* Memperbaiki ukuran container Select2 agar pas dengan form-control */
-        .select2-container {
-            width: 100% !important;
-            display: block;
-        }
-
-        .select2-container--default .select2-selection--single {
-            border: 1px solid #e4e6fc;
-            /* Warna border default Stisla */
-            height: calc(2.25rem + 2px);
-            /* Tinggi standar form-control Bootstrap */
-            padding: .375rem .75rem;
-            border-radius: .25rem;
-        }
-
-        Menghilangkan border biru double saat fokus .select2-container--default.select2-container--focus .select2-selection--single {
-            border-color: #95a0f4;
-        }
-
-        /* Menghilangkan container search secara paksa lewat CSS */
-        .select2-search--dropdown {
-            display: none !important;
-        }
-    </style>
+    <script src="{{ asset('plugins/summernote/summernote-bs4.min.js') }}"></script>
 
     <script>
         $(document).ready(function() {
-            // Init Select2 Tanpa Search Bar
+
+            // ── 1. SELECT2 ──────────────────────────────────────────────
             $('.select2').select2({
                 placeholder: "-- Pilih --",
                 allowClear: true,
                 width: '100%',
-                // Ini kuncinya untuk menghilangkan kotak input search
                 minimumResultsForSearch: Infinity
             });
 
-            // Toggle logic tetap sama
+            // ── 2. TOGGLE REFERENSI ──────────────────────────────────────
             $('#tipeReferensi').on('change', function() {
                 const val = $(this).val();
                 $('.ref-field').hide();
                 if (val === 'Peta Risiko') $('#referensiPetaRisiko').fadeIn();
                 if (val === 'Audit') $('#referensiAudit').fadeIn();
             }).trigger('change');
+
+            // ── 3. SUMMERNOTE INIT ───────────────────────────────────────
+            $('#isiSurat').summernote({
+                lang: 'en-US',
+                height: 320,
+                minHeight: 320,
+                maxHeight: null,
+                placeholder: 'Contoh:\nDengan hormat,\n\nSehubungan dengan pelaksanaan audit internal...\n\nDemikian surat ini kami sampaikan.',
+
+                // Toolbar: hanya fitur yang relevan untuk surat resmi
+                toolbar: [
+                    ['style', ['bold', 'italic', 'underline', 'clear']],
+                    ['font', ['strikethrough']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link', 'picture']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ],
+
+                // Callback: sinkronkan ke textarea saat konten berubah
+                callbacks: {
+                    onChange: function(contents) {
+                        $('#isiSurat').val(contents);
+                    }
+                }
+            });
+
+            // ── 4. VALIDASI SEBELUM SUBMIT ───────────────────────────────
+            $('#formSurat').on('submit', function(e) {
+                const konten = $('#isiSurat').summernote('code');
+                const bersih = konten.replace(/<[^>]*>/g, '').trim(); // strip HTML tags
+
+                if (bersih === '') {
+                    e.preventDefault();
+                    $('#wrapperIsiSurat').addClass('isi-surat-invalid');
+                    // Scroll ke field isi surat
+                    $('html, body').animate({
+                        scrollTop: $('#wrapperIsiSurat').offset().top - 100
+                    }, 400);
+                    // Tampilkan pesan error sementara
+                    if ($('#isiSuratError').length === 0) {
+                        $('#wrapperIsiSurat').append(
+                            '<div id="isiSuratError" class="text-danger mt-1" style="font-size:0.875rem;">' +
+                            '<i class="fas fa-exclamation-circle mr-1"></i>Isi surat tidak boleh kosong.</div>'
+                        );
+                    }
+                } else {
+                    // Pastikan textarea terisi sebelum form submit
+                    $('#isiSurat').val(konten);
+                    $('#wrapperIsiSurat').removeClass('isi-surat-invalid');
+                    $('#isiSuratError').remove();
+                }
+            });
+
+            // ── 5. HAPUS ERROR SAAT USER MULAI MENGETIK ─────────────────
+            $('#isiSurat').on('summernote.change', function() {
+                $('#wrapperIsiSurat').removeClass('isi-surat-invalid');
+                $('#isiSuratError').remove();
+            });
+
         });
     </script>
 @endpush

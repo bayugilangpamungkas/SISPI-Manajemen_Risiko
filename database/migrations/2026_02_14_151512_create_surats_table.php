@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('surats', function (Blueprint $table) {
             $table->id();
             $table->string('nomor_surat')->unique();
-            $table->enum('jenis_surat', ['Pemberitahuan', 'Undangan', 'Permohonan', 'Lainnya']);
+            $table->string('jenis_surat');
             $table->string('tujuan_surat');
             $table->string('perihal');
             $table->text('isi_surat');

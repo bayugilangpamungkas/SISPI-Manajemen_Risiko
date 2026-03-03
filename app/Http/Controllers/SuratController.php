@@ -89,7 +89,7 @@ class SuratController extends Controller
     {
         $request->validate([
             'nomor_surat' => 'required|string|unique:surats,nomor_surat',
-            'jenis_surat' => 'required|in:Pemberitahuan,Undangan,Permohonan,Lainnya',
+            'jenis_surat' => 'required|in:Surat Tugas,Surat Pemberitahuan Audit,Surat Permintaan Data,Nota Dinas,Undangan,Laporan Hasil Audit,Berita Acara,Permohonan,Lainnya',
             'tujuan_surat' => 'required|string|max:255',
             'perihal' => 'required|string|max:255',
             'isi_surat' => 'required|string',
@@ -179,7 +179,7 @@ class SuratController extends Controller
 
         $request->validate([
             'nomor_surat' => 'required|string|unique:surats,nomor_surat,' . $id,
-            'jenis_surat' => 'required|in:Pemberitahuan,Undangan,Permohonan,Lainnya',
+            'jenis_surat' => 'required|in:Surat Tugas,Surat Pemberitahuan Audit,Surat Permintaan Data,Nota Dinas,Undangan,Laporan Hasil Audit,Berita Acara,Permohonan,Lainnya',
             'tujuan_surat' => 'required|string|max:255',
             'perihal' => 'required|string|max:255',
             'isi_surat' => 'required|string',
@@ -284,6 +284,27 @@ class SuratController extends Controller
     }
 
     /**
+     * Print / Preview PDF surat di browser (inline)
+     */
+    public function printPDF($id)
+    {
+        $surat = Surat::findOrFail($id);
+
+        if (!$surat->file_pdf || !Storage::exists('public/surat_pdf/' . $surat->file_pdf)) {
+            // Generate PDF jika belum ada
+            $this->generatePDF($surat);
+        }
+
+        $filePath = storage_path('app/public/surat_pdf/' . $surat->file_pdf);
+
+        // Tampilkan inline di browser — dialog cetak akan muncul otomatis via JS
+        return response()->file($filePath, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $surat->file_pdf . '"',
+        ]);
+    }
+
+    /**
      * Generate PDF dari data surat
      */
     private function generatePDF($surat)
@@ -291,8 +312,11 @@ class SuratController extends Controller
         // Load surat dengan relasi
         $surat->load(['creator', 'petaRisiko', 'hasilAudit']);
 
+        // Ambil data Ketua SPI (id_level = 3)
+        $ketuaSPI = \App\Models\User::where('id_level', 3)->first();
+
         // Generate PDF
-        $pdf = Pdf::loadView('surat.pdf_template', compact('surat'));
+        $pdf = Pdf::loadView('surat.pdf_template', compact('surat', 'ketuaSPI'));
 
         // Save PDF
         $filename = 'Surat_' . str_replace(['/', ' '], '_', $surat->nomor_surat) . '.pdf';

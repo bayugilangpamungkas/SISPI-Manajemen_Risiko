@@ -214,20 +214,7 @@
                                                         <i class="fas fa-eye"></i>
                                                     </a>
 
-                                                    {{-- @if ($surat->file_pdf)
-                                                        <a href="{{ route('surat.download-pdf', $surat->id) }}"
-                                                            class="btn btn-sm btn-success" data-toggle="tooltip"
-                                                            title="Download PDF">
-                                                            <i class="fas fa-file-pdf"></i>
-                                                        </a>
-                                                    @endif --}}
-
                                                     @if ($surat->status == 'Draft')
-                                                        {{-- <a href="{{ route('surat.edit', $surat->id) }}"
-                                                            class="btn btn-sm btn-warning" data-toggle="tooltip"
-                                                            title="Edit">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a> --}}
 
                                                         <form action="{{ route('surat.finalize', $surat->id) }}"
                                                             method="POST" class="d-inline"

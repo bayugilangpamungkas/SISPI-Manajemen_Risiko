@@ -179,7 +179,7 @@
             font-size: 12pt;
             text-align: justify;
             text-justify: inter-word;
-            margin: 20px 0 25px 0;
+            margin: 40px 0 25px 0;
             min-height: 180px;
             color: #000;
         }
@@ -254,7 +254,7 @@
 
         .ttd strong {
             font-family: 'Times New Roman', Times, serif;
-            font-weight: bold;
+            /* font-weight: bold; */
         }
 
         .ttd-line {
@@ -396,10 +396,10 @@
 
     {{-- TANDA TANGAN --}}
     <div class="ttd">
-        <p>Malang, {{ $surat->tanggal_surat->translatedFormat('d F Y') }}</p>
-        <p><strong>Ketua SPI</strong></p>
+        {{-- <p>Malang, {{ $surat->tanggal_surat->translatedFormat('d F Y') }}</p> --}}
+        <p>Ketua SPI</p>
         <div class="ttd-space"></div>
-        <p><strong>{{ $ketuaSPI->name ?? '-' }}</strong></p>
+        <p>{{ $ketuaSPI->name ?? '-' }}</p>
         <p>NIP. {{ $ketuaSPI->nip ?? '-' }}</p>
     </div>
 

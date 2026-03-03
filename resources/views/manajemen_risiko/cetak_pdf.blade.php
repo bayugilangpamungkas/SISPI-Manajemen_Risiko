@@ -17,16 +17,16 @@
         }
 
         /* ============================================================
-         |  BASE
+         |  BASE — Times New Roman untuk seluruh dokumen
          ============================================================ */
         * {
             box-sizing: border-box;
         }
 
         body {
-            font-family: Arial, sans-serif;
-            font-size: 9pt;
-            line-height: 1.35;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 10pt;
+            line-height: 1.4;
             margin: 0;
             padding: 0;
             color: #000;
@@ -43,34 +43,27 @@
         .kop-table {
             width: 100%;
             border-collapse: collapse;
+            /* Garis pembatas kop surat */
             border-bottom: 3px solid #000;
             padding-bottom: 4px;
+            margin-bottom: 6px;
         }
 
-        /*
-         * ✅ PERBAIKAN LOGO:
-         * Ubah vertical-align dari 'middle' → 'top'
-         * dan padding-top: 0 agar logo rata atas dengan teks kop
-         */
         .kop-table td {
             border: none;
             padding: 0 4px;
-            /* ← padding-top 0, bukan 2px */
             vertical-align: top;
-            /* ← top, bukan middle */
         }
 
         .kop-logo {
-            width: 72px;
+            width: 100px;
             text-align: center;
         }
 
         .kop-logo img {
-            width: 80px;
+            width: 100px;
             height: auto;
             margin-top: 0;
-            /* ← pastikan tidak ada offset atas */
-
         }
 
         .kop-teks {
@@ -78,54 +71,65 @@
             padding: 0 6px;
         }
 
+        /* ── Baris 1: Kementerian + Politeknik — 12pt, normal, UPPERCASE ── */
         .kop-institusi {
-            font-size: 11pt;
-            font-weight: bold;
-            letter-spacing: 0.5px;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            font-weight: normal;
+            font-style: normal;
             text-transform: uppercase;
-            margin: 0 0 1px 0;
+            margin: 0;
             line-height: 1.3;
         }
 
+        /* ── Baris 2: Satuan Pengawas Internal — 14pt, BOLD, UPPERCASE ── */
         .kop-unit {
-            font-size: 13.5pt;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14pt;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0 0 2px 0;
+            margin: 3px 0 3px 0;
+            line-height: 1.3;
         }
 
+        /* ── Baris 3: Alamat & Kontak — 9pt, normal ── */
         .kop-alamat {
-            font-size: 8pt;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 9pt;
+            font-weight: normal;
             margin: 1px 0 0 0;
-            color: #222;
+            color: #000;
+            line-height: 1.45;
         }
 
         /* ============================================================
          |  JUDUL DOKUMEN
          ============================================================ */
         .judul-dokumen {
+            font-family: 'Times New Roman', Times, serif;
             text-align: center;
-            margin: 7px 0 6px 0;
+            margin: 8px 0 6px 0;
         }
 
         .judul-dokumen h2 {
+            font-family: 'Times New Roman', Times, serif;
             font-size: 11pt;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0 0 1px 0;
-            text-decoration: underline;
+            letter-spacing: 0.5px;
+            margin: 0 0 2px 0;
+            /* text-decoration: underline; */
         }
 
         .judul-dokumen p {
-            font-size: 8.5pt;
-            margin: 1px 0 0 0;
-            color: #333;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 10pt;
+            margin: 0;
+            color: #000;
         }
 
         /* ============================================================
-         |  TABEL IDENTITAS AUDIT (2 kolom informasi)
+         |  TABEL IDENTITAS AUDIT
          ============================================================ */
         .tbl-identitas {
             width: 100%;
@@ -135,38 +139,35 @@
         }
 
         .tbl-identitas td {
-            padding: 3.5px 7px;
-            font-size: 8.5pt;
+            font-family: 'Times New Roman', Times, serif;
+            padding: 3px 7px;
+            font-size: 10pt;
             vertical-align: top;
             border: 1px solid #000;
-            line-height: 1.3;
+            line-height: 1.35;
         }
 
         .tbl-identitas .lbl {
             font-weight: bold;
             white-space: nowrap;
             width: 13%;
-            background-color: #fff;
         }
 
         .tbl-identitas .sep {
             width: 1%;
             text-align: center;
-            padding: 3.5px 2px;
+            padding: 3px 2px;
             border-left: none;
             border-right: none;
-            background-color: #fff;
         }
 
         .tbl-identitas .val {
             width: 35%;
         }
 
-        /* pemisah tengah antara kiri–kanan */
         .tbl-identitas .mid-gap {
             width: 3%;
             border: 1px solid #000;
-            background-color: #fff;
             padding: 0;
         }
 
@@ -175,59 +176,48 @@
          ============================================================ */
         .badge-risiko {
             display: inline-block;
+            font-family: 'Times New Roman', Times, serif;
             font-weight: bold;
-            font-size: 8.5pt;
-            padding: 2px 14px;
+            font-size: 10pt;
+            padding: 1px 12px;
             border-radius: 2px;
-            letter-spacing: 0.5px;
             background-color: #fff;
             color: #000;
         }
 
-        .lvl-extreme {
-            background-color: #fff;
-            color: #000;
-        }
-
-        .lvl-high {
-            background-color: #fff;
-            color: #000;
-        }
-
-        .lvl-moderate {
-            background-color: #fff;
-            color: #000;
-        }
-
+        .lvl-extreme,
+        .lvl-high,
+        .lvl-moderate,
         .lvl-low {
             background-color: #fff;
             color: #000;
         }
 
         /* ============================================================
-         |  TABEL ISI AUDIT (3 kolom utama)
+         |  TABEL ISI AUDIT (3 kolom)
          ============================================================ */
         .tbl-audit {
             width: 100%;
             border-collapse: collapse;
             border: 1.5px solid #000;
-            margin-bottom: 7px;
+            margin-bottom: 6px;
         }
 
         .tbl-audit th {
+            font-family: 'Times New Roman', Times, serif;
             background-color: #fff;
             color: #000;
-            font-size: 8.5pt;
+            font-size: 10pt;
             font-weight: bold;
             text-align: center;
             padding: 5px 7px;
             border: 1px solid #000;
-            letter-spacing: 0.3px;
         }
 
         .tbl-audit td {
+            font-family: 'Times New Roman', Times, serif;
             padding: 6px 8px;
-            font-size: 8.5pt;
+            font-size: 10pt;
             vertical-align: top;
             border: 1px solid #000;
             line-height: 1.45;
@@ -235,14 +225,8 @@
             color: #000;
         }
 
-        .tbl-audit td.col-pengendalian {
-            background-color: #fff;
-        }
-
-        .tbl-audit td.col-mitigasi {
-            background-color: #fff;
-        }
-
+        .tbl-audit td.col-pengendalian,
+        .tbl-audit td.col-mitigasi,
         .tbl-audit td.col-komentar {
             background-color: #fff;
         }
@@ -260,6 +244,7 @@
         }
 
         .isi-label {
+            font-family: 'Times New Roman', Times, serif;
             font-weight: bold;
             color: #000;
             display: block;
@@ -267,23 +252,30 @@
         }
 
         .isi-kosong {
+            font-family: 'Times New Roman', Times, serif;
             text-align: center;
             color: #000;
             font-style: italic;
             padding: 30px 0;
         }
 
-        /* ── Komentar bernomor ── */
+        /* ── Komentar ── */
         .komentar-item {
+            font-family: 'Times New Roman', Times, serif;
             display: block;
-            margin-bottom: 6px;
-            line-height: 1.5;
+            margin-bottom: 5px;
+            line-height: 1.55;
+            text-align: justify;
         }
 
         .komentar-no {
             font-weight: bold;
             color: #000;
-            margin-right: 3px;
+            margin-right: 2px;
+        }
+
+        .komentar-judul {
+            font-weight: bold;
         }
 
         /* ── Mitigasi kepada ── */
@@ -293,7 +285,7 @@
             padding: 4px 6px;
             background-color: #fff;
             border-left: 3px solid #000;
-            font-size: 8pt;
+            font-size: 9pt;
             line-height: 1.4;
         }
 
@@ -302,12 +294,45 @@
             color: #000;
         }
 
+        /* ── Strategi Mitigasi ── */
+        .mitigasi-strategi {
+            font-family: 'Times New Roman', Times, serif;
+            display: block;
+            font-size: 10pt;
+            font-weight: normal;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .mitigasi-divider {
+            border: none;
+            border-top: 1px solid #000;
+            margin: 6px 0;
+        }
+
+        .status-konfirmasi-label {
+            font-family: 'Times New Roman', Times, serif;
+            display: block;
+            font-weight: bold;
+            font-size: 10pt;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .status-konfirmasi-row {
+            font-family: 'Times New Roman', Times, serif;
+            display: block;
+            text-align: center;
+            font-size: 10pt;
+            line-height: 1.8;
+        }
+
         /* ============================================================
-         |  BAGIAN TANDA TANGAN
+         |  TANDA TANGAN
          ============================================================ */
         .ttd-section {
             width: 100%;
-            margin-top: 6px;
+            margin-top: 8px;
         }
 
         .ttd-table {
@@ -316,103 +341,64 @@
         }
 
         .ttd-table td {
+            font-family: 'Times New Roman', Times, serif;
             border: none;
-            padding: 0 0 0 0;
+            padding: 0 20px;
             width: 50%;
             vertical-align: top;
-            font-size: 8.5pt;
+            font-size: 10pt;
         }
 
-        /* Kolom kiri → rata kiri */
         .ttd-table td.ttd-kiri {
             text-align: center;
         }
 
-        /* Kolom kanan → rata kanan */
         .ttd-table td.ttd-kanan {
             text-align: center;
         }
 
         .ttd-kota {
-            font-size: 8.5pt;
-            margin-bottom: 2px;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 10pt;
+            margin: 0 0 2px 0;
         }
 
         .ttd-jabatan {
-            font-size: 8.5pt;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 10pt;
             font-weight: bold;
-            margin-bottom: 0;
+            margin: 0;
         }
 
         .ttd-ruang {
-            height: 48px;
+            height: 50px;
         }
 
         .ttd-nama {
+            font-family: 'Times New Roman', Times, serif;
             font-weight: bold;
             text-decoration: underline;
-            font-size: 8.5pt;
+            font-size: 10pt;
+            margin: 0;
         }
 
         .ttd-nip {
-            font-size: 8pt;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 10pt;
+            margin: 1px 0 0 0;
         }
 
         /* ============================================================
-         |  FOOTER HALAMAN
+         |  FOOTER
          ============================================================ */
         .footer-doc {
-            border-top: 1px solid #999;
+            font-family: 'Times New Roman', Times, serif;
+            border-top: 1px solid #000;
             margin-top: 8px;
             padding-top: 3px;
-            font-size: 7.5pt;
-            color: #555;
+            font-size: 8pt;
+            color: #000;
             text-align: center;
-        }
-
-        /* ── Kolom Mitigasi ── */
-        .mitigasi-strategi {
-            display: block;
-            font-size: 9pt;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-
-        .mitigasi-divider {
-            border: none;
-            border-top: 1px solid #ccc;
-            margin: 6px 0;
-        }
-
-        .status-konfirmasi-label {
-            display: block;
-            font-weight: bold;
-            font-size: 8.5pt;
-            text-align: center;
-            margin-bottom: 4px;
-        }
-
-        .status-konfirmasi-row {
-            display: block;
-            text-align: center;
-            font-size: 8.5pt;
-            line-height: 1.8;
-        }
-
-        /* ── Komentar: nomor bold + judul bold + teks biasa justify ── */
-        .komentar-item {
-            display: block;
-            margin-bottom: 5px;
-            line-height: 1.55;
-            text-align: justify;
-        }
-
-        .komentar-no {
-            font-weight: bold;
-        }
-
-        .komentar-judul {
-            font-weight: bold;
         }
     </style>
 </head>
@@ -456,12 +442,13 @@
                     @endif
                 </td>
                 <td class="kop-teks">
+                    <p class="kop-institusi">Kementerian Pendidikan Tinggi, Sains,</p>
+                    <p class="kop-institusi">dan Teknologi</p>
                     <p class="kop-institusi">Politeknik Negeri Malang</p>
                     <p class="kop-unit">Satuan Pengawas Internal</p>
-                    <p class="kop-alamat">
-                        Jl. Soekarno-Hatta No.9, Jatimulyo, Kec. Lowokwaru, Kota Malang, Jawa Timur 65141
-                        &nbsp;|&nbsp; Telp. (0341) 404424 &nbsp;|&nbsp; spi.polinema.ac.id
-                    </p>
+                    <p class="kop-alamat">Jalan Soekarno Hatta Nomor 9 Jatimulyo, Lowokwaru, Malang 65141</p>
+                    <p class="kop-alamat">Telepon (0341) 404424, 404425, Faksimile (0341) 404420</p>
+                    <p class="kop-alamat">Laman www.polinema.ac.id</p>
                 </td>
             </tr>
         </table>
@@ -471,8 +458,8 @@
      JUDUL DOKUMEN
      ================================================================ --}}
     <div class="judul-dokumen">
-        <h2>Lembar Monitoring dan Evaluasi Manajemen Risiko</h2>
-        <p>Laporan Hasil Audit – Tahun Anggaran {{ $hasilAudit->tahun_anggaran ?? date('Y') }}</p>
+        <h2>Lembar Monitoring dan Evaluasi Manajemen Risiko Unit</h2>
+        {{-- <p>Laporan Hasil Audit – Tahun Anggaran {{ $hasilAudit->tahun_anggaran ?? date('Y') }}</p> --}}
     </div>
 
     {{-- ================================================================
@@ -627,7 +614,7 @@
                                 </span>
                             @endforeach
                         @else
-                            <span style="color:#888; font-style:italic;">— Tidak ada komentar —</span>
+                            <span style="color:#000; font-style:italic;">— Tidak ada komentar —</span>
                         @endif
                     </td>
                 </tr>

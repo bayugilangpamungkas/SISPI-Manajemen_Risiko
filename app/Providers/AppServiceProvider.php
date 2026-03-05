@@ -36,25 +36,28 @@ class AppServiceProvider extends ServiceProvider
                 $level_menus = Level_menu::where('id_level', auth()->user()->id_level)->get();
                 $first = Menu::first();
                 $menus = Menu::get();
+
+                // Ambil semua id_menu yang boleh diakses oleh level user ini
+                $allowed_menu_ids = $level_menus->pluck('id_menu')->toArray();
+
                 $panel_menus = [];
                 foreach ($menus as $menu) {
-                    foreach ($level_menus->skip(1) as $level_menu) {
-                        if ($menu->id == $level_menu->id_menu) {
-                            // Only add parent menus (not submenu) and menus without head_menu
-                            if ($menu->id_head_menu == null && $menu->parent_id == null) {
-                                $panel_menus[] = $menu;
-                            }
+                    // Cek apakah menu ini ada dalam daftar yang diizinkan
+                    if (in_array($menu->id, $allowed_menu_ids)) {
+                        // Hanya tambahkan parent menus (bukan submenu) dan bukan head_menu
+                        if ($menu->id_head_menu == null && $menu->parent_id == null) {
+                            $panel_menus[] = $menu;
                         }
                     }
-                };
+                }
 
                 $head_menus = Head_menu::get();
 
                 View::share([
-                    'first_menu' => $first,
+                    'first_menu'  => $first,
                     'panel_menus' => $panel_menus,
-                    'head_menus' => $head_menus,
-                    'level_menus' => $level_menus
+                    'head_menus'  => $head_menus,
+                    'level_menus' => $level_menus,
                 ]);
             }
         });

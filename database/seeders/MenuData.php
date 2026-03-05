@@ -116,6 +116,12 @@ class MenuData extends Seeder
 
                 ],
             ],
+            [
+                'id' => 30,
+                'name' => 'Manajemen Surat',
+                'link' => '/surat',
+                'icon' => 'fas fa-envelope',
+            ],
 
         ];
 

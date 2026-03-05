@@ -68,18 +68,10 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '1',
                 'id_menu' => '20',
             ],
-            // [
-            //     'id_level' => '1',
-            //     'id_menu' => '21', // Menu: Manajemen Risiko (Parent)
-            // ],
-            // [
-            //     'id_level' => '1',
-            //     'id_menu' => '22', // Submenu: Daftar Risiko
-            // ],
-            // [
-            //     'id_level' => '1',
-            //     'id_menu' => '23', // Submenu: Sub menu 2
-            // ],
+            [
+                'id_level' => '1',
+                'id_menu' => '30', // Menu: Manajemen Surat
+            ],
 
             // ========================================
             // LEVEL 2: ADMIN
@@ -134,10 +126,10 @@ class LevelMenuSeeder extends Seeder
                 'id_level' => '2',
                 'id_menu' => '23', // Submenu: Sub menu 2
             ],
-            // [
-            //     'id_level' => '2',
-            //     'id_menu' => '22', // Menu: Dokumen
-            // ],
+            [
+                'id_level' => '2',
+                'id_menu' => '30', // Menu: Manajemen Surat
+            ],
 
             // ========================================
             // LEVEL 3: KETUA

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('jenis_surat');
             $table->string('tujuan_surat');
             $table->string('perihal');
+            $table->string('lampiran')->nullable();
             $table->text('isi_surat');
             $table->date('tanggal_surat');
 

@@ -16,9 +16,10 @@ class Surat extends Model
         'perihal',
         'isi_surat',
         'tanggal_surat',
-        'tipe_referensi',
-        'referensi_id',
+        // 'tipe_referensi',
+        // 'referensi_id',
         'file_pdf',
+        'lampiran',
         'status',
         'created_by',
     ];

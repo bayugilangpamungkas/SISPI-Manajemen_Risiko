@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>{{ $surat->nomor_surat }} - {{ $surat->jenis_surat }} </title>
+    <title>{{ $surat->nomor_surat }} - {{ $surat->jenis_surat }}</title>
     <style>
         /* ============================================================
          |  PAGE SETUP — A4 PORTRAIT
@@ -13,9 +13,6 @@
             margin: 1.5cm 2.5cm 2cm 2.5cm;
         }
 
-        /* ============================================================
-         |  BASE — Times New Roman untuk seluruh dokumen
-         ============================================================ */
         * {
             box-sizing: border-box;
         }
@@ -23,7 +20,7 @@
         body {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
-            line-height: 1.6;
+            line-height: 1.5;
             margin: 0;
             padding: 0;
             color: #000;
@@ -32,180 +29,162 @@
         /* ============================================================
          |  KOP SURAT
          ============================================================ */
-        .kop-surat {
-            width: 100%;
-            /* Garis pembatas kop — double sesuai standar surat resmi */
-            border-bottom: 3px double #000;
-            margin: 0 0 12px 0;
-            padding: 0 0 8px 0;
-        }
-
-        .kop-table {
+        .kop-outer {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 0;
         }
 
-        .logo-cell {
-            width: 100px;
+        .kop-logo-cell {
+            width: 90px;
             vertical-align: middle;
-            text-align: left;
-            padding-right: 12px;
+            text-align: center;
+            padding-right: 10px;
         }
 
-        .logo-cell img {
+        .kop-logo-cell img {
             width: 100px;
             height: auto;
             display: block;
+            margin: 0 auto;
         }
 
-        .text-cell {
-            text-align: center;
+        .kop-text-cell {
             vertical-align: middle;
-            padding-left: 5px;
+            text-align: center;
+            padding: 0;
         }
 
-        /* ── Baris 1: Kementerian & Politeknik — 12pt, normal, UPPERCASE ── */
-        .kop-surat .kop-institusi {
-            font-family: 'Times New Roman', Times, serif;
+        .kop-line1 {
+            font-size: 11pt;
+            font-weight: normal;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            margin: 0;
+            line-height: 1.35;
+        }
+
+        .kop-line2 {
             font-size: 12pt;
             font-weight: normal;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.2px;
             margin: 0;
-            line-height: 1.3;
+            line-height: 1.35;
         }
 
-        /* ── Baris 2: Satuan Pengawas Internal — 14pt, BOLD, UPPERCASE ── */
-        .kop-surat .kop-unit {
-            font-family: 'Times New Roman', Times, serif;
+        .kop-line3 {
             font-size: 14pt;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin: 3px 0;
+            margin: 2px 0;
             line-height: 1.3;
         }
 
-        /* ── Baris 3: Alamat & Kontak — 9pt, normal ── */
-        .kop-surat .kop-alamat {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 9pt;
+        .kop-alamat {
+            font-size: 8.5pt;
             font-weight: normal;
-            margin: 1px 0 0 0;
-            color: #000;
+            margin: 2px 0 0 0;
             line-height: 1.45;
         }
 
-        /* ============================================================
-         |  JUDUL SURAT
-         ============================================================ */
-        .judul-container {
-            font-family: 'Times New Roman', Times, serif;
-            text-align: center;
-            margin: 20px 0 16px 0;
-        }
-
-        .judul-container strong {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
-            font-weight: bold;
-            text-decoration: underline;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .judul-container span {
-            font-family: 'Times New Roman', Times, serif;
-            display: block;
-            margin-top: 6px;
-            font-size: 12pt;
-            font-weight: normal;
+        /* Garis pembatas kop — double border sesuai standar */
+        .kop-border-bottom {
+            border-bottom: 4px double #000;
+            margin-bottom: 14px;
+            padding-bottom: 4px;
         }
 
         /* ============================================================
-         |  META SURAT (Kepada, Perihal, Tanggal, Referensi)
+         |  BLOK META SURAT
+         |  Layout: tabel 2 kolom besar
+         |  Kiri  → Nomor / Lampiran / Hal
+         |  Kanan → Tanggal (rata kanan, sejajar baris Nomor)
          ============================================================ */
-        .meta-surat {
-            margin: 0 0 20px 0;
-        }
-
-        .meta-surat table {
+        .blok-meta {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 18px;
         }
 
-        .meta-surat td {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
-            padding: 3px 0;
+        /* Kolom kiri: berisi sub-tabel Nomor-Lampiran-Hal */
+        .blok-meta>tbody>tr>td.meta-kiri {
             vertical-align: top;
-            line-height: 1.5;
-            color: #000;
+            width: 65%;
+            padding: 0;
         }
 
-        .meta-surat td:first-child {
-            width: 120px;
-            font-weight: normal;
-        }
-
-        .meta-surat td:nth-child(2) {
-            width: 10px;
-            padding: 3px 4px;
-        }
-
-        .meta-surat td:last-child {
-            font-weight: normal;
-        }
-
-        /* ── Referensi ── */
-        .referensi-item {
-            font-family: 'Times New Roman', Times, serif;
+        /* Kolom kanan: tanggal rata kanan, sejajar baris Nomor */
+        .blok-meta>tbody>tr>td.meta-kanan {
+            vertical-align: top;
+            width: 35%;
+            text-align: right;
             font-size: 12pt;
+            padding-top: 1px;
+            white-space: nowrap;
         }
 
-        .referensi-label {
-            font-weight: normal;
+        /* Sub-tabel kiri: Nomor / Lampiran / Hal */
+        .sub-meta {
+            border-collapse: collapse;
+            width: auto;
         }
 
-        .referensi-value {
+        .sub-meta td {
+            font-size: 12pt;
+            padding: 1px 0;
+            vertical-align: top;
+            line-height: 1.65;
+        }
+
+        /* Kolom label — underline sesuai standar surat resmi */
+        .sub-meta td.lbl {
+            width: 85px;
+            text-decoration: underline;
+            white-space: nowrap;
+        }
+
+        /* Kolom titik dua */
+        .sub-meta td.sep {
+            width: 16px;
+            padding: 1px 5px;
+            text-decoration: none;
+        }
+
+        /* Kolom nilai */
+        .sub-meta td.val {
             font-weight: normal;
         }
 
         /* ============================================================
-         |  ISI SURAT — render HTML dari Summernote (DomPDF-safe)
+         |  ISI SURAT
          ============================================================ */
         .isi-surat {
-            font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
             text-align: justify;
             text-justify: inter-word;
-            margin: 40px 0 25px 0;
-            min-height: 180px;
+            margin: 16px 0 0 0;
             color: #000;
         }
 
-        /* Setiap <p> dari Summernote */
         .isi-surat p {
-            font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
             line-height: 1.8;
-            margin: 0 0 10px 0;
+            margin: 0 0 12px 0;
             padding: 0;
             text-align: justify;
-            color: #000;
         }
 
         .isi-surat p:last-child {
             margin-bottom: 0;
         }
 
-        /* List dari Summernote */
         .isi-surat ul,
         .isi-surat ol {
-            font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
             line-height: 1.8;
-            margin: 0 0 10px 1.5em;
+            margin: 0 0 10px 1.8em;
             padding: 0;
         }
 
@@ -213,7 +192,6 @@
             margin-bottom: 4px;
         }
 
-        /* Bold, italic, underline dari Summernote */
         .isi-surat strong,
         .isi-surat b {
             font-weight: bold;
@@ -229,53 +207,68 @@
         }
 
         /* ============================================================
-         |  TANDA TANGAN
+         |  TANDA TANGAN + FOOTER — fixed di bawah halaman
+         |  Dibungkus satu blok agar keduanya selalu di bawah
          ============================================================ */
-        .ttd {
-            font-family: 'Times New Roman', Times, serif;
-            margin-top: 40px;
-            float: right;
-            width: 280px;
+        .blok-bawah {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+        }
+
+        /* Tabel TTD — 2 kolom, TTD di kanan */
+        .ttd-wrapper {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        .ttd-kiri {
+            width: 55%;
+            vertical-align: bottom;
+        }
+
+        .ttd-kanan {
+            width: 45%;
+            vertical-align: top;
             text-align: center;
         }
 
-        .ttd p {
-            font-family: 'Times New Roman', Times, serif;
+        .ttd-kanan p {
             font-size: 12pt;
-            margin: 2px 0;
-            line-height: 1.5;
-            color: #000;
+            margin: 1px 0;
+            line-height: 1.55;
+            text-align: center;
         }
 
         .ttd-space {
-            height: 70px;
-            margin: 8px 0;
+            height: 80px;
         }
 
-        .ttd strong {
-            font-family: 'Times New Roman', Times, serif;
-            /* font-weight: bold; */
+        .ttd-nama {
+            font-size: 12pt;
+            text-decoration: underline;
+            margin: 0;
+            line-height: 1.55;
+            text-align: center;
         }
 
-        .ttd-line {
-            display: inline-block;
-            min-width: 200px;
-            border-bottom: 1px solid #000;
-            margin: 4px 0;
+        .ttd-nip {
+            font-size: 12pt;
+            margin: 0;
+            line-height: 1.55;
+            text-align: center;
         }
 
-        /* ============================================================
-         |  FOOTER
-         ============================================================ */
+        /* Footer */
         .footer {
-            font-family: 'Times New Roman', Times, serif;
-            clear: both;
-            margin-top: 50px;
-            padding-top: 8px;
+            padding-top: 6px;
             border-top: 1px solid #000;
             font-size: 8pt;
             font-style: italic;
-            color: #000;
+            color: #555;
             line-height: 1.4;
         }
 
@@ -283,20 +276,13 @@
             margin: 2px 0;
         }
 
-        /* ============================================================
-         |  PRINT OPTIMIZATION
-         ============================================================ */
         @media print {
             body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
 
-            .kop-surat {
-                page-break-after: avoid;
-            }
-
-            .ttd {
+            .blok-bawah {
                 page-break-inside: avoid;
             }
         }
@@ -304,112 +290,93 @@
 </head>
 
 <body>
-    {{-- KOP SURAT --}}
-    <div class="kop-surat">
-        <table class="kop-table">
+
+    {{-- ══════════════════════════════════════════
+         KOP SURAT
+    ══════════════════════════════════════════ --}}
+    <div class="kop-border-bottom">
+        <table class="kop-outer">
             <tr>
-                <td class="logo-cell">
-                    {{-- Menggunakan public_path untuk memastikan logo terbaca saat generate PDF --}}
+                <td class="kop-logo-cell">
                     <img src="{{ public_path('img/logo kop polinema.png') }}" alt="Logo Polinema">
                 </td>
-                <td class="text-cell">
-                    <p class="kop-institusi">KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</p>
-                    <p class="kop-institusi">POLITEKNIK NEGERI MALANG</p>
-                    <p class="kop-unit">SATUAN PENGAWAS INTERNAL</p>
-                    <p class="kop-alamat">Jl. Soekarno Hatta No. 9 Malang 65141</p>
-                    <p class="kop-alamat">Telp. (0341) 404424 | Email: spi@polinema.ac.id | Laman: spi.polinema.ac.id
-                    </p>
+                <td class="kop-text-cell">
+                    <p class="kop-line1">KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</p>
+                    <p class="kop-line2">POLITEKNIK NEGERI MALANG</p>
+                    <p class="kop-line3">SATUAN PENGAWAS INTERNAL</p>
+                    <p class="kop-alamat">Jalan Soekarno Hatta Nomor 9 Jatimulyo, Lowokwaru, Malang 65141</p>
+                    <p class="kop-alamat">Telepon (0341) 404424, 404425, Faksimile (0341) 404420 &nbsp;|&nbsp; Laman
+                        www.polinema.ac.id</p>
                 </td>
             </tr>
         </table>
     </div>
 
-    {{-- JUDUL & NOMOR --}}
-    <div class="judul-container">
-        <strong>{{ strtoupper($surat->jenis_surat) }}</strong>
-        <span>Nomor: {{ $surat->nomor_surat }}</span>
-    </div>
-
-    {{-- META SURAT --}}
-    <div class="meta-surat">
-        <table>
+    {{-- ══════════════════════════════════════════
+         BLOK META: Nomor / Lampiran / Hal  +  Tanggal
+         Layout dua kolom: kiri = meta, kanan = tanggal
+    ══════════════════════════════════════════ --}}
+    <table class="blok-meta">
+        <tbody>
             <tr>
-                <td>Kepada</td>
-                <td>: </td>
-                <td>{{ $surat->tujuan_surat }}</td>
-            </tr>
-            <tr>
-                <td>Perihal</td>
-                <td>: </td>
-                <td>{{ $surat->perihal }}</td>
-            </tr>
-            <tr>
-                <td>Tanggal</td>
-                <td>: </td>
-                <td>{{ $surat->tanggal_surat->translatedFormat('d F Y') }}</td>
-            </tr>
-            @if ($surat->tipe_referensi != 'Tanpa Referensi')
-                <tr>
-                    <td>Referensi</td>
-                    <td>: </td>
-                    <td>
-                        @php
-                            $kodeKegiatan = '-';
-                            // Mengambil data melalui relasi petaRisiko yang ada di model
-                            $peta = $surat->petaRisiko;
+                {{-- ── KIRI: Nomor, Lampiran, Hal ── --}}
+                <td class="meta-kiri">
+                    <table class="sub-meta">
+                        <tbody>
+                            <tr>
+                                <td class="lbl">Nomor</td>
+                                <td class="sep">:</td>
+                                <td class="val">{{ $surat->nomor_surat }}</td>
+                            </tr>
+                            <tr>
+                                <td class="lbl">Lampiran</td>
+                                <td class="sep">:</td>
+                                <td class="val">{{ $surat->lampiran ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="lbl">Hal</td>
+                                <td class="sep">:</td>
+                                <td class="val">{{ $surat->perihal }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
 
-                            if ($peta && $peta->kegiatan) {
-                                $keg = $peta->kegiatan;
-                                if (!empty($keg->kode_regist)) {
-                                    $kodeKegiatan = $keg->kode_regist;
-                                } elseif (!empty($keg->id_kegiatan)) {
-                                    $kodeKegiatan = $keg->id_kegiatan;
-                                } elseif (!empty($keg->kode)) {
-                                    $kodeKegiatan = $keg->kode;
-                                } else {
-                                    // Fallback: buat format KEG-TAHUN-ID
-                                    $kodeKegiatan = 'KEG-' . date('Y') . '-' . str_pad($keg->id, 3, '0', STR_PAD_LEFT);
-                                }
-                            } elseif ($peta && $peta->id_kegiatan) {
-                                // Fallback jika relasi kegiatan tidak terload tapi ID ada
-                                $kegiatanManual = \App\Models\Kegiatan::find($peta->id_kegiatan);
-                                if ($kegiatanManual) {
-                                    $kodeKegiatan =
-                                        $kegiatanManual->kode_regist ??
-                                        'KEG-' . date('Y') . '-' . str_pad($kegiatanManual->id, 3, '0', STR_PAD_LEFT);
-                                }
-                            }
-                        @endphp
+                {{-- ── KANAN: Tanggal (rata kanan, sejajar baris Nomor) ── --}}
+                <td class="meta-kanan">
+                    {{ $surat->tanggal_surat->translatedFormat('d F Y') }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
-                        <span class="referensi-item">
-                            <span class="referensi-label">{{ $surat->tipe_referensi }}</span>:
-                            <span class="referensi-value">{{ $kodeKegiatan }}</span>
-                        </span>
-                    </td>
-                </tr>
-            @endif
-        </table>
-    </div>
-
-    {{-- ISI SURAT — render HTML langsung dari Summernote --}}
+    {{-- ══════════════════════════════════════════
+         ISI SURAT
+    ══════════════════════════════════════════ --}}
     <div class="isi-surat">{!! $surat->isi_surat !!}</div>
 
-    {{-- TANDA TANGAN --}}
-    <div class="ttd">
-        {{-- <p>Malang, {{ $surat->tanggal_surat->translatedFormat('d F Y') }}</p> --}}
-        <p>Ketua SPI</p>
-        <div class="ttd-space"></div>
-        <p>{{ $ketuaSPI->name ?? '-' }}</p>
-        <p>NIP. {{ $ketuaSPI->nip ?? '-' }}</p>
+    {{-- ══════════════════════════════════════════
+         BLOK BAWAH: TANDA TANGAN + FOOTER
+    ══════════════════════════════════════════ --}}
+    <div class="blok-bawah">
+        <table class="ttd-wrapper">
+            <tr>
+                <td class="ttd-kiri"></td>
+                <td class="ttd-kanan">
+                    <p>Ketua SPI,</p>
+                    <div class="ttd-space"></div>
+                    <p class="ttd-nama">{{ $ketuaSPI->name ?? '-' }}</p>
+                    <p class="ttd-nip">NIP. {{ $ketuaSPI->nip ?? '-' }}</p>
+                </td>
+            </tr>
+        </table>
+
+        <div class="footer">
+            <p>Dokumen ini dibuat melalui Sistem Informasi SPI Politeknik Negeri Malang</p>
+            <p>Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} WIB</p>
+        </div>
     </div>
 
-    <div style="clear: both;"></div>
-
-    {{-- FOOTER --}}
-    <div class="footer">
-        <p>Dokumen ini dibuat melalui Sistem Informasi SPI Politeknik Negeri Malang</p>
-        <p>Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} WIB</p>
-    </div>
 </body>
 
 </html>

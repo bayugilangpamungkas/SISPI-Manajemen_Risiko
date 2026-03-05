@@ -558,4 +558,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/surat/{id}/finalize', [App\Http\Controllers\SuratController::class, 'finalize'])->name('surat.finalize')->middleware(['auth']);
     Route::get('/surat/{id}/download-pdf', [App\Http\Controllers\SuratController::class, 'downloadPDF'])->name('surat.download-pdf')->middleware(['auth']);
     Route::get('/surat/{id}/print', [App\Http\Controllers\SuratController::class, 'printPDF'])->name('surat.print')->middleware(['auth']);
+    Route::post('/surat/{id}/upload-scan', [App\Http\Controllers\SuratController::class, 'uploadScan'])->name('surat.upload-scan')->middleware(['auth']);
+    Route::get('/surat/{id}/view-scan', [App\Http\Controllers\SuratController::class, 'viewScan'])->name('surat.view-scan')->middleware(['auth']);
 });

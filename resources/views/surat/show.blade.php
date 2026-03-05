@@ -42,6 +42,24 @@
                                         <i class="fas fa-print mr-2"></i> Cetak
                                     </a>
                                 @endif
+
+                                {{-- ── SCAN SURAT ── --}}
+                                @if ($surat->file_scan)
+                                    <a href="{{ route('surat.view-scan', $surat->id) }}" class="btn btn-success btn-lg"
+                                        target="_blank">
+                                        <i class="fas fa-image mr-2"></i> Lihat Scan Surat
+                                    </a>
+                                    <button type="button" class="btn btn-warning btn-lg"
+                                        onclick="bukaModalScan({{ $surat->id }}, '{{ addslashes($surat->nomor_surat) }}', true)">
+                                        <i class="fas fa-redo mr-2"></i> Upload Ulang Scan
+                                    </button>
+                                @else
+                                    <button type="button" class="btn btn-secondary btn-lg"
+                                        onclick="bukaModalScan({{ $surat->id }}, '{{ addslashes($surat->nomor_surat) }}', false)">
+                                        <i class="fas fa-upload mr-2"></i> Upload Scan Surat
+                                    </button>
+                                @endif
+
                                 @if ($surat->status == 'Draft')
                                     <a href="{{ route('surat.edit', $surat->id) }}" class="btn btn-warning btn-lg">
                                         <i class="fas fa-edit mr-2"></i> Edit Surat
@@ -239,6 +257,62 @@
             </div>
         </section>
     </div>
+
+    {{-- ══════════════════════════════════════════
+         MODAL UPLOAD SCAN SURAT
+    ══════════════════════════════════════════ --}}
+    <div class="modal fade" id="modalUploadScan" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-upload mr-2"></i>
+                        <span id="modalScanTitle">Upload Scan Surat</span>
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <form id="modalScanAction" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" id="modalScanSuratId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <span class="text-muted" style="font-size:.875rem;">Nomor Surat:</span>
+                            <span id="modalScanNomor" class="font-weight-bold ml-1"></span>
+                            <span id="modalScanBadge" class="badge badge-secondary ml-2"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-600">File Scan <span class="text-danger">*</span></label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="inputFileScan" name="file_scan"
+                                    accept=".jpg,.jpeg,.png,.pdf" required>
+                                <label class="custom-file-label" id="labelFileScan" for="inputFileScan">
+                                    Pilih file (JPG, PNG, PDF — maks. 5MB)
+                                </label>
+                            </div>
+                            <small class="form-text text-muted mt-1">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Format: JPG, JPEG, PNG, PDF &bull; Maks. 5MB
+                            </small>
+                        </div>
+                        <div class="text-center mt-2">
+                            <img id="previewFileScan" src="" alt="Preview" class="img-fluid rounded d-none"
+                                style="max-height:200px; border:1px solid #dee2e6;">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i> Batal
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload mr-1"></i> Upload Sekarang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('styles')
@@ -272,4 +346,44 @@
             letter-spacing: 0.3px;
         }
     </style>
+@endpush
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+
+        function bukaModalScan(suratId, nomorSurat, isUlang) {
+            $('#modalScanSuratId').val(suratId);
+            $('#modalScanAction').attr('action', '/surat/' + suratId + '/upload-scan');
+            $('#modalScanTitle').text(isUlang ? 'Upload Ulang Scan Surat' : 'Upload Scan Surat');
+            $('#modalScanNomor').text(nomorSurat);
+            $('#modalScanBadge').text(isUlang ? 'Ganti File' : 'Upload Baru')
+                .removeClass('badge-secondary badge-warning')
+                .addClass(isUlang ? 'badge-warning' : 'badge-secondary');
+            $('#inputFileScan').val('');
+            $('#previewFileScan').addClass('d-none').attr('src', '');
+            $('#labelFileScan').text('Pilih file (JPG, PNG, PDF — maks. 5MB)');
+            $('#modalUploadScan').modal('show');
+        }
+
+        document.getElementById('inputFileScan').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            document.getElementById('labelFileScan').textContent = file.name;
+            const preview = document.getElementById('previewFileScan');
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.classList.add('d-none');
+                preview.src = '';
+            }
+        });
+    </script>
 @endpush

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Surat;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -24,8 +25,20 @@ class SuratController extends Controller
         'Lainnya',
     ];
 
+    /** Pastikan kolom file_scan ada di tabel (dipanggil sekali saat boot) */
+    private function ensureFileScanColumn(): void
+    {
+        if (!Schema::hasColumn('surats', 'file_scan')) {
+            Schema::table('surats', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('file_scan')->nullable()->after('file_pdf');
+            });
+        }
+    }
+
     public function index(Request $request)
     {
+        $this->ensureFileScanColumn();
+
         $active     = 30;
         $jenisSurat = $request->input('jenis_surat', 'all');
         $status     = $request->input('status', 'all');
@@ -225,6 +238,74 @@ class SuratController extends Controller
                 'Content-Disposition' => 'inline; filename="' . $surat->file_pdf . '"',
             ]
         );
+    }
+
+    /**
+     * Upload hasil scan surat (jpg/png/jpeg/pdf)
+     */
+    public function uploadScan(Request $request, $id)
+    {
+        $this->ensureFileScanColumn();
+
+        $surat = Surat::findOrFail($id);
+
+        $request->validate([
+            'file_scan' => [
+                'required',
+                'file',
+                'max:5120', // 5MB
+                'mimes:jpg,jpeg,png,pdf',
+            ],
+        ], [
+            'file_scan.required' => 'Pilih file scan terlebih dahulu.',
+            'file_scan.max'      => 'Ukuran file maksimal 5MB.',
+            'file_scan.mimes'    => 'Format file harus JPG, PNG, atau PDF.',
+        ]);
+
+        try {
+            // Hapus file lama jika ada
+            if ($surat->file_scan && Storage::exists('public/surat/' . $surat->file_scan)) {
+                Storage::delete('public/surat/' . $surat->file_scan);
+            }
+
+            // Simpan file baru
+            $file      = $request->file('file_scan');
+            $safeName  = 'scan_' . str_replace(['/', ' ', '\\'], '_', $surat->nomor_surat)
+                . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+            $file->storeAs('public/surat', $safeName);
+
+            $surat->update(['file_scan' => $safeName]);
+
+            return redirect()->back()
+                ->with('success', '✅ File scan surat berhasil diupload.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal upload: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Tampilkan / stream file scan di tab baru
+     */
+    public function viewScan($id)
+    {
+        $surat = Surat::findOrFail($id);
+
+        if (!$surat->file_scan || !Storage::exists('public/surat/' . $surat->file_scan)) {
+            abort(404, 'File scan tidak ditemukan.');
+        }
+
+        $path      = storage_path('app/public/surat/' . $surat->file_scan);
+        $extension = strtolower(pathinfo($surat->file_scan, PATHINFO_EXTENSION));
+        $mime      = in_array($extension, ['jpg', 'jpeg', 'png'])
+            ? 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension)
+            : 'application/pdf';
+
+        return response()->file($path, [
+            'Content-Type'        => $mime,
+            'Content-Disposition' => 'inline; filename="' . $surat->file_scan . '"',
+        ]);
     }
 
     private function generatePDF($surat)

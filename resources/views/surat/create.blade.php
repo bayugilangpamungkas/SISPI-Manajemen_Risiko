@@ -133,7 +133,6 @@
                     </a>
                     <div>
                         <h1>Buat Surat Baru</h1>
-                        <small class="text-muted">Field berikut akan tampil langsung di PDF surat resmi</small>
                     </div>
                 </div>
             </div>
@@ -160,8 +159,8 @@
                             <div class="card card-primary shadow-sm">
 
                                 {{-- ── HEADER CARD ── --}}
-                                <div class="card-header">
-                                    <h4 class="card-title">
+                                <div class="card-header bg-primary">
+                                    <h4 class="card-title text-white">
                                         <i class="fas fa-envelope-open-text mr-2"></i>Informasi Surat
                                     </h4>
                                 </div>

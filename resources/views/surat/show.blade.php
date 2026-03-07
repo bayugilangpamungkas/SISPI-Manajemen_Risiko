@@ -13,11 +13,7 @@
                         </a>
                         <div>
                             <h1 class="mb-1" style="font-size: 1.75rem; font-weight: 700; color: #2c3e50;">
-                                Detail Surat
-                            </h1>
-                            <p class="text-muted mb-0" style="font-size: 0.875rem;">
-                                Informasi lengkap surat {{ $surat->nomor_surat }}
-                            </p>
+                                Detail Surat </h1>
                         </div>
                     </div>
                 </div>
@@ -27,45 +23,36 @@
                 {{-- ========== ACTION BUTTONS ========== --}}
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="font-weight-bold text-dark mb-0">
-                                <i class="fas fa-info-circle text-primary mr-2"></i>Aksi Surat
-                            </h6>
-                            <div>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            {{-- Bagian Judul/Icon --}}
+                            {{-- <div class="mb-2 mb-md-0">
+                                <h6 class="font-weight-bold text-dark mb-0">
+                                    <i class="fas fa-info-circle text-primary mr-2"></i>Aksi Surat
+                                </h6>
+                            </div> --}}
+
+                            {{-- Bagian Tombol Aksi --}}
+                            <div class="d-flex flex-wrap" style="gap: 8px;">
                                 @if ($surat->file_pdf)
-                                    <a href="{{ route('surat.download-pdf', $surat->id) }}" class="btn btn-success btn-lg"
-                                        target="_blank">
+                                    <a href="{{ route('surat.download-pdf', $surat->id) }}"
+                                        class="btn btn-success shadow-sm d-inline-flex align-items-center" target="_blank">
                                         <i class="fas fa-file-pdf mr-2"></i> Download PDF
                                     </a>
-                                    <a href="{{ route('surat.print', $surat->id) }}" class="btn btn-primary btn-lg"
-                                        target="_blank">
+                                    <a href="{{ route('surat.print', $surat->id) }}"
+                                        class="btn btn-primary shadow-sm d-inline-flex align-items-center" target="_blank">
                                         <i class="fas fa-print mr-2"></i> Cetak
                                     </a>
                                 @endif
 
-                                {{-- ── SCAN SURAT ── --}}
-                                @if ($surat->file_scan)
-                                    <a href="{{ route('surat.view-scan', $surat->id) }}" class="btn btn-success btn-lg"
-                                        target="_blank">
-                                        <i class="fas fa-image mr-2"></i> Lihat Scan Surat
-                                    </a>
-                                    <button type="button" class="btn btn-warning btn-lg"
-                                        onclick="bukaModalScan({{ $surat->id }}, '{{ addslashes($surat->nomor_surat) }}', true)">
-                                        <i class="fas fa-redo mr-2"></i> Upload Ulang Scan
-                                    </button>
-                                @else
-                                    <button type="button" class="btn btn-secondary btn-lg"
-                                        onclick="bukaModalScan({{ $surat->id }}, '{{ addslashes($surat->nomor_surat) }}', false)">
-                                        <i class="fas fa-upload mr-2"></i> Upload Scan Surat
-                                    </button>
-                                @endif
-
                                 @if ($surat->status == 'Draft')
-                                    <a href="{{ route('surat.edit', $surat->id) }}" class="btn btn-warning btn-lg">
+                                    <a href="{{ route('surat.edit', $surat->id) }}"
+                                        class="btn btn-warning shadow-sm d-inline-flex align-items-center text-dark">
                                         <i class="fas fa-edit mr-2"></i> Edit Surat
                                     </a>
                                 @endif
-                                <a href="{{ route('surat.index') }}" class="btn btn-secondary btn-lg">
+
+                                <a href="{{ route('surat.index') }}"
+                                    class="btn btn-secondary shadow-sm d-inline-flex align-items-center">
                                     <i class="fas fa-arrow-left mr-2"></i> Kembali
                                 </a>
                             </div>
@@ -94,14 +81,7 @@
                                     </div>
                                 </div>
 
-                                <div class="info-group mb-3">
-                                    <label class="font-weight-bold text-dark mb-2" style="font-size: 0.875rem;">
-                                        <i class="fas fa-file-alt mr-1 text-primary"></i> JENIS SURAT
-                                    </label>
-                                    <div class="info-value p-3 bg-light rounded">
-                                        <span class="badge badge-info p-2">{{ $surat->jenis_surat }}</span>
-                                    </div>
-                                </div>
+                                {{-- JENIS SURAT dihapus --}}
 
                                 <div class="info-group mb-3">
                                     <label class="font-weight-bold text-dark mb-2" style="font-size: 0.875rem;">
@@ -112,14 +92,14 @@
                                     </div>
                                 </div>
 
-                                <div class="info-group">
+                                {{-- <div class="info-group">
                                     <label class="font-weight-bold text-dark mb-2" style="font-size: 0.875rem;">
                                         <i class="fas fa-users mr-1 text-primary"></i> TUJUAN SURAT
                                     </label>
                                     <div class="info-value p-3 bg-light rounded">
                                         {{ $surat->tujuan_surat }}
                                     </div>
-                                </div>
+                                </div> --}}
                             </div>
 
                             <div class="col-md-6 mb-4">
@@ -140,14 +120,14 @@
                                     </div>
                                 </div>
 
-                                <div class="info-group mb-3">
+                                {{-- <div class="info-group mb-3">
                                     <label class="font-weight-bold text-dark mb-2" style="font-size: 0.875rem;">
                                         <i class="fas fa-link mr-1 text-primary"></i> TIPE REFERENSI
                                     </label>
                                     <div class="info-value p-3 bg-light rounded">
                                         <span class="badge badge-secondary p-2">{{ $surat->tipe_referensi }}</span>
                                     </div>
-                                </div>
+                                </div> --}}
 
                                 <div class="info-group mb-3">
                                     <label class="font-weight-bold text-dark mb-2" style="font-size: 0.875rem;">
@@ -158,14 +138,14 @@
                                     </div>
                                 </div>
 
-                                <div class="info-group">
+                                {{-- <div class="info-group">
                                     <label class="font-weight-bold text-dark mb-2" style="font-size: 0.875rem;">
                                         <i class="fas fa-clock mr-1 text-primary"></i> DIBUAT PADA
                                     </label>
                                     <div class="info-value p-3 bg-light rounded">
                                         {{ $surat->created_at->format('d F Y, H:i') }} WIB
                                     </div>
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </div>

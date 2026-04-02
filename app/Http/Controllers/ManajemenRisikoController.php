@@ -570,7 +570,7 @@ class ManajemenRisikoController extends Controller
         }
 
         // ✅ AMBIL DATA DENGAN PAGINATION BIASA
-        $perPage = 20;
+        $perPage = 10;
         $petas = $query->orderByRaw('(skor_kemungkinan * skor_dampak) DESC')
             ->paginate($perPage);
 
@@ -1640,8 +1640,7 @@ class ManajemenRisikoController extends Controller
 
     /**
      * ✅ CETAK EXCEL BULK — Semua risiko final milik 1 Unit Kerja
-     * Setiap baris = 1 risiko, dengan semua data audit
-     * Route: GET /manajemen-risiko/bulk/cetak-excel?unit_kerja=...&tahun=...
+     *
      */
     public function cetakExcelBulk(Request $request)
     {

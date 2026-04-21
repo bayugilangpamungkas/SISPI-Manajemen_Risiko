@@ -535,7 +535,7 @@
 
         @include('components.minute-card-styles') .minutes-empty {
             text-align: center;
-            color: #4a5568;
+            color: #718096;
             font-size: 1rem;
             margin-top: 40px;
         }

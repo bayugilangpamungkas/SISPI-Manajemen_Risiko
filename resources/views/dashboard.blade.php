@@ -2,11 +2,11 @@
 @section('title', 'Dashboard')
 
 @section('main')
-<div class="main-content">
-    <section class="section">
-        <div class="section-header">
-            <h1>Dashboard</h1>
-        </div>
+    <div class="main-content">
+        <section class="section">
+            <div class="section-header">
+                <h1>Dashboard</h1>
+            </div>
             <div class="section-body">
 
                 <!-- Progress bar untuk data yang di-approve -->
@@ -31,13 +31,15 @@
                                 </div>
                             </div>
                         @endif
-        
+
                         @if (count($assignedPosts) > 0)
                             <div class="card-body">
                                 <h5>Persentase Laporan Akhir yang Telah Dikumpulkan (Tugas Anda)</h5>
                                 <div class="progress">
-                                    <div class="progress-bar" role="progressbar" style="width: {{ $laporanAkhirRateAssigned }}%;"
-                                        aria-valuenow="{{ $laporanAkhirRateAssigned }}" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar" role="progressbar"
+                                        style="width: {{ $laporanAkhirRateAssigned }}%;"
+                                        aria-valuenow="{{ $laporanAkhirRateAssigned }}" aria-valuemin="0"
+                                        aria-valuemax="100">
                                         {{ round($laporanAkhirRateAssigned, 2) }}%
                                     </div>
                                 </div>
@@ -45,7 +47,7 @@
                         @endif
                     </div>
                 </div>
-        
+
                 <div class="row">
                     <!-- Chart Data Penugasan -->
                     <div class="col-xl-7 col-xxl-7 mt-3 mb-3">
@@ -55,7 +57,7 @@
                             </div>
                         </div>
                     </div>
-        
+
                     <!-- Card untuk Bidang -->
                     <div class="col-xl-5 col-xxl-5 mt-3 mb-3">
                         @foreach ($bidangCounts as $bidang => $count)
@@ -86,8 +88,8 @@
                     </div>
                 </div>
             </div>
-    </section>
-</div>
+        </section>
+    </div>
 
     <script src="{{ $tugasLaporChart->cdn() }}"></script>
     {{ $tugasLaporChart->script() }}

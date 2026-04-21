@@ -10,12 +10,8 @@
         @if ($hasImages)
             <div class="minute-card-viewport" data-minute-gallery="{{ $galleryIdentifier }}">
                 @foreach ($minuteImages as $index => $image)
-                    <img
-                        src="{{ $image->image_url }}"
-                        alt="{{ $image->caption ?? $minute->title }}"
-                        class="minute-card-slide {{ $index === 0 ? 'is-active' : '' }}"
-                        loading="lazy"
-                    >
+                    <img src="{{ $image->image_url }}" alt="{{ $image->caption ?? $minute->title }}"
+                        class="minute-card-slide {{ $index === 0 ? 'is-active' : '' }}" loading="lazy">
                 @endforeach
 
                 @if ($minuteImages->count() > 1)
@@ -27,7 +23,9 @@
                     </button>
                     <div class="minute-card-dots">
                         @foreach ($minuteImages as $index => $image)
-                            <button type="button" class="minute-card-dot {{ $index === 0 ? 'is-active' : '' }}" data-minute-dot data-target="{{ $index }}" aria-label="Pilih gambar {{ $index + 1 }}"></button>
+                            <button type="button" class="minute-card-dot {{ $index === 0 ? 'is-active' : '' }}"
+                                data-minute-dot data-target="{{ $index }}"
+                                aria-label="Pilih gambar {{ $index + 1 }}"></button>
                         @endforeach
                     </div>
                 @endif
@@ -42,7 +40,8 @@
 
     <div class="minute-card-content">
         <div class="minute-card-meta">
-            <span class="minute-card-date">{{ $minute->meeting_date?->format('d M Y') ?? 'Tanggal belum ditetapkan' }}</span>
+            <span
+                class="minute-card-date">{{ $minute->meeting_date?->format('d M Y') ?? 'Tanggal belum ditetapkan' }}</span>
             @if ($minute->location)
                 <span class="minute-card-location"><i class="fas fa-map-marker-alt"></i> {{ $minute->location }}</span>
             @endif
@@ -72,7 +71,8 @@
                 <div class="minute-card-gallery-thumbs">
                     @foreach ($minuteImages as $image)
                         <a href="{{ $image->image_url }}" target="_blank" rel="noopener">
-                            <img src="{{ $image->image_url }}" alt="{{ $image->caption ?? $minute->title }}" loading="lazy">
+                            <img src="{{ $image->image_url }}" alt="{{ $image->caption ?? $minute->title }}"
+                                loading="lazy">
                         </a>
                     @endforeach
                 </div>

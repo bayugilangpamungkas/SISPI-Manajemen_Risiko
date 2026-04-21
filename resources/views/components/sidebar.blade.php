@@ -10,12 +10,12 @@ ia<div class="main-sidebar sidebar-style-2">
             @php
                 $currentPanelActive = $active ?? null;
             @endphp
-            <li class="{{ Request::is('dashboard') ? 'active' : '' }}">
+            {{-- <li class="{{ Request::is('dashboard') ? 'active' : '' }}">
                 <a href="{{ $first_menu->link }}" class="nav-link">
                     <i class="{{ $first_menu->icon }}"></i>
                     <span>{{ $first_menu->name }}</span>
                 </a>
-            </li>
+            </li> --}}
             @foreach ($head_menus as $head_menu)
                 @php
                     $count = 0;

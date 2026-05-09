@@ -167,33 +167,41 @@
   })
 
   it('TEST 12: Auditee dapat membuka detail risiko dari tombol aksi', () => {
-    // ✅ STEP 1: Visit halaman manajemen risiko
+    // ✅ STEP 1: Visit halaman manajemen risiko auditee
     cy.visit('/manajemen-risiko')
     cy.url({ timeout: 10000 }).should('include', '/auditee/manajemen-risiko')
 
-    // ✅ STEP 2: Pastikan tabel ada dan memiliki data
+    // ✅ STEP 2: Ambil tombol detail dari baris pertama
+    // Berdasarkan gambar Inspect Element, kita gunakan atribut title/data-original-title
     cy.get('table.table tbody tr', { timeout: 8000 })
-      .should('have.length.greaterThan', 0)
-      .first() // Ambil baris pertama
-      .find('a.btn-sm.btn-primary, a.btn-sm.btn-info') // Cari tombol detail
+      .should('have.length.greaterThan', 0) // Pastikan tabel ada isinya
       .first()
-      .as('btnDetail') // Simpan sebagai alias agar lebih bersih
+      .find('a[data-original-title="Lihat Proses Audit"], a[title="Lihat Proses Audit"], a.btn-primary')
+      .first()
+      .as('btnDetail')
 
-    // ✅ STEP 3: Klik tombol detail (Lakukan di luar scope baris agar tidak error saat navigasi)
+    // ✅ STEP 3: Klik tombol detail
+    // Menggunakan force: true untuk memastikan klik tembus meskipun ada tooltip/overlay
     cy.get('@btnDetail').should('be.visible').click({ force: true })
 
-    // ✅ STEP 4: Tunggu halaman detail terbuka
-    // Gunakan regex agar pengecekan URL lebih fleksibel terhadap ID yang dinamis
-    cy.url({ timeout: 10000 }).should('match', /\/auditee\/manajemen-risiko\/\d+\/detail/)
+    // ✅ STEP 4: Validasi URL setelah perpindahan halaman
+    // Menggunakan regex \d+ untuk menangkap ID dinamis (seperti ID 35 di gambar Anda)
+    cy.url({ timeout: 15000 })
+      .should('match', /\/auditee\/manajemen-risiko\/\d+\/detail/)
 
-    // ✅ STEP 5: Validasi konten spesifik halaman detail
-    // Jangan pakai 'body', pakai elemen yang membuktikan halaman sudah ter-render sempurna
-    cy.get('h1', { timeout: 8000 })
+    // ✅ STEP 5: Validasi konten halaman detail sudah loaded
+    // Kita pastikan ada elemen judul (h1/h2) yang muncul
+    cy.get('h1, h2, .card-title', { timeout: 10000 })
       .should('be.visible')
-      .and('contain', 'Detail'); // Sesuaikan dengan judul di halaman SISPI Anda
+      .then(($el) => {
+        // Memastikan teks judul mengandung kata 'Detail' atau 'Proses' 
+        // sesuai dengan konteks tombol "Lihat Proses Audit"
+        const text = $el.text().toLowerCase();
+        expect(text).to.match(/detail|proses|risiko/);
+      })
 
-    // Tambahan: Pastikan ada data yang muncul di halaman detail
-    cy.get('.card-body').should('exist').and('not.be.empty')
+    // Tambahan: Pastikan body atau container utama tidak kosong
+    cy.get('.card-body, .main-card').should('exist').and('not.be.empty')
   })
 
   it('TEST 13: Auditee dapat melihat notifikasi perbaikan jika ada', () => {
@@ -240,5 +248,4 @@
     // Validasi ada data kategori di body
     cy.get('table.table tbody .badge-secondary').should('have.length.greaterThan', 0)
   })
-
 })

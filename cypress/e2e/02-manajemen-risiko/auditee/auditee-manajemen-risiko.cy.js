@@ -190,7 +190,7 @@
       .should('match', /\/auditee\/manajemen-risiko\/\d+\/detail/)
 
     // ✅ STEP 5: Validasi konten halaman detail sudah loaded
-    // Kita pastikan ada elemen judul (h1/h2) yang muncul
+    // Kita pastikan ada elemen judul (h1/h2) yang munculhallo
     cy.get('h1, h2, .card-title', { timeout: 10000 })
       .should('be.visible')
       .then(($el) => {

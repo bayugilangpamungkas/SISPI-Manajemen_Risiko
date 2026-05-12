@@ -4,8 +4,7 @@
 
 @push('style')
     <!-- CSS Libraries -->
-    <link rel="stylesheet"
-        href="{{ asset('library/bootstrap-social/bootstrap-social.css') }}">
+    <link rel="stylesheet" href="{{ asset('library/bootstrap-social/bootstrap-social.css') }}">
 @endpush
 
 @section('main')
@@ -17,46 +16,40 @@
         <div class="card-body">
             <form action="{{ url('login/proses') }}" method="post">
                 @csrf
+
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input id="username"
-                        type="text"
-                        class="form-control"
-                        name="username"
-                        tabindex="1"
-                        required
-                        autofocus>
-                    <div class="invalid-feedback">
-                        Please fill in your email
-                    </div>
+                    <input id="username" type="text" class="form-control @error('username') is-invalid @enderror"
+                        name="username" value="{{ old('username') }}" tabindex="1" required autofocus>
+
+                    {{-- Pesan spesifik untuk username --}}
+                    @error('username')
+                        <small class="text-danger mt-2 d-block">
+                            <strong>* {{ $message }}</strong>
+                        </small>
+                    @enderror
                 </div>
 
                 <div class="form-group">
                     <div class="d-block">
-                        <label for="password"
-                            class="control-label">Password</label>
+                        <label for="password" class="control-label">Password</label>
                         <div class="float-right">
-                            <a href="auth-forgot-password.html"
-                                class="text-small">
-                                Forgot Password?
-                            </a>
+                            <a href="auth-forgot-password.html" class="text-small">Forgot Password?</a>
                         </div>
                     </div>
-                    <input id="password"
-                        type="password"
-                        class="form-control"
-                        name="password"
-                        tabindex="2"
-                        required>
-                    <div class="invalid-feedback">
-                        please fill in your password
-                    </div>
+                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror"
+                        name="password" tabindex="2" required>
+
+                    {{-- Pesan spesifik untuk password --}}
+                    @error('password')
+                        <small class="text-danger mt-2 d-block">
+                            <strong>* {{ $message }}</strong>
+                        </small>
+                    @enderror
                 </div>
 
                 <div class="form-group">
-                    <button type="submit"
-                        class="btn btn-primary btn-lg btn-block"
-                        tabindex="4">
+                    <button type="submit" class="btn btn-primary btn-lg btn-block" tabindex="4">
                         Login
                     </button>
                 </div>

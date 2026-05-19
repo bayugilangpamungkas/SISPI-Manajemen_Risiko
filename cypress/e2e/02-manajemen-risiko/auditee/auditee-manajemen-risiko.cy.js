@@ -170,15 +170,12 @@
     // ✅ STEP 1: Visit halaman manajemen risiko auditee
     cy.visit('/manajemen-risiko')
     cy.url({ timeout: 10000 }).should('include', '/auditee/manajemen-risiko')
-
-    // ✅ STEP 2: Ambil tombol detail dari baris pertama
-    // Berdasarkan gambar Inspect Element, kita gunakan atribut title/data-original-title
     cy.get('table.table tbody tr', { timeout: 8000 })
-      .should('have.length.greaterThan', 0) // Pastikan tabel ada isinya
-      .first()
+      .should('have.length.greaterThan', 0);
+    cy.get('table.table tbody')
       .find('a[data-original-title="Lihat Proses Audit"], a[title="Lihat Proses Audit"], a.btn-primary')
-      .first()
-      .as('btnDetail')
+      .first() // Mengambil tombol pertama yang ketemu di baris mana saja
+      .as('btnDetail');
 
     // ✅ STEP 3: Klik tombol detail
     // Menggunakan force: true untuk memastikan klik tembus meskipun ada tooltip/overlay

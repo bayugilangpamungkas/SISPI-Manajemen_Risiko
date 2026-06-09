@@ -27,20 +27,46 @@
 
 
 Cypress.Commands.add('login', (username, password) => {
-  cy.visit('http://127.0.0.1:8000/login')
-
-  cy.get('input[name="username"]').clear().type(username)
-  cy.get('input[name="password"]').clear().type(password)
-
-  cy.get('button[type="submit"]').click()
-})
-
-Cypress.Commands.add('logout', () => {
 
   cy.clearCookies()
   cy.clearLocalStorage()
 
+  cy.visit('/login')
+
+  cy.url({ timeout: 10000 })
+    .should('include', '/login')
+
+  cy.get('input[name="username"]', { timeout: 10000 })
+    .should('be.visible')
+    .clear()
+    .type(username)
+
+  cy.get('input[name="password"]')
+    .should('be.visible')
+    .clear()
+    .type(password)
+
+  cy.get('button[type="submit"]')
+    .should('be.visible')
+    .click()
+
+  cy.url({ timeout: 15000 })
+    .should('include', '/dashboard')
+
+})
+
+Cypress.Commands.add('logout', () => {
+
   cy.visit('/logout', {
     failOnStatusCode: false
   })
+
+  cy.clearCookies()
+  cy.clearLocalStorage()
+
+  cy.visit('/login')
+
+  cy.url({ timeout: 10000 })
+    .should('include', '/login')
+
 })

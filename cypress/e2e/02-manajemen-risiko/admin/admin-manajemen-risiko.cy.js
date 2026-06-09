@@ -61,7 +61,7 @@ describe('Admin - Manajemen Risiko', () => {
         cy.get('.modal.show .modal-title').should('contain', 'Tugaskan Auditor')
 
         // Pilih auditor
-        cy.get('.modal.show select[name="auditor_id"]', { timeout: 5000 }).should('be.visible').select(8)
+        cy.get('.modal.show select[name="auditor_id"]', { timeout: 5000 }).should('be.visible').select(9)
 
         // Simpan
         cy.get('.modal.show button[type="submit"]').should('be.visible').click()

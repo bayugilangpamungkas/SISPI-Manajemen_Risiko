@@ -1,4 +1,4 @@
-﻿describe('Admin - Manajemen Risiko', () => {
+describe('Admin - Manajemen Risiko', () => {
 
   beforeEach(() => {
     cy.login('admin1', '123456')

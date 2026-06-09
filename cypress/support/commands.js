@@ -36,5 +36,11 @@ Cypress.Commands.add('login', (username, password) => {
 })
 
 Cypress.Commands.add('logout', () => {
-  cy.contains('Logout').click()
+
+  cy.clearCookies()
+  cy.clearLocalStorage()
+
+  cy.visit('/logout', {
+    failOnStatusCode: false
+  })
 })

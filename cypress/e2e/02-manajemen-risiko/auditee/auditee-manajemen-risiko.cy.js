@@ -124,18 +124,19 @@
   })
 
   it('TEST 9: Auditee dapat melihat tombol aksi untuk setiap risiko', () => {
-    cy.visit('/manajemen-risiko')
-    cy.url({ timeout: 10000 }).should('include', '/auditee/manajemen-risiko')
 
-    // Cek ada data di tabel
-    cy.get('table.table tbody tr').then((rows) => {
-      if (rows.length > 0) {
-        // Cari tombol aksi di baris pertama
-        cy.get('table.table tbody tr').first().within(() => {
-          cy.get('a.btn-sm, button.btn-sm').should('have.length.greaterThan', 0)
-        })
-      }
-    })
+    cy.visit('/manajemen-risiko')
+
+    cy.url().should('include', '/auditee/manajemen-risiko')
+
+    cy.get('table.table tbody tr')
+      .should('have.length.greaterThan', 0)
+
+    cy.get('table.table tbody tr')
+      .first()
+      .find('a, button')
+      .should('have.length.greaterThan', 0)
+
   })
 
   it('TEST 10: Auditee dapat melihat kolom Status di table', () => {

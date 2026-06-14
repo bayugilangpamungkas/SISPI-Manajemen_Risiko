@@ -5,11 +5,9 @@ describe('FULL FLOW - Manajemen Risiko', () => {
   // =====================================================
   // HELPER FUNCTION
   // =====================================================
-
   const logout = () => {
     cy.logout()
   }
-
   // =====================================================
   // TEST 1: ADMIN - Login & Manajemen Risiko
   // =====================================================
@@ -555,9 +553,7 @@ describe('FULL FLOW - Manajemen Risiko', () => {
         }
 
       })
-
     logout()
-
   })
 
 })
